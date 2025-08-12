@@ -177,6 +177,98 @@ function workSectionScrollLock(){
   });
 }
 
+function compassScrollLock() {
+  // Get elements
+  const compassWrap = document.querySelector('.compass_wrap');
+  const listItems = gsap.utils.toArray('.compass_content_list_item');
+  const itemCount = listItems.length;
+  
+  // Exit if elements don't exist
+  if (!compassWrap || itemCount === 0) return;
+  
+  // Get SVG elements for visibility toggle
+  const hl1Group = document.querySelector('#hl-1');
+  const hl2Group = document.querySelector('#hl-2');
+  const hl3Group = document.querySelector('#hl-3');
+  
+  // Track current visible section
+  let currentSection = 0;
+  
+  // Create the main ScrollTrigger
+  const compassTrigger = ScrollTrigger.create({
+    trigger: compassWrap,
+    start: 'center center',
+    end: `+=${itemCount * 100}%`, // Total scroll distance based on item count
+    pin: true,
+    pinSpacing: true,
+    scrub: 1,
+    onUpdate: (self) => {
+      // Calculate which item should be active based on progress
+      const progress = self.progress;
+      const activeIndex = Math.floor(progress * itemCount);
+      const itemProgress = (progress * itemCount) % 1; // Progress within current item (0-1)
+      
+      // Update active states and progress bars
+      listItems.forEach((item, index) => {
+        if (index < activeIndex) {
+          // Completed items
+          item.classList.add('is-active');
+          gsap.set(item, {
+            '--progress-width': '100%'
+          });
+        } else if (index === activeIndex) {
+          // Current active item
+          item.classList.add('is-active');
+          gsap.set(item, {
+            '--progress-width': `${itemProgress * 100}%`
+          });
+        } else {
+          // Future items
+          item.classList.remove('is-active');
+          gsap.set(item, {
+            '--progress-width': '0%'
+          });
+        }
+      });
+      
+      // Toggle SVG group visibility based on section
+      if (hl1Group && hl2Group && hl3Group && itemCount === 3) {
+        const newSection = activeIndex;
+        
+        // Only update visibility if we're still within the scroll range
+        // or going backwards into the scroll range
+        if (newSection !== currentSection && progress < 1) {
+          // Hide all groups first
+          hl1Group.classList.add('is-hidden');
+          hl2Group.classList.add('is-hidden');
+          hl3Group.classList.add('is-hidden');
+          
+          // Show the appropriate group
+          if (newSection === 0) {
+            hl1Group.classList.remove('is-hidden');
+          } else if (newSection === 1) {
+            hl2Group.classList.remove('is-hidden');
+          } else if (newSection === 2) {
+            hl3Group.classList.remove('is-hidden');
+          }
+          
+          currentSection = newSection;
+        }
+        
+        // When at the end (progress = 1), ensure the last group stays visible
+        if (progress >= 0.999) { // Using 0.999 to account for floating point precision
+          hl1Group.classList.add('is-hidden');
+          hl2Group.classList.add('is-hidden');
+          hl3Group.classList.remove('is-hidden'); // Keep hl3 visible
+        }
+      }
+    }
+  });
+  
+  // Return the trigger instance for potential cleanup
+  return compassTrigger;
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -184,6 +276,7 @@ const init = () => {
   setupLenis();
   swipers();
   workSectionScrollLock();
+  compassScrollLock();
 }; // end init
 
 $(window).on("load", init);
