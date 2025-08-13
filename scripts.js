@@ -39,8 +39,9 @@ function initScrollAnimations(){
     yOffset: 40,
     duration: 0.8,
     stagger: 0.15,
-    batchWindow: 50,
-    triggerPoint: "top 85%"
+    batchWindow: 100,
+    triggerPercent: 0.85, // Extracted as decimal
+    get triggerPoint() { return `top ${this.triggerPercent * 100}%` } // Computed property
   };
 
   // Track which elements have already animated
@@ -48,7 +49,7 @@ function initScrollAnimations(){
 
   function handleInitialElements() {
     const scrollY = window.scrollY || window.pageYOffset;
-    const triggerY = scrollY + (window.innerHeight * 0.85);
+    const triggerY = scrollY + (window.innerHeight * config.triggerPercent);
     const viewportTop = scrollY;
     
     const elements = gsap.utils.toArray(config.attr);
@@ -249,7 +250,7 @@ function workSectionScrollLock(){
       scrollTrigger: {
         trigger: carouselLayout,
         start: 'center center',
-        end: () => `+=${getScrollDistance() * 1.5}`, // Function-based value
+        end: () => `+=${getScrollDistance() * 2}`, // Function-based value
         scrub: 1,
         pin: true,
         invalidateOnRefresh: true,
