@@ -39,14 +39,13 @@ function initScrollAnimations(){
     yOffset: 40,
     duration: 0.8,
     stagger: 0.15,
-    batchWindow: 100,
+    batchWindow: 50,
     triggerPoint: "top 85%"
   };
 
-  // Set initial state
-  // gsap.set(config.attr, { opacity: 0, y: config.yOffset });
+  // Track which elements have already animated
+  const animatedElements = new Set();
 
-  // Fix: Separate handling for above viewport vs in viewport
   function handleInitialElements() {
     const scrollY = window.scrollY || window.pageYOffset;
     const triggerY = scrollY + (window.innerHeight * 0.85);
@@ -61,16 +60,16 @@ function initScrollAnimations(){
       const elementY = rect.top + scrollY;
       
       if (elementY < viewportTop) {
-        // Above viewport - instant
         above.push(el);
+        animatedElements.add(el); // Mark as already animated
       } else if (elementY < triggerY) {
-        // In viewport - animate
         inView.push(el);
+        animatedElements.add(el); // Mark as already animated
       }
     });
     
     // Instantly show elements above viewport
-    if (above.length) gsap.set(above, { opacity: 1, y: 0, immediateRender: true });
+    if (above.length) gsap.set(above, { opacity: 1, y: 0 });
     
     // Animate elements in viewport
     if (inView.length) {
@@ -80,8 +79,7 @@ function initScrollAnimations(){
         duration: config.duration,
         ease: "power3.out",
         stagger: config.stagger,
-        overwrite: 'auto',
-        // clearProps: "transform"
+        overwrite: 'auto'
       });
     }
   }
@@ -107,14 +105,21 @@ function initScrollAnimations(){
     }
 
     gsap.utils.toArray(config.attr).forEach(el => {
+      // Skip if already animated
+      if (animatedElements.has(el)) return;
+      
       ScrollTrigger.create({
         trigger: el,
         start: config.triggerPoint,
         once: true,
         onEnter: () => {
-          queue.push(el);
-          clearTimeout(timer);
-          timer = setTimeout(flushQueue, config.batchWindow);
+          // Double-check element hasn't been animated
+          if (!animatedElements.has(el)) {
+            animatedElements.add(el);
+            queue.push(el);
+            clearTimeout(timer);
+            timer = setTimeout(flushQueue, config.batchWindow);
+          }
         }
       });
     });
