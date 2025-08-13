@@ -1,24 +1,127 @@
 console.debug("%cScripts.js loaded", "color: lightgreen;");
 
+// Preserve scroll position on refresh
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
 let lenis;
 
 // Lenis setup
 function setupLenis() {
-  lenis = new Lenis();
-
-  lenis.on("scroll", ScrollTrigger.update);
-
-  gsap.ticker.add((time) => {
-    lenis.raf(time * 1000);
+  lenis = new Lenis({
+    syncTouch: true,
+    smoothWheel: true
   });
 
-  gsap.ticker.lagSmoothing(0);
+  // Update ScrollTrigger but prevent refresh during scroll
+  lenis.on("scroll", () => {
+    ScrollTrigger.update();
+  });
 
-  lenis.start();
-
-  let isPaused = false;
+  // Prevent Lenis from causing refreshes on pinned elements
+  ScrollTrigger.addEventListener("refresh", () => {
+    lenis.resize();
+  });
+  
+  // Standard RAF without GSAP ticker to avoid conflicts
+  function raf(time) {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
 }
 
+// Global Animations
+function initScrollAnimations(){
+  const config = {
+    attr: '[data-anim="fadeslide-up"]',
+    yOffset: 40,
+    duration: 0.8,
+    stagger: 0.15,
+    batchWindow: 100,
+    triggerPoint: "top 85%"
+  };
+
+  // Set initial state
+  // gsap.set(config.attr, { opacity: 0, y: config.yOffset });
+
+  // Fix: Separate handling for above viewport vs in viewport
+  function handleInitialElements() {
+    const scrollY = window.scrollY || window.pageYOffset;
+    const triggerY = scrollY + (window.innerHeight * 0.85);
+    const viewportTop = scrollY;
+    
+    const elements = gsap.utils.toArray(config.attr);
+    const above = [];
+    const inView = [];
+    
+    elements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const elementY = rect.top + scrollY;
+      
+      if (elementY < viewportTop) {
+        // Above viewport - instant
+        above.push(el);
+      } else if (elementY < triggerY) {
+        // In viewport - animate
+        inView.push(el);
+      }
+    });
+    
+    // Instantly show elements above viewport
+    if (above.length) gsap.set(above, { opacity: 1, y: 0, immediateRender: true });
+    
+    // Animate elements in viewport
+    if (inView.length) {
+      gsap.to(inView, {
+        opacity: 1,
+        y: 0,
+        duration: config.duration,
+        ease: "power3.out",
+        stagger: config.stagger,
+        overwrite: 'auto',
+        // clearProps: "transform"
+      });
+    }
+  }
+
+  // Create triggers AFTER checking initial state
+  setTimeout(() => {
+    handleInitialElements();
+    
+    let queue = [];
+    let timer = null;
+
+    function flushQueue() {
+      if (!queue.length) return;
+      gsap.to(queue, {
+        opacity: 1,
+        y: 0,
+        duration: config.duration,
+        ease: "power3.out",
+        stagger: config.stagger,
+        overwrite: 'auto'
+      });
+      queue = [];
+    }
+
+    gsap.utils.toArray(config.attr).forEach(el => {
+      ScrollTrigger.create({
+        trigger: el,
+        start: config.triggerPoint,
+        once: true,
+        onEnter: () => {
+          queue.push(el);
+          clearTimeout(timer);
+          timer = setTimeout(flushQueue, config.batchWindow);
+        }
+      });
+    });
+  }, 100);
+}
+
+// Swipers
 function swipers() {
 	// Podcast Slider
   if (document.querySelector(".swiper.podcast-eps_slider_main-swiper")) {
@@ -115,6 +218,7 @@ function swipers() {
   }
 };
 
+// Work Section Scroll Lock
 function workSectionScrollLock(){
   // Initialize all carousel sections on the page
   document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
@@ -145,6 +249,10 @@ function workSectionScrollLock(){
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
+        anticipatePin: 1,
+        scroller: document.body,
+        pinType: "transform",
+        immediatePin: true,
         onUpdate: (self) => {
           // Update progress bar width based on scroll progress
           if (progressBar) {
@@ -175,8 +283,9 @@ function workSectionScrollLock(){
       ScrollTrigger.refresh(true); // Force refresh
     }, 250); // Debounce resize
   });
-}
+};
 
+// Compass Section Scroll Lock
 function compassScrollLock() {
   // Get elements
   const compassWrap = document.querySelector('.compass_wrap');
@@ -197,10 +306,14 @@ function compassScrollLock() {
   // Create the main ScrollTrigger
   const compassTrigger = ScrollTrigger.create({
     trigger: compassWrap,
-    start: 'center center',
+    start: 'center center-=3%',
     end: `+=${itemCount * 100}%`, // Total scroll distance based on item count
     pin: true,
     pinSpacing: true,
+    anticipatePin: 1,
+    scroller: document.body,
+    pinType: "transform",
+    immediatePin: true,
     scrub: 1,
     onUpdate: (self) => {
       // Calculate which item should be active based on progress
@@ -267,7 +380,7 @@ function compassScrollLock() {
   
   // Return the trigger instance for potential cleanup
   return compassTrigger;
-}
+};
 
 // Init Function
 const init = () => {
@@ -277,6 +390,17 @@ const init = () => {
   swipers();
   workSectionScrollLock();
   compassScrollLock();
+  
+  // Delay non-pinned animations slightly
+  setTimeout(() => {
+    initScrollAnimations();
+  }, 50);
+  
+  // Single refresh after everything
+  setTimeout(() => {
+    ScrollTrigger.refresh(true);
+  }, 200);
+  
 }; // end init
 
 $(window).on("load", init);
