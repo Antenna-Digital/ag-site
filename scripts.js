@@ -224,8 +224,8 @@ function swipers() {
   }
 };
 
-// Work Section Scroll Lock
-function workSectionScrollLock(){
+// Work Scroll Lock Section
+function workScrollLock(){
   // Initialize all carousel sections on the page
   document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
     
@@ -291,7 +291,7 @@ function workSectionScrollLock(){
   });
 };
 
-// Compass Section Scroll Lock
+// Compass Scroll Lock Section
 function compassScrollLock() {
   // Get elements
   const compassWrap = document.querySelector('.compass_wrap');
@@ -388,14 +388,143 @@ function compassScrollLock() {
   return compassTrigger;
 };
 
+// Work Grid Masonry
+function workGridMasonry(){
+  if (typeof Macy === 'undefined') {
+    console.error('Macy.js not loaded');
+    return;
+  }
+  const workGridWrap = document.querySelector('.work-grid_wrap');
+
+  if (!workGridWrap) return;
+
+  let macyInstance;
+  let currentColumns = 0;
+  
+  const getBrowserFontSize = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
+  
+  const cleanupMacyStyles = () => {
+    const listElement = document.querySelector('.work-grid_collection_list');
+    const items = document.querySelectorAll('.work-grid_collection_item');
+    
+    listElement?.removeAttribute('style');
+    items.forEach(item => item.removeAttribute('style'));
+  };
+  
+  const handleMacy = () => {
+    const listElement = document.querySelector('.work-grid_collection_list');
+    const container = listElement?.parentElement;
+    const browserFontSize = getBrowserFontSize();
+    
+    // Check container query state via CSS custom property
+    const computedStyle = getComputedStyle(listElement);
+    const columns = computedStyle.getPropertyValue('--columns') === '2' ? 2 : 1;
+
+    if (columns === currentColumns) {
+      if (columns === 2 && macyInstance) {
+        const maxItemWidth = 38 * browserFontSize;
+        const minGap = 2.5 * browserFontSize;
+        const listWidth = listElement.offsetWidth;
+        const macyMargin = Math.max(minGap, listWidth - (maxItemWidth * 2));
+        
+        macyInstance.options.margin = macyMargin;
+        macyInstance.recalculate(true);
+      }
+      return;
+    }
+
+    currentColumns = columns;
+
+    if (macyInstance) {
+      macyInstance.remove();
+      macyInstance = null;
+      setTimeout(cleanupMacyStyles, 0);
+    }
+
+    if (columns === 2) {
+      setTimeout(() => {
+        const maxItemWidth = 38 * browserFontSize;
+        const minGap = 2.5 * browserFontSize;
+        const listWidth = listElement.offsetWidth;
+        const macyMargin = Math.max(minGap, listWidth - (maxItemWidth * 2));
+
+        macyInstance = Macy({
+          container: '.work-grid_collection_list',
+          columns: 2,
+          margin: macyMargin,
+          waitForImages: true,
+        });
+        
+        macyInstance.runOnImageLoad(() => {
+          macyInstance.recalculate(true);
+        }, true);
+      }, 10);
+    } else {
+      setTimeout(cleanupMacyStyles, 100);
+    }
+  };
+
+  // Quick recalculation for resize (no column change)
+  const quickRecalc = () => {
+    if (macyInstance && currentColumns === 2) {
+      const listElement = document.querySelector('.work-grid_collection_list');
+      const browserFontSize = getBrowserFontSize();
+      const maxItemWidth = 38 * browserFontSize;
+      const minGap = 2.5 * browserFontSize;
+      const listWidth = listElement.offsetWidth;
+      const macyMargin = Math.max(minGap, listWidth - (maxItemWidth * 2));
+      
+      macyInstance.options.margin = macyMargin;
+      macyInstance.recalculate(true);
+    }
+  };
+
+  handleMacy();
+
+  // Finsweet CMS Load integration
+  window.fsAttributes = window.fsAttributes || [];
+  window.fsAttributes.push([
+    'cmsload',
+    (listInstances) => {
+      listInstances.forEach((instance) => {
+        instance.on('renderitems', () => setTimeout(handleMacy, 100));
+      });
+    }
+  ]);
+
+  // ResizeObserver for container query changes
+  if ('ResizeObserver' in window) {
+    const container = document.querySelector('.work-grid_collection_list');
+    if (container && container.parentElement) {
+      const resizeObserver = new ResizeObserver(() => {
+        handleMacy();
+      });
+      resizeObserver.observe(container.parentElement);
+    }
+  }
+
+  // Two-tier resize handling
+  let quickTimer, fullTimer;
+  window.addEventListener('resize', () => {
+    // Quick recalc every 50ms during resize
+    clearTimeout(quickTimer);
+    quickTimer = setTimeout(quickRecalc, 50);
+    
+    // Full check after resize stops
+    clearTimeout(fullTimer);
+    fullTimer = setTimeout(handleMacy, 250);
+  });
+};
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
 
   setupLenis();
   swipers();
-  workSectionScrollLock();
+  workScrollLock();
   compassScrollLock();
+  workGridMasonry();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
