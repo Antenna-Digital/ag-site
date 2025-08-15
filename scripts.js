@@ -34,98 +34,135 @@ function setupLenis() {
 
 // Global Animations
 function initScrollAnimations(){
-  const config = {
-    attr: '[data-anim="fadeslide-up"]',
-    yOffset: 40,
-    duration: 0.8,
-    stagger: 0.15,
+  const configs = {
+    'fadeslide-up': {
+      yOffset: 40,
+      duration: 0.8,
+      stagger: 0.15,
+      animateProps: { opacity: 1, y: 0 },
+      initialProps: el => ({ opacity: 0, y: 40 })
+    },
+    'fade': {
+      duration: 0.8,
+      stagger: 0.15,
+      animateProps: { opacity: 1 },
+      initialProps: el => ({ opacity: 0 })
+    }
+    // Add more animation types here as needed
+  };
+
+  const globalConfig = {
+    attr: '[data-anim]', // Now selects all data-anim elements
     batchWindow: 100,
-    triggerPercent: 0.85, // Extracted as decimal
-    get triggerPoint() { return `top ${this.triggerPercent * 100}%` } // Computed property
+    triggerPercent: 0.90,
+    get triggerPoint() { return `top ${this.triggerPercent * 100}%` }
   };
 
   // Track which elements have already animated
   const animatedElements = new Set();
 
+  function getAnimConfig(el) {
+    const animType = el.getAttribute('data-anim');
+    return configs[animType] || configs['fadeslide-up']; // Default fallback
+  }
+
   function handleInitialElements() {
     const scrollY = window.scrollY || window.pageYOffset;
-    const triggerY = scrollY + (window.innerHeight * config.triggerPercent);
+    const triggerY = scrollY + (window.innerHeight * globalConfig.triggerPercent);
     const viewportTop = scrollY;
-    
-    const elements = gsap.utils.toArray(config.attr);
+
+    const elements = gsap.utils.toArray(globalConfig.attr);
     const above = [];
     const inView = [];
-    
+
     elements.forEach(el => {
       const rect = el.getBoundingClientRect();
       const elementY = rect.top + scrollY;
-      
+
       if (elementY < viewportTop) {
         above.push(el);
-        animatedElements.add(el); // Mark as already animated
+        animatedElements.add(el);
       } else if (elementY < triggerY) {
         inView.push(el);
-        animatedElements.add(el); // Mark as already animated
+        animatedElements.add(el);
       }
     });
-    
+
     // Instantly show elements above viewport
-    if (above.length) gsap.set(above, { opacity: 1, y: 0 });
-    
-    // Animate elements in viewport
-    if (inView.length) {
-      gsap.to(inView, {
-        opacity: 1,
-        y: 0,
+    above.forEach(el => {
+      const config = getAnimConfig(el);
+      gsap.set(el, config.animateProps);
+    });
+
+    // Group inView elements by animation type for proper staggering
+    const inViewByType = {};
+    inView.forEach(el => {
+      const animType = el.getAttribute('data-anim');
+      if (!inViewByType[animType]) inViewByType[animType] = [];
+      inViewByType[animType].push(el);
+    });
+
+    // Animate each group with its own stagger
+    Object.entries(inViewByType).forEach(([animType, elements]) => {
+      const config = configs[animType] || configs['fadeslide-up'];
+      gsap.to(elements, {
+        ...config.animateProps,
         duration: config.duration,
         ease: "power3.out",
         stagger: config.stagger,
         overwrite: 'auto'
       });
-    }
+    });
   }
 
   // Create triggers AFTER checking initial state
   setTimeout(() => {
     handleInitialElements();
-    
-    let queue = [];
-    let timer = null;
 
-    function flushQueue() {
-      if (!queue.length) return;
+    // Group queues by animation type
+    const queues = {};
+    const timers = {};
+
+    function flushQueue(animType) {
+      const queue = queues[animType];
+      if (!queue || !queue.length) return;
+
+      const config = configs[animType] || configs['fadeslide-up'];
       gsap.to(queue, {
-        opacity: 1,
-        y: 0,
+        ...config.animateProps,
         duration: config.duration,
         ease: "power3.out",
         stagger: config.stagger,
         overwrite: 'auto'
       });
-      queue = [];
+      queues[animType] = [];
     }
 
-    gsap.utils.toArray(config.attr).forEach(el => {
-      // Skip if already animated
+    gsap.utils.toArray(globalConfig.attr).forEach(el => {
       if (animatedElements.has(el)) return;
-      
+
+      const animType = el.getAttribute('data-anim');
+
       ScrollTrigger.create({
         trigger: el,
-        start: config.triggerPoint,
+        start: globalConfig.triggerPoint,
         once: true,
         onEnter: () => {
-          // Double-check element hasn't been animated
           if (!animatedElements.has(el)) {
             animatedElements.add(el);
-            queue.push(el);
-            clearTimeout(timer);
-            timer = setTimeout(flushQueue, config.batchWindow);
+
+            // Initialize queue for this animation type if needed
+            if (!queues[animType]) queues[animType] = [];
+
+            queues[animType].push(el);
+            clearTimeout(timers[animType]);
+            timers[animType] = setTimeout(() => flushQueue(animType), globalConfig.batchWindow);
           }
         }
       });
     });
   }, 100);
-}
+};
 
 // Swipers
 function swipers() {
