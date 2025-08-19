@@ -10,7 +10,7 @@ let lenis;
 // Lenis setup
 function setupLenis() {
   lenis = new Lenis({
-    syncTouch: true,
+    // syncTouch: true,
     smoothWheel: true
   });
 
