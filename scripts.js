@@ -328,8 +328,26 @@ function workScrollLock(){
   });
 };
 
-// Compass Scroll Lock Section
+// Compass Scroll Lock Section with SVG Chart
 function compassScrollLock() {
+  // Chart data states for different scroll positions
+  const chartStates = [
+    // State 1: Complete the assessment
+    [20, 45, 55, 10, 70, 25, 50, 45],
+    // State 2: Get your score
+    [45, 20, 45, 55, 10, 70, 25, 50],
+    // State 3: View detailed feedback
+    [50, 45, 20, 45, 55, 10, 70, 25]
+  ];
+
+  // Chart configuration
+  const chartConfig = {
+    labels: ['Awake', 'Aware', 'Reflective', 'Attentive', 'Cogent', 'Sentient', 'Visionary', 'Intentional'],
+    centerX: 226,
+    centerY: 226,
+    maxRadius: 225
+  };
+
   // Get elements
   const compassWrap = document.querySelector('.compass_wrap');
   const listItems = gsap.utils.toArray('.compass_content_list_item');
@@ -337,20 +355,194 @@ function compassScrollLock() {
   
   // Exit if elements don't exist
   if (!compassWrap || itemCount === 0) return;
-  
-  // Get SVG elements for visibility toggle
-  const hl1Group = document.querySelector('#hl-1');
-  const hl2Group = document.querySelector('#hl-2');
-  const hl3Group = document.querySelector('#hl-3');
-  
-  // Track current visible section
+
+  // Create or get the SVG chart
+  let chartContainer = document.querySelector('.compass_graphic_wrap');
+  if (!chartContainer) {
+    console.error('Chart container not found');
+    return;
+  }
+
+  // Replace canvas with SVG if needed
+  if (chartContainer.tagName === 'CANVAS') {
+    const svgContainer = document.createElement('div');
+    svgContainer.className = chartContainer.className;
+    chartContainer.parentNode.replaceChild(svgContainer, chartContainer);
+    chartContainer = svgContainer;
+  }
+
+  // Create the SVG structure
+  chartContainer.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -50 652 552" style="width: 100%; height: 100%;">
+      <!-- Background rings -->
+      <g class="chart-rings">
+        <path d="M226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
+              fill="#f7f6f4" stroke="none" opacity="0.8"/>
+        <path d="M226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25Z" 
+              fill="#e1dfda" stroke="none" opacity="0.8"/>
+        <path d="M226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5Z" 
+              fill="#f7f6f4" stroke="none" opacity="0.8"/>
+        <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75Z" 
+              fill="#e1dfda" stroke="none" opacity="0.8"/>
+      </g>
+      
+      <!-- Data shape -->
+      <polygon class="data-shape" 
+               points="" 
+               fill="rgba(222, 228, 46, 0.7)" 
+               stroke="#DEE42E" 
+               stroke-width="2"/>
+      
+      <!-- Data points -->
+      <g class="data-points"></g>
+      
+      <!-- Grid lines -->
+      <g class="grid-lines">
+        <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75ZM226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5ZM226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25ZM226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
+              stroke="#11171E" stroke-width="1.5" fill="none" opacity="0.9"/>
+      </g>
+      
+      <!-- Center lines -->
+      <g class="center-lines"></g>
+      
+      <!-- Labels -->
+      <g class="chart-labels"></g>
+    </svg>
+  `;
+
+  // Get SVG elements
+  const svg = chartContainer.querySelector('svg');
+  const dataShape = svg.querySelector('.data-shape');
+  const dataPointsGroup = svg.querySelector('.data-points');
+  const centerLinesGroup = svg.querySelector('.center-lines');
+  const labelsGroup = svg.querySelector('.chart-labels');
+
+  // Function to calculate data points
+  function calculateDataPoints(data) {
+    return data.map((value, index) => {
+      const normalizedValue = (value / 100) * chartConfig.maxRadius;
+      const angle = (index * 2 * Math.PI / data.length) - Math.PI / 2;
+      const x = chartConfig.centerX + normalizedValue * Math.cos(angle);
+      const y = chartConfig.centerY + normalizedValue * Math.sin(angle);
+      return { x, y, value };
+    });
+  }
+
+  // Function to calculate label positions
+  function calculateLabelPosition(index, total, radius) {
+    const angle = (index * 2 * Math.PI / total) - Math.PI / 2;
+    const isCardinal = index % 2 === 0;
+    const actualRadius = isCardinal ? 235 : radius;
+    const x = chartConfig.centerX + actualRadius * Math.cos(angle);
+    const y = chartConfig.centerY + actualRadius * Math.sin(angle);
+    
+    let textAnchor = "middle";
+    let dy = "0";
+    
+    if (!isCardinal) {
+      if (Math.cos(angle) < 0) {
+        textAnchor = "end";
+        return { x: x + 10, y, textAnchor, dy };
+      }
+      if (Math.cos(angle) > 0) {
+        textAnchor = "start";
+        return { x: x - 10, y, textAnchor, dy };
+      }
+    }
+    
+    if (Math.abs(Math.cos(angle)) > 0.85) {
+      textAnchor = Math.cos(angle) > 0 ? "start" : "end";
+    }
+    if (Math.abs(Math.sin(angle)) > 0.85) {
+      dy = Math.sin(angle) > 0 ? "1em" : "-0.5em";
+    }
+
+    return { x, y, textAnchor, dy };
+  }
+
+  // Initialize center lines
+  chartConfig.labels.forEach((_, index) => {
+    const angle = (index * 2 * Math.PI / chartConfig.labels.length) - Math.PI / 2;
+    const endX = chartConfig.centerX + chartConfig.maxRadius * Math.cos(angle);
+    const endY = chartConfig.centerY + chartConfig.maxRadius * Math.sin(angle);
+    
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', chartConfig.centerX);
+    line.setAttribute('y1', chartConfig.centerY);
+    line.setAttribute('x2', endX);
+    line.setAttribute('y2', endY);
+    line.setAttribute('stroke', '#11171E');
+    line.setAttribute('stroke-opacity', '0.1');
+    line.setAttribute('stroke-width', '1.5');
+    centerLinesGroup.appendChild(line);
+  });
+
+  // Initialize labels
+  chartConfig.labels.forEach((label, index) => {
+    const pos = calculateLabelPosition(index, chartConfig.labels.length, 260);
+    
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', pos.x);
+    text.setAttribute('y', pos.y);
+    text.setAttribute('text-anchor', pos.textAnchor);
+    text.setAttribute('dy', pos.dy);
+    text.setAttribute('fill', '#11171E');
+    text.style.fontSize = '16px';
+    text.style.fontFamily = '"Restarthard 2", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    text.textContent = label;
+    labelsGroup.appendChild(text);
+  });
+
+  // Function to update chart
+  function updateChart(data, progress = 1) {
+    const points = calculateDataPoints(data);
+    const pointsString = points.map(p => `${p.x},${p.y}`).join(' ');
+    
+    // Animate polygon points
+    gsap.to(dataShape, {
+      attr: { points: pointsString },
+      duration: 0.5,
+      ease: 'ease'
+    });
+    
+    // Update or create data points
+    const existingPoints = dataPointsGroup.querySelectorAll('circle');
+    
+    points.forEach((point, index) => {
+      let circle = existingPoints[index];
+      
+      if (!circle) {
+        circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', '#DEE42E');
+        circle.setAttribute('stroke', '#DEE42E');
+        circle.setAttribute('stroke-width', '1');
+        dataPointsGroup.appendChild(circle);
+      }
+      
+      gsap.to(circle, {
+        attr: { cx: point.x, cy: point.y },
+        duration: 0.5,
+        ease: 'ease'
+      });
+    });
+  }
+
+  // Function to interpolate between data states
+  function interpolateData(data1, data2, progress) {
+    return data1.map((val, i) => val + (data2[i] - val) * progress);
+  }
+
   let currentSection = 0;
+  
+  // Initialize with first state
+  updateChart(chartStates[0]);
   
   // Create the main ScrollTrigger
   const compassTrigger = ScrollTrigger.create({
     trigger: compassWrap,
     start: 'center center-=3%',
-    end: `+=${itemCount * 100}%`, // Total scroll distance based on item count
+    end: `+=${itemCount * 100}%`,
     pin: true,
     pinSpacing: true,
     anticipatePin: 1,
@@ -359,71 +551,52 @@ function compassScrollLock() {
     immediatePin: true,
     scrub: 1,
     onUpdate: (self) => {
-      // Calculate which item should be active based on progress
       const progress = self.progress;
       const activeIndex = Math.floor(progress * itemCount);
-      const itemProgress = (progress * itemCount) % 1; // Progress within current item (0-1)
+      const itemProgress = (progress * itemCount) % 1;
       
-      // Update active states and progress bars
+      // Update list items
       listItems.forEach((item, index) => {
         if (index < activeIndex) {
-          // Completed items
           item.classList.add('is-active');
-          gsap.set(item, {
-            '--progress-width': '100%'
-          });
+          gsap.set(item, { '--progress-width': '100%' });
         } else if (index === activeIndex) {
-          // Current active item
           item.classList.add('is-active');
-          gsap.set(item, {
-            '--progress-width': `${itemProgress * 100}%`
-          });
+          gsap.set(item, { '--progress-width': `${itemProgress * 100}%` });
         } else {
-          // Future items
           item.classList.remove('is-active');
-          gsap.set(item, {
-            '--progress-width': '0%'
-          });
+          gsap.set(item, { '--progress-width': '0%' });
         }
       });
       
-      // Toggle SVG group visibility based on section
-      if (hl1Group && hl2Group && hl3Group && itemCount === 3) {
-        const newSection = activeIndex;
+      // Update chart based on scroll
+      const sectionIndex = Math.min(activeIndex, chartStates.length - 1);
+      
+      if (sectionIndex !== currentSection || (itemProgress > 0 && sectionIndex < chartStates.length - 1)) {
+        let dataToShow;
         
-        // Only update visibility if we're still within the scroll range
-        // or going backwards into the scroll range
-        if (newSection !== currentSection && progress < 1) {
-          // Hide all groups first
-          hl1Group.classList.add('is-hidden');
-          hl2Group.classList.add('is-hidden');
-          hl3Group.classList.add('is-hidden');
-          
-          // Show the appropriate group
-          if (newSection === 0) {
-            hl1Group.classList.remove('is-hidden');
-          } else if (newSection === 1) {
-            hl2Group.classList.remove('is-hidden');
-          } else if (newSection === 2) {
-            hl3Group.classList.remove('is-hidden');
-          }
-          
-          currentSection = newSection;
+        // Interpolate between states for smooth transitions
+        if (itemProgress > 0 && sectionIndex < chartStates.length - 1) {
+          dataToShow = interpolateData(
+            chartStates[sectionIndex],
+            chartStates[sectionIndex + 1],
+            itemProgress
+          );
+        } else {
+          dataToShow = chartStates[sectionIndex];
         }
         
-        // When at the end (progress = 1), ensure the last group stays visible
-        if (progress >= 0.999) { // Using 0.999 to account for floating point precision
-          hl1Group.classList.add('is-hidden');
-          hl2Group.classList.add('is-hidden');
-          hl3Group.classList.remove('is-hidden'); // Keep hl3 visible
+        updateChart(dataToShow, itemProgress);
+        
+        if (sectionIndex !== currentSection) {
+          currentSection = sectionIndex;
         }
       }
     }
   });
   
-  // Return the trigger instance for potential cleanup
   return compassTrigger;
-};
+}
 
 // Work Grid Masonry
 function workGridMasonry(){
