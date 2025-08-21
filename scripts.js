@@ -288,14 +288,15 @@ function workScrollLock(){
         trigger: carouselLayout,
         start: 'center center',
         end: () => `+=${getScrollDistance() * 2}`, // Function-based value
-        scrub: 1,
+        scrub: true,
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
-        anticipatePin: 1,
+        // anticipatePin: 1,
         scroller: document.body,
-        pinType: "transform",
-        immediatePin: true,
+        // pinType: "transform",
+        pinType: "fixed",
+        // immediatePin: true,
         onUpdate: (self) => {
           // Update progress bar width based on scroll progress
           if (progressBar) {
