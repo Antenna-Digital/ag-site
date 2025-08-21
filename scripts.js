@@ -10,8 +10,11 @@ let lenis;
 // Lenis setup
 function setupLenis() {
   lenis = new Lenis({
-    // syncTouch: true,
-    smoothWheel: true
+    smoothWheel: true,
+    // Add these for mobile stability:
+    smoothTouch: false,  // Disable smooth scroll on touch devices
+    touchMultiplier: 2,
+    syncTouch: false  // Prevent touch sync issues
   });
 
   // Update ScrollTrigger but prevent refresh during scroll
@@ -24,12 +27,12 @@ function setupLenis() {
     lenis.resize();
   });
   
-  // Standard RAF without GSAP ticker to avoid conflicts
-  function raf(time) {
-    lenis.raf(time);
-    requestAnimationFrame(raf);
-  }
-  requestAnimationFrame(raf);
+  // Add GSAP ticker integration for better sync:
+  gsap.ticker.add((time) => {
+    lenis.raf(time * 1000);
+  });
+  
+  gsap.ticker.lagSmoothing(0);  // Prevent lag smoothing conflicts
 }
 
 // Global Animations
@@ -288,16 +291,14 @@ function workScrollLock(){
         trigger: carouselLayout,
         start: 'center center',
         end: () => `+=${getScrollDistance() * 2}`, // Function-based value
-        scrub: 0,
+        scrub: 1,
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
-        // anticipatePin: 1,
-        scroller: document.body,
-        // pinType: "transform",
-        pinType: "fixed",
-        // immediatePin: true,
-        normalizeScroll: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+        anticipatePin: 1,
+        // scroller: document.body,
+        pinType: "transform",
+        immediatePin: true,
         onUpdate: (self) => {
           // Update progress bar width based on scroll progress
           if (progressBar) {
