@@ -266,11 +266,6 @@ function swipers() {
 
 // Work Scroll Lock Section
 function workScrollLock(){
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  
-  if (isMobile && window.lenis) {
-    window.lenis.stop();  // Temporarily disable Lenis on mobile
-  }
   // Initialize all carousel sections on the page
   document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
     
@@ -300,10 +295,33 @@ function workScrollLock(){
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
-        anticipatePin: 1,
+        // anticipatePin: 1,
         // scroller: document.body,
-        pinType: "transform",
-        immediatePin: true,
+        // pinType: "transform",
+        pinType: "fixed",  // Use fixed positioning
+        pinnedContainer: carouselLayout,  // Add this
+        // immediatePin: true,
+        // Add these callbacks:
+        onEnter: () => {
+          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            window.lenis.stop();
+          }
+        },
+        onLeaveBack: () => {
+          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            window.lenis.start();
+          }
+        },
+        onLeave: () => {
+          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            window.lenis.start();
+          }
+        },
+        onEnterBack: () => {
+          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            window.lenis.stop();
+          }
+        },
         onUpdate: (self) => {
           // Update progress bar width based on scroll progress
           if (progressBar) {
