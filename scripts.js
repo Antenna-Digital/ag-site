@@ -14,8 +14,6 @@ function setupLenis() {
     smoothWheel: true
   });
 
-  window.lenis = lenis;
-
   // Update ScrollTrigger but prevent refresh during scroll
   lenis.on("scroll", () => {
     ScrollTrigger.update();
@@ -290,38 +288,23 @@ function workScrollLock(){
         trigger: carouselLayout,
         start: 'center center',
         end: () => `+=${getScrollDistance() * 2}`, // Function-based value
-        scrub: 1,
+        scrub: true,
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
-        anticipatePin: 1,
+        // anticipatePin: 1,
         scroller: document.body,
-        pinType: "transform",
-        immediatePin: true,
-        onToggle: (self) => {
-          if (lenis) {
-            console.log('lenis toggle exists');
-            if (self.isActive) {
-              lenis.stop();  // Stop Lenis when pin becomes active
-              console.log('lenis stopped');
-            } else {
-              lenis.start(); // Resume Lenis when pin is inactive
-              console.log('lenis is back');
-            }
-          }
-        },
+        // pinType: "transform",
+        pinType: "fixed",
+        // immediatePin: true,
         onUpdate: (self) => {
-          // Debug logging
-          // console.log('Progress:', self.progress, 'Direction:', self.direction, 'Velocity:', self.getVelocity());
           // Update progress bar width based on scroll progress
           if (progressBar) {
             gsap.set(progressBar, {
               width: `${self.progress * 100}%`
             });
           }
-        },
-        onRefresh: () => console.log('ScrollTrigger refreshed'),
-        // onToggle: (self) => console.log('Pin toggled:', self.isActive)
+        }
       }
     });
     
@@ -563,11 +546,12 @@ function compassScrollLock() {
     end: `+=${itemCount * 100}%`,
     pin: true,
     pinSpacing: true,
-    anticipatePin: 1,
+    // anticipatePin: 1,
     scroller: document.body,
-    pinType: "transform",
-    immediatePin: true,
-    scrub: 1,
+    // pinType: "transform",
+    pinType: "fixed",
+    // immediatePin: true,
+    scrub: true,
     onUpdate: (self) => {
       const progress = self.progress;
       const activeIndex = Math.floor(progress * itemCount);
