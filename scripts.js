@@ -288,11 +288,11 @@ function workScrollLock(){
         trigger: carouselLayout,
         start: 'center center',
         end: () => `+=${getScrollDistance() * 2}`, // Function-based value
-        scrub: 1,
+        scrub: 0,
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
-        anticipatePin: 1,
+        // anticipatePin: 1,
         scroller: document.body,
         // pinType: "transform",
         pinType: "fixed",
