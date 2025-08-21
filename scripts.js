@@ -299,13 +299,13 @@ function workScrollLock(){
         pinType: "transform",
         immediatePin: true,
         onToggle: (self) => {
-          if (window.lenis) {
+          if (lenis) {
             console.log('lenis toggle exists');
             if (self.isActive) {
-              window.lenis.stop();  // Stop Lenis when pin becomes active
+              lenis.stop();  // Stop Lenis when pin becomes active
               console.log('lenis stopped');
             } else {
-              window.lenis.start(); // Resume Lenis when pin is inactive
+              lenis.start(); // Resume Lenis when pin is inactive
               console.log('lenis is back');
             }
           }
