@@ -266,6 +266,11 @@ function swipers() {
 
 // Work Scroll Lock Section
 function workScrollLock(){
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile && window.lenis) {
+    window.lenis.stop();  // Temporarily disable Lenis on mobile
+  }
   // Initialize all carousel sections on the page
   document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
     
