@@ -321,7 +321,7 @@ function workScrollLock(){
           }
         },
         onRefresh: () => console.log('ScrollTrigger refreshed'),
-        onToggle: (self) => console.log('Pin toggled:', self.isActive)
+        // onToggle: (self) => console.log('Pin toggled:', self.isActive)
       }
     });
     
