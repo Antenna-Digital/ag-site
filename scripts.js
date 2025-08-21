@@ -300,16 +300,19 @@ function workScrollLock(){
         immediatePin: true,
         onToggle: (self) => {
           if (window.lenis) {
+            console.log('lenis toggle exists');
             if (self.isActive) {
               window.lenis.stop();  // Stop Lenis when pin becomes active
+              console.log('lenis stopped');
             } else {
               window.lenis.start(); // Resume Lenis when pin is inactive
+              console.log('lenis is back');
             }
           }
         },
         onUpdate: (self) => {
           // Debug logging
-          console.log('Progress:', self.progress, 'Direction:', self.direction, 'Velocity:', self.getVelocity());
+          // console.log('Progress:', self.progress, 'Direction:', self.direction, 'Velocity:', self.getVelocity());
           // Update progress bar width based on scroll progress
           if (progressBar) {
             gsap.set(progressBar, {
