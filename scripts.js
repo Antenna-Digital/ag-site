@@ -10,11 +10,8 @@ let lenis;
 // Lenis setup
 function setupLenis() {
   lenis = new Lenis({
-    smoothWheel: true,
-    // Add these for mobile stability:
-    smoothTouch: false,  // Disable smooth scroll on touch devices
-    touchMultiplier: 2,
-    syncTouch: false  // Prevent touch sync issues
+    // syncTouch: true,
+    smoothWheel: true
   });
 
   // Update ScrollTrigger but prevent refresh during scroll
@@ -27,12 +24,12 @@ function setupLenis() {
     lenis.resize();
   });
   
-  // Add GSAP ticker integration for better sync:
-  gsap.ticker.add((time) => {
-    lenis.raf(time * 1000);
-  });
-  
-  gsap.ticker.lagSmoothing(0);  // Prevent lag smoothing conflicts
+  // Standard RAF without GSAP ticker to avoid conflicts
+  function raf(time) {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
 }
 
 // Global Animations
@@ -295,41 +292,22 @@ function workScrollLock(){
         pin: true,
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
-        // anticipatePin: 1,
-        // scroller: document.body,
-        // pinType: "transform",
-        pinType: "fixed",  // Use fixed positioning
-        pinnedContainer: carouselLayout,  // Add this
-        // immediatePin: true,
-        // Add these callbacks:
-        onEnter: () => {
-          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.lenis.stop();
-          }
-        },
-        onLeaveBack: () => {
-          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.lenis.start();
-          }
-        },
-        onLeave: () => {
-          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.lenis.start();
-          }
-        },
-        onEnterBack: () => {
-          if (window.lenis && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.lenis.stop();
-          }
-        },
+        anticipatePin: 1,
+        scroller: document.body,
+        pinType: "transform",
+        immediatePin: true,
         onUpdate: (self) => {
+          // Debug logging
+          console.log('Progress:', self.progress, 'Direction:', self.direction, 'Velocity:', self.getVelocity());
           // Update progress bar width based on scroll progress
           if (progressBar) {
             gsap.set(progressBar, {
               width: `${self.progress * 100}%`
             });
           }
-        }
+        },
+        onRefresh: () => console.log('ScrollTrigger refreshed'),
+        onToggle: (self) => console.log('Pin toggled:', self.isActive)
       }
     });
     
