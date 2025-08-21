@@ -14,6 +14,8 @@ function setupLenis() {
     smoothWheel: true
   });
 
+  window.lenis = lenis;
+
   // Update ScrollTrigger but prevent refresh during scroll
   lenis.on("scroll", () => {
     ScrollTrigger.update();
@@ -296,6 +298,15 @@ function workScrollLock(){
         scroller: document.body,
         pinType: "transform",
         immediatePin: true,
+        onToggle: (self) => {
+          if (window.lenis) {
+            if (self.isActive) {
+              window.lenis.stop();  // Stop Lenis when pin becomes active
+            } else {
+              window.lenis.start(); // Resume Lenis when pin is inactive
+            }
+          }
+        },
         onUpdate: (self) => {
           // Debug logging
           console.log('Progress:', self.progress, 'Direction:', self.direction, 'Velocity:', self.getVelocity());
