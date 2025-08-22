@@ -259,6 +259,94 @@ function swipers() {
       });
     });
   }
+
+  // Two-Image Slider
+  if (document.querySelector(".swiper.two-image-slider_main_swiper")) {
+    console.log("two-image swiper(s) exists");
+    const twoImageSwiperWraps = document.querySelectorAll(".two-image-slider_wrap");
+    twoImageSwiperWraps.forEach((wrap) => {
+      const mainSwiperEl = wrap.querySelector(".swiper.two-image-slider_main_swiper");
+      const textSwiperEl = wrap.querySelector(
+        ".swiper.two-image-slider_text_swiper"
+      );
+      const secondarySwiperEl = wrap.querySelector(
+        ".swiper.two-image-slider_secondary_swiper"
+      );
+      const prevBtn = wrap.querySelector(".two-image-slider_nav_prev");
+      const nextBtn = wrap.querySelector(".two-image-slider_nav_next");
+
+      const mainSwiper = new Swiper(mainSwiperEl, {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        speed: 650,
+        loop: true,
+        effect: "fade",
+        fadeEffect: {
+          crossFade: true
+        },
+        // virtualTranslate: true,
+        allowTouchMove: false,
+        navigation: false,
+      });
+
+      const textSwiper = new Swiper(textSwiperEl, {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        speed: 500,
+        speed: 700,
+        loop: true,
+        effect: "fade",
+        fadeEffect: {
+          crossFade: true
+        },
+        // virtualTranslate: true,
+        allowTouchMove: false,
+        navigation: false,
+      });
+
+      const secondarySwiper = new Swiper(secondarySwiperEl, {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        speed: 300,
+        speed: 700,
+        loop: true,
+        effect: "fade",
+        fadeEffect: {
+          crossFade: true
+        },
+        // virtualTranslate: true,
+        allowTouchMove: false,
+        navigation: false,
+      });
+
+      let isAnimating = false;
+      const delay = 750;
+
+      prevBtn.addEventListener("click", () => {
+        if (!isAnimating) {
+          isAnimating = true;
+          mainSwiper.slidePrev();
+          textSwiper.slidePrev();
+          secondarySwiper.slidePrev();
+          setTimeout(() => {
+            isAnimating = false;
+          }, delay);
+        }
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if (!isAnimating) {
+          isAnimating = true;
+          mainSwiper.slideNext();
+          textSwiper.slideNext();
+          secondarySwiper.slideNext();
+          setTimeout(() => {
+            isAnimating = false;
+          }, delay);
+        }
+      });
+    });
+  }
 };
 
 // Work Scroll Lock Section
