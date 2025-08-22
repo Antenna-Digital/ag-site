@@ -816,6 +816,148 @@ function workGridMasonry(){
   });
 };
 
+// Accordion Section
+function accordionSection(){
+  const accordionComponents = document.querySelectorAll('.accordion-section_wrap');
+  if (!accordionComponents.length) return;
+
+  class Accordion {
+    constructor(wrapper) {
+      this.wrapper = wrapper;
+      this.items = wrapper.querySelectorAll('[data-accordion-item]');
+      this.activeItem = null;
+      this.animating = false;
+      this.init();
+    }
+  
+    init() {
+      this.items.forEach((item, index) => {
+        const inner = item.querySelector('.accordion-section_accordion_item_inner');
+        const textElement = item.querySelector('.accordion-section_accordion_item_text');
+        const paragraph = textElement ? textElement.querySelector('.c-paragraph') : null;
+        
+        if (!inner || !textElement) {
+          console.error('Missing required elements in accordion item', index);
+          return;
+        }
+        
+        // Store references
+        item.accordionInner = inner;
+        item.accordionContent = textElement;
+        item.accordionParagraph = paragraph;
+        
+        // Set initial state
+        if (index === 0) {
+          // First item is open
+          item.classList.add('is-active');
+          this.activeItem = item;
+          // Store the natural height for later use
+          item.naturalHeight = textElement.offsetHeight;
+          gsap.set(textElement, { height: 'auto', overflow: 'hidden' });
+        } else {
+          // Others are closed
+          gsap.set(textElement, { height: 0, overflow: 'hidden' });
+          // Store natural height for animation
+          gsap.set(textElement, { height: 'auto' });
+          item.naturalHeight = textElement.offsetHeight;
+          gsap.set(textElement, { height: 0 });
+        }
+        
+        // Add click handler
+        inner.style.cursor = 'pointer';
+        inner.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (!this.animating) {
+            this.toggleItem(item);
+          }
+        });
+      });
+    }
+  
+    toggleItem(clickedItem) {
+      if (this.animating) return;
+      this.animating = true;
+      
+      // Create a timeline for simultaneous animations
+      const tl = gsap.timeline({
+        onComplete: () => {
+          this.animating = false;
+          // Set the opened item to auto height for responsiveness
+          if (this.activeItem) {
+            gsap.set(this.activeItem.accordionContent, { height: 'auto' });
+          }
+        }
+      });
+      
+      if (this.activeItem === clickedItem) {
+        // Just close the current item
+        this.addCloseAnimation(tl, clickedItem, 0);
+        clickedItem.classList.remove('is-active');
+        this.activeItem = null;
+      } else {
+        // If there's an active item, close it
+        if (this.activeItem) {
+          this.addCloseAnimation(tl, this.activeItem, 0);
+          this.activeItem.classList.remove('is-active');
+        }
+        
+        // Open the clicked item at the same time
+        this.addOpenAnimation(tl, clickedItem, 0);
+        clickedItem.classList.add('is-active');
+        this.activeItem = clickedItem;
+      }
+      
+      tl.play();
+    }
+    
+    addOpenAnimation(timeline, item, position) {
+      const textElement = item.accordionContent;
+      const paragraph = item.accordionParagraph;
+      
+      // Get fresh height measurement
+      gsap.set(textElement, { height: 'auto' });
+      const targetHeight = textElement.offsetHeight;
+      gsap.set(textElement, { height: 0 });
+      
+      // Animate height
+      timeline.to(textElement, {
+        height: targetHeight,
+        duration: 0.4,
+        ease: 'power2.inOut'
+      }, position);
+      
+      // Fade in content (no y movement)
+      if (paragraph) {
+        timeline.from(paragraph, {
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        }, position + 0.1); // Slight delay for better effect
+      }
+    }
+    
+    addCloseAnimation(timeline, item, position) {
+      const textElement = item.accordionContent;
+      
+      // Get current height before animating
+      const currentHeight = textElement.offsetHeight;
+      gsap.set(textElement, { height: currentHeight });
+      
+      // Animate to closed
+      timeline.to(textElement, {
+        height: 0,
+        duration: 0.4,
+        ease: 'power2.inOut'
+      }, position);
+    }
+  }
+
+  // Create an accordion instance for each wrapper
+  accordionComponents.forEach(wrapper => {
+    new Accordion(wrapper);
+  });
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -825,6 +967,7 @@ const init = () => {
   workScrollLock();
   compassScrollLock();
   workGridMasonry();
+  accordionSection();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
