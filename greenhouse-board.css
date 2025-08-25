@@ -1,0 +1,9 @@
+body {
+  background-color: transparent !important;
+  padding: 1px;
+}
+
+main.main {
+  max-width: 100% !important;
+  padding: 0 !important;
+}
