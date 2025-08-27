@@ -168,7 +168,7 @@ function initScrollAnimations(){
 function swipers() {
 	// Podcast Slider
   if (document.querySelector(".swiper.podcast-eps_slider_main-swiper")) {
-    console.log("podcast swiper(s) exists");
+    // console.log("podcast swiper(s) exists");
     const podcastSwiperWraps = document.querySelectorAll(".podcast-eps_wrap");
     podcastSwiperWraps.forEach((wrap) => {
       const mainSwiperEl = wrap.querySelector(".swiper.podcast-eps_slider_main-swiper");
@@ -262,7 +262,7 @@ function swipers() {
 
   // Two-Image Slider
   if (document.querySelector(".swiper.two-image-slider_main_swiper")) {
-    console.log("two-image swiper(s) exists");
+    // console.log("two-image swiper(s) exists");
     const twoImageSwiperWraps = document.querySelectorAll(".two-image-slider_wrap");
     twoImageSwiperWraps.forEach((wrap) => {
       const mainSwiperEl = wrap.querySelector(".swiper.two-image-slider_main_swiper");
@@ -958,6 +958,44 @@ function accordionSection(){
   });
 }
 
+// Timeline Accordion
+function timelineAccordion() {
+  document.querySelectorAll('.timeline-accordion_accordion_item').forEach(item => {
+    const header = item.querySelector('.timeline-accordion_accordion_header');
+    const body = item.querySelector('.timeline-accordion_accordion_body');
+    
+    // Set initial state
+    gsap.set(body, { height: 0, paddingBottom: 0, overflow: 'hidden' });
+    item.dataset.isOpen = 'false';
+    
+    // Add click listener to header
+    header?.addEventListener('click', () => {
+      const isOpen = item.dataset.isOpen === 'true';
+      
+      if (!isOpen) {
+        gsap.fromTo(body, {
+          height: 0,
+          paddingBottom: 0
+        }, {
+          height: 'auto',
+          paddingBottom: '1rem',
+          duration: 0.5,
+          ease: 'power2.inOut'
+        });
+        item.dataset.isOpen = 'true';
+      } else {
+        gsap.to(body, {
+          height: 0,
+          paddingBottom: 0,
+          duration: 0.4,
+          ease: 'power2.inOut'
+        });
+        item.dataset.isOpen = 'false';
+      }
+    });
+  });
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -968,6 +1006,7 @@ const init = () => {
   compassScrollLock();
   workGridMasonry();
   accordionSection();
+  timelineAccordion();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
