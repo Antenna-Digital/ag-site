@@ -105,12 +105,22 @@ function initScrollAnimations(){
     // Animate each group with its own stagger
     Object.entries(inViewByType).forEach(([animType, elements]) => {
       const config = configs[animType] || configs['fadeslide-up'];
-      gsap.to(elements, {
-        ...config.animateProps,
-        duration: config.duration,
-        ease: "power3.out",
-        stagger: config.stagger,
-        overwrite: 'auto'
+      
+      // Sort elements by their position for consistent stagger order
+      elements.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+      
+      elements.forEach((el, index) => {
+        const customDelay = parseInt(el.getAttribute('data-anim-delay') || 0) / 1000; // Convert ms to seconds
+        const staggerDelay = index * config.stagger;
+        const totalDelay = staggerDelay + customDelay;
+        
+        gsap.to(el, {
+          ...config.animateProps,
+          duration: config.duration,
+          ease: "power3.out",
+          delay: totalDelay,
+          overwrite: 'auto'
+        });
       });
     });
   }
@@ -126,15 +136,26 @@ function initScrollAnimations(){
     function flushQueue(animType) {
       const queue = queues[animType];
       if (!queue || !queue.length) return;
-
+    
       const config = configs[animType] || configs['fadeslide-up'];
-      gsap.to(queue, {
-        ...config.animateProps,
-        duration: config.duration,
-        ease: "power3.out",
-        stagger: config.stagger,
-        overwrite: 'auto'
+      
+      // Sort queue by position for consistent stagger
+      queue.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+      
+      queue.forEach((el, index) => {
+        const customDelay = parseInt(el.getAttribute('data-anim-delay') || 0) / 1000; // Convert ms to seconds
+        const staggerDelay = index * config.stagger;
+        const totalDelay = staggerDelay + customDelay;
+        
+        gsap.to(el, {
+          ...config.animateProps,
+          duration: config.duration,
+          ease: "power3.out",
+          delay: totalDelay,
+          overwrite: 'auto'
+        });
       });
+      
       queues[animType] = [];
     }
 
