@@ -1148,9 +1148,6 @@ function marquees() {
         return;
       }
       
-      // Detect iOS for specific optimizations
-      this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      
       // Calculate and set optimal animation duration
       this.calculateDuration();
       
@@ -1161,13 +1158,6 @@ function marquees() {
       this.element.setAttribute('data-marquee-pause-on-hover', this.options.pauseOnHover ? 'true' : 'false');
       this.element.setAttribute('data-marquee-fade', this.options.fadeEdges ? 'true' : 'false');
       this.element.setAttribute('data-marquee-smooth', this.options.smooth ? 'true' : 'false');
-      
-      // iOS-specific setup
-      if (this.isIOS) {
-        this.element.setAttribute('data-marquee-ios', 'true');
-        // Reduce observer frequency on iOS for better performance
-        this.options.observeResize = false;
-      }
       
       // Set up observers
       if (this.options.observeResize) {
@@ -1181,12 +1171,8 @@ function marquees() {
       delete this.element.dataset.marqueeLoading;
       this.element.dataset.marqueeLoaded = 'true';
       
-      // Ensure smooth start with delay for iOS
-      if (this.isIOS) {
-        setTimeout(() => this.syncAnimations(), 100);
-      } else {
-        this.syncAnimations();
-      }
+      // Ensure smooth start
+      this.syncAnimations();
     }
     
     calculateDuration() {
@@ -1218,10 +1204,7 @@ function marquees() {
       
       // Calculate the actual content width
       const contentWidth = innerContent.scrollWidth;
-      
-      // For iOS, add a small buffer to prevent flicker
-      const buffer = this.isIOS ? 2 : 0;
-      const totalWidth = contentWidth + gap - buffer;
+      const totalWidth = contentWidth + gap;
       
       // Get the current pixels per second value (may have been updated)
       const currentSpeed = parseFloat(this.getConfig('speed', this.options.pixelsPerSecond));
@@ -1239,35 +1222,21 @@ function marquees() {
     
     syncAnimations() {
       // Ensure all duplicate content animations are synchronized
-      this.contents.forEach((content, index) => {
+      this.contents.forEach((content) => {
         // Reset animation
         content.style.animation = 'none';
         // Remove any inline animation-play-state that might interfere
         content.style.animationPlayState = '';
-        
-        // Force reflow - critical for iOS
-        void content.offsetHeight;
+        content.offsetHeight; // Trigger reflow
         
         // Start all animations at the same time
-        const animationName = this.isIOS ? 'marqueeScrollIOS' : 'marqueeScroll';
+        const animationName = 'marqueeScroll';
         const duration = `var(--marquee-duration, ${this.duration}s)`;
         const timing = 'linear';
         const iterations = 'infinite';
         const direction = this.isReversed ? 'reverse' : 'normal';
         
-        if (this.isIOS) {
-          // iOS: Start all copies at slightly different positions to prevent flicker
-          const offset = index * (100 / this.contents.length);
-          content.style.transform = `translateX(${offset}%)`;
-          content.style.webkitTransform = `translateX(${offset}%)`;
-          
-          // Apply animation with calculated delay to maintain offset
-          const delay = (this.duration * offset / 100);
-          content.style.animation = `${animationName} ${duration} ${timing} -${delay}s ${iterations} ${direction}`;
-          content.style.webkitAnimation = `${animationName} ${duration} ${timing} -${delay}s ${iterations} ${direction}`;
-        } else {
-          content.style.animation = `${animationName} ${duration} ${timing} ${iterations} ${direction}`;
-        }
+        content.style.animation = `${animationName} ${duration} ${timing} ${iterations} ${direction}`;
         
         // Only apply inline play state if explicitly paused
         if (this.isPaused) {
@@ -1384,6 +1353,20 @@ function marquees() {
     const controller = new MarqueeController(element);
     controllers.push(controller);
   });
+
+  // For Webflow Integration:
+  // 
+  // Option 1: Use data attributes directly in Webflow
+  // <div data-marquee data-marquee-speed="100">
+  // 
+  // Option 2: Use inline CSS variable
+  // <div data-marquee style="--marquee-pixels-per-second: 100">
+  // 
+  // Option 3: Use Webflow's custom code embed
+  // document.querySelector('[data-marquee]').dataset.marqueeSpeed = 100;
+  // 
+  // Option 4: Initialize with options in custom code
+  // new MarqueeController(element, { pixelsPerSecond: 100 });
 }
 
 // Init Function
