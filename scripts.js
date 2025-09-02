@@ -1074,274 +1074,275 @@ function marquees() {
   // Progressive enhancement for CSS-only marquee
   // Uses data attributes for structure-agnostic implementation
   class MarqueeController {
-  constructor(element, options = {}) {
-    this.element = element;
-    
-    // Read configuration from data attributes or options
-    this.options = {
-      pixelsPerSecond: this.getConfig('speed', 75),
-      pauseOnHover: this.getConfig('pauseOnHover', true),
-      fadeEdges: this.getConfig('fade', true),
-      smooth: this.getConfig('smooth', true),
-      observeResize: true,
-      ...options
-    };
-    
-    this.isPaused = false;
-    this.isReversed = false;
-    this.resizeObserver = null;
-    this.mutationObserver = null;
-    
-    this.init();
-  }
-  
-  getConfig(attr, defaultValue) {
-    // Check multiple sources for configuration
-    // 1. Data attribute (e.g., data-marquee-speed)
-    const attrName = `marquee${attr.charAt(0).toUpperCase() + attr.slice(1)}`;
-    const dataAttr = this.element.dataset[attrName];
-    
-    if (dataAttr !== undefined) {
-      // Handle boolean values
-      if (dataAttr === 'true') return true;
-      if (dataAttr === 'false') return false;
-      // Return other values as-is
-      return dataAttr;
+    constructor(element, options = {}) {
+      this.element = element;
+      
+      // Read configuration from data attributes or options
+      this.options = {
+        pixelsPerSecond: this.getConfig('speed', 75),
+        pauseOnHover: this.getConfig('pauseOnHover', true),
+        fadeEdges: this.getConfig('fade', true),
+        smooth: this.getConfig('smooth', true),
+        observeResize: true,
+        ...options
+      };
+      
+      this.isPaused = false;
+      this.isReversed = false;
+      this.resizeObserver = null;
+      this.mutationObserver = null;
+      
+      this.init();
     }
     
-    // 2. CSS variable (e.g., --marquee-pixels-per-second)
-    if (attr === 'speed') {
-      const cssVar = getComputedStyle(this.element).getPropertyValue('--marquee-pixels-per-second');
-      if (cssVar) {
-        return parseFloat(cssVar);
+    getConfig(attr, defaultValue) {
+      // Check multiple sources for configuration
+      // 1. Data attribute (e.g., data-marquee-speed)
+      const attrName = `marquee${attr.charAt(0).toUpperCase() + attr.slice(1)}`;
+      const dataAttr = this.element.dataset[attrName];
+      
+      if (dataAttr !== undefined) {
+        // Handle boolean values
+        if (dataAttr === 'true') return true;
+        if (dataAttr === 'false') return false;
+        // Return other values as-is
+        return dataAttr;
+      }
+      
+      // 2. CSS variable (e.g., --marquee-pixels-per-second)
+      if (attr === 'speed') {
+        const cssVar = getComputedStyle(this.element).getPropertyValue('--marquee-pixels-per-second');
+        if (cssVar) {
+          return parseFloat(cssVar);
+        }
+      }
+      
+      // 3. Inline style variable
+      const inlineStyle = this.element.style.getPropertyValue(`--marquee-${attr}`);
+      if (inlineStyle) {
+        return inlineStyle;
+      }
+      
+      return defaultValue;
+    }
+    
+    init() {
+      // Add loading state
+      this.element.dataset.marqueeLoading = 'true';
+      
+      // Wait for content to load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.setup());
+      } else {
+        this.setup();
       }
     }
     
-    // 3. Inline style variable
-    const inlineStyle = this.element.style.getPropertyValue(`--marquee-${attr}`);
-    if (inlineStyle) {
-      return inlineStyle;
+    setup() {
+      // Get elements using data attributes
+      this.wrapper = this.element.querySelector('[data-marquee-inner]');
+      this.contents = this.element.querySelectorAll('[data-marquee-content]');
+      
+      if (!this.wrapper || !this.contents.length) {
+        console.warn('Marquee: Required elements not found');
+        return;
+      }
+      
+      // Calculate and set optimal animation duration
+      this.calculateDuration();
+      
+      // Apply enhancements
+      this.element.dataset.marqueeEnhanced = 'true';
+      
+      // Set initial data attributes based on options using setAttribute
+      this.element.setAttribute('data-marquee-pause-on-hover', this.options.pauseOnHover ? 'true' : 'false');
+      this.element.setAttribute('data-marquee-fade', this.options.fadeEdges ? 'true' : 'false');
+      this.element.setAttribute('data-marquee-smooth', this.options.smooth ? 'true' : 'false');
+      
+      // Set up observers
+      if (this.options.observeResize) {
+        this.observeSize();
+      }
+      
+      // Watch for content changes
+      this.observeContent();
+      
+      // Remove loading state
+      delete this.element.dataset.marqueeLoading;
+      this.element.dataset.marqueeLoaded = 'true';
+      
+      // Ensure smooth start
+      this.syncAnimations();
     }
     
-    return defaultValue;
-  }
-  
-  init() {
-    // Add loading state
-    this.element.dataset.marqueeLoading = 'true';
-    
-    // Wait for content to load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.setup());
-    } else {
-      this.setup();
+    calculateDuration() {
+      const firstContent = this.contents[0];
+      if (!firstContent) return;
+      
+      // Force a layout recalculation to get accurate measurements
+      firstContent.style.display = 'none';
+      firstContent.offsetHeight; // Trigger reflow
+      firstContent.style.display = '';
+      
+      // Get computed styles for accurate gap calculation
+      const computedStyle = window.getComputedStyle(this.element);
+      const gapValue = computedStyle.getPropertyValue('--marquee-gap').trim();
+      
+      // Parse the gap value properly (handles clamp, rem, px, etc.)
+      let gap = 0;
+      const tempEl = document.createElement('div');
+      tempEl.style.width = gapValue;
+      tempEl.style.position = 'absolute';
+      tempEl.style.visibility = 'hidden';
+      document.body.appendChild(tempEl);
+      gap = tempEl.getBoundingClientRect().width;
+      document.body.removeChild(tempEl);
+      
+      // Get the inner content wrapper for accurate width
+      const innerContent = firstContent.querySelector('[data-marquee-items]');
+      if (!innerContent) return;
+      
+      // Calculate the actual content width
+      const contentWidth = innerContent.scrollWidth;
+      const totalWidth = contentWidth + gap;
+      
+      // Get the current pixels per second value (may have been updated)
+      const currentSpeed = parseFloat(this.getConfig('speed', this.options.pixelsPerSecond));
+      
+      // Calculate duration based on desired speed
+      const duration = totalWidth / currentSpeed;
+      
+      // Set CSS variable for animation duration
+      this.element.style.setProperty('--marquee-duration', `${duration}s`);
+      
+      // Store for later use
+      this.duration = duration;
+      this.contentWidth = totalWidth;
     }
-  }
-  
-  setup() {
-    // Get elements using data attributes
-    this.wrapper = this.element.querySelector('[data-marquee-inner]');
-    this.contents = this.element.querySelectorAll('[data-marquee-content]');
     
-    if (!this.wrapper || !this.contents.length) {
-      console.warn('Marquee: Required elements not found');
-      return;
+    syncAnimations() {
+      // Ensure all duplicate content animations are synchronized
+      this.contents.forEach((content) => {
+        // Reset animation
+        content.style.animation = 'none';
+        // Remove any inline animation-play-state that might interfere
+        content.style.animationPlayState = '';
+        content.offsetHeight; // Trigger reflow
+        
+        // Start all animations at the same time
+        const animationName = 'marqueeScroll';
+        const duration = `var(--marquee-duration, ${this.duration}s)`;
+        const timing = 'linear';
+        const iterations = 'infinite';
+        const direction = this.isReversed ? 'reverse' : 'normal';
+        
+        content.style.animation = `${animationName} ${duration} ${timing} ${iterations} ${direction}`;
+        
+        // Only apply inline play state if explicitly paused
+        if (this.isPaused) {
+          content.style.animationPlayState = 'paused';
+        }
+      });
     }
     
-    // Detect iOS
-    this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
-    // Calculate and set optimal animation duration
-    this.calculateDuration();
-    
-    // Apply enhancements
-    this.element.dataset.marqueeEnhanced = 'true';
-    
-    // Set initial data attributes based on options
-    this.element.setAttribute('data-marquee-pause-on-hover', this.options.pauseOnHover ? 'true' : 'false');
-    this.element.setAttribute('data-marquee-fade', this.options.fadeEdges ? 'true' : 'false');
-    this.element.setAttribute('data-marquee-smooth', this.options.smooth ? 'true' : 'false');
-    
-    // Set up observers (but throttle on iOS)
-    if (this.options.observeResize && !this.isIOS) {
-      this.observeSize();
+    updateOptions(newOptions) {
+      Object.assign(this.options, newOptions);
+      
+      // Update CSS variables and data attributes
+      if (newOptions.pixelsPerSecond !== undefined) {
+        this.element.dataset.marqueeSpeed = newOptions.pixelsPerSecond;
+        this.element.style.setProperty('--marquee-pixels-per-second', newOptions.pixelsPerSecond);
+        this.calculateDuration();
+        this.syncAnimations();
+      }
+      
+      // Update pause on hover - use setAttribute for reliability
+      if (newOptions.pauseOnHover !== undefined) {
+        const value = newOptions.pauseOnHover ? 'true' : 'false';
+        this.element.setAttribute('data-marquee-pause-on-hover', value);
+        // Also update the options to keep in sync
+        this.options.pauseOnHover = newOptions.pauseOnHover;
+      }
+      
+      // Update fade edges - use setAttribute for reliability
+      if (newOptions.fadeEdges !== undefined) {
+        this.element.setAttribute('data-marquee-fade', newOptions.fadeEdges ? 'true' : 'false');
+      }
+      
+      // Update smooth transitions
+      if (newOptions.smooth !== undefined) {
+        this.element.setAttribute('data-marquee-smooth', newOptions.smooth ? 'true' : 'false');
+      }
     }
     
-    // Watch for content changes
-    this.observeContent();
+    play() {
+      this.isPaused = false;
+      this.element.dataset.marqueePaused = 'false';
+      this.contents.forEach(content => {
+        // Remove inline style to allow CSS hover to work
+        content.style.animationPlayState = '';
+      });
+    }
     
-    // Remove loading state
-    delete this.element.dataset.marqueeLoading;
-    this.element.dataset.marqueeLoaded = 'true';
-    
-    // Start animations
-    this.syncAnimations();
-  }
-  
-  calculateDuration() {
-    const firstContent = this.contents[0];
-    if (!firstContent) return;
-    
-    // Get computed styles for accurate gap calculation
-    const computedStyle = window.getComputedStyle(this.element);
-    const gapValue = computedStyle.getPropertyValue('--marquee-gap').trim();
-    
-    // Parse the gap value properly
-    let gap = 0;
-    const tempEl = document.createElement('div');
-    tempEl.style.width = gapValue;
-    tempEl.style.position = 'absolute';
-    tempEl.style.visibility = 'hidden';
-    document.body.appendChild(tempEl);
-    gap = tempEl.getBoundingClientRect().width;
-    document.body.removeChild(tempEl);
-    
-    // Get the inner content wrapper for accurate width
-    const innerContent = firstContent.querySelector('[data-marquee-items]');
-    if (!innerContent) return;
-    
-    // Calculate the actual content width
-    const contentWidth = innerContent.scrollWidth;
-    const totalWidth = contentWidth + gap;
-    
-    // Get the current pixels per second value
-    const currentSpeed = parseFloat(this.getConfig('speed', this.options.pixelsPerSecond));
-    
-    // Calculate duration based on desired speed
-    const duration = totalWidth / currentSpeed;
-    
-    // Set CSS variable for animation duration
-    this.element.style.setProperty('--marquee-duration', `${duration}s`);
-    
-    // Store for later use
-    this.duration = duration;
-    this.contentWidth = totalWidth;
-  }
-  
-  syncAnimations() {
-    // Simple, consistent animation setup
-    this.contents.forEach((content) => {
-      // Reset animation
-      content.style.animation = 'none';
-      content.style.animationPlayState = '';
-      content.style.transform = '';
-      content.style.webkitTransform = '';
-      
-      // Force reflow
-      void content.offsetHeight;
-      
-      // Apply same animation to all copies
-      const duration = this.duration ? `${this.duration}s` : 'var(--marquee-speed)';
-      const direction = this.isReversed ? 'reverse' : 'normal';
-      
-      // Simple animation string
-      content.style.animation = `marqueeScroll ${duration} linear infinite ${direction}`;
-      
-      // Only apply pause state if explicitly paused
-      if (this.isPaused) {
+    pause() {
+      this.isPaused = true;
+      this.element.dataset.marqueePaused = 'true';
+      this.contents.forEach(content => {
         content.style.animationPlayState = 'paused';
+      });
+    }
+    
+    reverse() {
+      this.isReversed = !this.isReversed;
+      this.element.dataset.marqueeDirection = this.isReversed ? 'reverse' : 'normal';
+      this.syncAnimations();
+    }
+    
+    reset() {
+      this.isReversed = false;
+      this.isPaused = false;
+      this.element.dataset.marqueePaused = 'false';
+      this.element.dataset.marqueeDirection = 'normal';
+      this.calculateDuration();
+      this.syncAnimations();
+    }
+    
+    observeSize() {
+      // Recalculate on resize
+      this.resizeObserver = new ResizeObserver(() => {
+        this.calculateDuration();
+        this.syncAnimations();
+      });
+      
+      this.resizeObserver.observe(this.element);
+      this.resizeObserver.observe(this.contents[0]);
+    }
+    
+    observeContent() {
+      // Watch for content changes
+      this.mutationObserver = new MutationObserver(() => {
+        this.calculateDuration();
+        this.syncAnimations();
+      });
+      
+      this.mutationObserver.observe(this.contents[0], {
+        childList: true,
+        subtree: true
+      });
+    }
+    
+    destroy() {
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
       }
-    });
-  }
-  
-  updateOptions(newOptions) {
-    Object.assign(this.options, newOptions);
-    
-    // Update CSS variables and data attributes
-    if (newOptions.pixelsPerSecond !== undefined) {
-      this.element.dataset.marqueeSpeed = newOptions.pixelsPerSecond;
-      this.element.style.setProperty('--marquee-pixels-per-second', newOptions.pixelsPerSecond);
-      this.calculateDuration();
-      this.syncAnimations();
-    }
-    
-    // Update pause on hover - use setAttribute for reliability
-    if (newOptions.pauseOnHover !== undefined) {
-      const value = newOptions.pauseOnHover ? 'true' : 'false';
-      this.element.setAttribute('data-marquee-pause-on-hover', value);
-      // Also update the options to keep in sync
-      this.options.pauseOnHover = newOptions.pauseOnHover;
-    }
-    
-    // Update fade edges - use setAttribute for reliability
-    if (newOptions.fadeEdges !== undefined) {
-      this.element.setAttribute('data-marquee-fade', newOptions.fadeEdges ? 'true' : 'false');
-    }
-    
-    // Update smooth transitions
-    if (newOptions.smooth !== undefined) {
-      this.element.setAttribute('data-marquee-smooth', newOptions.smooth ? 'true' : 'false');
+      if (this.mutationObserver) {
+        this.mutationObserver.disconnect();
+      }
+      delete this.element.dataset.marqueeEnhanced;
+      delete this.element.dataset.marqueeLoaded;
+      this.element.style.removeProperty('--marquee-duration');
     }
   }
-  
-  play() {
-    this.isPaused = false;
-    this.element.dataset.marqueePaused = 'false';
-    this.contents.forEach(content => {
-      // Remove inline style to allow CSS hover to work
-      content.style.animationPlayState = '';
-    });
-  }
-  
-  pause() {
-    this.isPaused = true;
-    this.element.dataset.marqueePaused = 'true';
-    this.contents.forEach(content => {
-      content.style.animationPlayState = 'paused';
-    });
-  }
-  
-  reverse() {
-    this.isReversed = !this.isReversed;
-    this.element.dataset.marqueeDirection = this.isReversed ? 'reverse' : 'normal';
-    this.syncAnimations();
-  }
-  
-  reset() {
-    this.isReversed = false;
-    this.isPaused = false;
-    this.element.dataset.marqueePaused = 'false';
-    this.element.dataset.marqueeDirection = 'normal';
-    this.calculateDuration();
-    this.syncAnimations();
-  }
-  
-  observeSize() {
-    // Recalculate on resize
-    this.resizeObserver = new ResizeObserver(() => {
-      this.calculateDuration();
-      this.syncAnimations();
-    });
-    
-    this.resizeObserver.observe(this.element);
-    this.resizeObserver.observe(this.contents[0]);
-  }
-  
-  observeContent() {
-    // Watch for content changes
-    this.mutationObserver = new MutationObserver(() => {
-      this.calculateDuration();
-      this.syncAnimations();
-    });
-    
-    this.mutationObserver.observe(this.contents[0], {
-      childList: true,
-      subtree: true
-    });
-  }
-  
-  destroy() {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-    if (this.mutationObserver) {
-      this.mutationObserver.disconnect();
-    }
-    delete this.element.dataset.marqueeEnhanced;
-    delete this.element.dataset.marqueeLoaded;
-    this.element.style.removeProperty('--marquee-duration');
-  }
-}
   
   // Auto-initialize all marquees
   const marquees = document.querySelectorAll('[data-marquee]');
