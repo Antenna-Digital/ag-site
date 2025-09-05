@@ -665,6 +665,9 @@ function compassScrollLock() {
       const progress = self.progress;
       const activeIndex = Math.floor(progress * itemCount);
       const itemProgress = (progress * itemCount) % 1;
+  
+      // Get text elements
+      const textElements = gsap.utils.toArray('.compass_content_text');
       
       // Update list items
       listItems.forEach((item, index) => {
@@ -677,6 +680,15 @@ function compassScrollLock() {
         } else {
           item.classList.remove('is-active');
           gsap.set(item, { '--progress-width': '0%' });
+        }
+      });
+  
+      // Update text elements - only the current one is active
+      textElements.forEach((text, index) => {
+        if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
+          text.classList.add('is-active');
+        } else {
+          text.classList.remove('is-active');
         }
       });
       
@@ -1079,7 +1091,7 @@ function marquees() {
       
       // Read configuration from data attributes or options
       this.options = {
-        pixelsPerSecond: this.getConfig('speed', 75),
+        pixelsPerSecond: this.getConfig('speed', 50),
         pauseOnHover: this.getConfig('pauseOnHover', true),
         fadeEdges: this.getConfig('fade', true),
         smooth: this.getConfig('smooth', true),
