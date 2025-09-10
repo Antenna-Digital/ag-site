@@ -741,6 +741,44 @@ function workGridMasonry(){
   
   const getBrowserFontSize = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
   
+  // Store animation states before cleanup
+  const preserveAnimationStates = () => {
+    const items = document.querySelectorAll('.work-grid_collection_item');
+    const states = new Map();
+    
+    items.forEach(item => {
+      const animEl = item.querySelector('[data-anim]') || item;
+      if (animEl) {
+        const computed = getComputedStyle(animEl);
+        // Check if element has been animated (opacity > 0)
+        if (computed.opacity !== '0') {
+          states.set(animEl, {
+            opacity: computed.opacity,
+            transform: computed.transform
+          });
+        }
+      }
+    });
+    
+    return states;
+  };
+  
+  // Restore animation states after cleanup
+  const restoreAnimationStates = (states) => {
+    if (!states || states.size === 0) return;
+    
+    states.forEach((style, el) => {
+      if (el && document.contains(el)) {
+        gsap.set(el, {
+          opacity: style.opacity,
+          clearProps: 'transform', // Clear transform to let Macy handle positioning
+          immediateRender: true,
+          overwrite: 'auto'
+        });
+      }
+    });
+  };
+  
   const cleanupMacyStyles = () => {
     const listElement = document.querySelector('.work-grid_collection_list');
     const items = document.querySelectorAll('.work-grid_collection_item');
@@ -773,6 +811,9 @@ function workGridMasonry(){
 
     currentColumns = columns;
 
+    // Preserve animation states before destroying Macy
+    const animationStates = preserveAnimationStates();
+
     if (macyInstance) {
       macyInstance.remove();
       macyInstance = null;
@@ -795,10 +836,16 @@ function workGridMasonry(){
         
         macyInstance.runOnImageLoad(() => {
           macyInstance.recalculate(true);
+          // Restore animation states after Macy is done
+          restoreAnimationStates(animationStates);
         }, true);
       }, 10);
     } else {
-      setTimeout(cleanupMacyStyles, 100);
+      setTimeout(() => {
+        cleanupMacyStyles();
+        // Restore animation states after cleanup
+        restoreAnimationStates(animationStates);
+      }, 100);
     }
   };
 
