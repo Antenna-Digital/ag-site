@@ -402,30 +402,35 @@ function workScrollLock(){
         invalidateOnRefresh: true,
         pinSpacing: true,  // Explicitly set pin spacing
         // anticipatePin: 1,
-        scroller: document.body,
+        // scroller: document.body,
         // pinType: "transform",
         pinType: "fixed",
         // immediatePin: true,
         onUpdate: (self) => {
           // Update progress bar width based on scroll progress
           if (progressBar) {
+            // Adjust progress to account for padding
+            const adjustedProgress = Math.max(0, Math.min(1, (self.progress - 0.1) / 0.8));
             gsap.set(progressBar, {
-              width: `${self.progress * 100}%`
+              width: `${adjustedProgress * 100}%`
             });
           }
         }
       }
     });
     
-    // Horizontal scroll animation
+    // Add padding before animation starts (10% of timeline)
+    tl.to({}, { duration: 0.1 });
+    
+    // Horizontal scroll animation (80% of timeline)
     tl.to(collectionList, {
-      x: () => -getScrollDistance(), // Function-based value
-      ease: 'none'
+      x: () => -getScrollDistance(),
+      ease: 'none',
+      duration: 0.8
     });
     
-    collectionItems.forEach(item => {
-    });
-    
+    // Add padding after animation ends (10% of timeline)
+    tl.to({}, { duration: 0.1 });
   });
 
   // Refresh ScrollTrigger on window resize
