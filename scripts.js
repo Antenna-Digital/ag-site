@@ -202,6 +202,20 @@ function swipers() {
       const prevBtn = wrap.querySelector(".podcast-eps_slider_nav_prev");
       const nextBtn = wrap.querySelector(".podcast-eps_slider_nav_next");
 
+      const updateEpisodeNumber = () => {
+        const activeSlide = mainSwiperEl.querySelector('.swiper-slide-active');
+        const taglineStrong = wrap.querySelector('.podcast-eps_slider_tagline strong');
+
+        if (activeSlide && taglineStrong) {
+          const episodeNum = activeSlide.dataset.episodeNumber;
+          if (episodeNum) {
+            // Pad with leading zero if less than 10, otherwise use as-is
+            const formattedNum = episodeNum.padStart(2, '0');
+            taglineStrong.textContent = formattedNum;
+          }
+        }
+      };
+
       const mainSwiper = new Swiper(mainSwiperEl, {
         slidesPerView: 1,
         spaceBetween: 20,
@@ -217,6 +231,9 @@ function swipers() {
         // },
         navigation: false, // Disable default navigation
       });
+
+      mainSwiper.on('slideChange', updateEpisodeNumber);
+      mainSwiper.on('slideChangeTransitionEnd', updateEpisodeNumber);
 
       const thumbSwiper = new Swiper(thumbSwiperEl, {
         slidesPerView: 1,
@@ -251,6 +268,8 @@ function swipers() {
         // },
         navigation: false, // Disable default navigation
       });
+
+      updateEpisodeNumber();
 
       let isAnimating = false;
       const delay = 750;
