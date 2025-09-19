@@ -1438,6 +1438,23 @@ function marquees() {
   });
 }
 
+// Form Stuff
+function formStuff() {
+  // Listen to all jQuery AJAX events (success, error, etc.)
+  $(document).ajaxComplete(function (event, xhr, settings) {
+    if (settings.url.includes('/form/')) {
+      // console.log('AJAX completed:', event, xhr, settings);
+
+      if (xhr.status === 200) {
+        console.log('Form successfully submitted');
+        ScrollTrigger.refresh();
+      } else {
+        console.log('Form submission failed');
+      }
+    }
+  });
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -1451,6 +1468,7 @@ const init = () => {
   timelineAccordion();
   odometers();
   marquees();
+  formStuff();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
