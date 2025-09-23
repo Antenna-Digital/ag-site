@@ -1474,6 +1474,104 @@ function formStuff() {
   });
 }
 
+function expertiseStackNav() {
+  const stackItems = document.querySelectorAll('.expertise-stack_item');
+  const navContainer = document.querySelector('.expertise-stack_nav');
+  
+  if (!stackItems.length || !navContainer) return;
+  
+  // Store ScrollTrigger instances
+  const triggers = [];
+  
+  // Generate nav items dynamically
+  stackItems.forEach((item, index) => {
+    item.id = `expertise-item-${index}`;
+    
+    const navItem = document.createElement('a');
+    navItem.className = 'expertise-stack_nav_item';
+    navItem.href = `#expertise-item-${index}`;
+    navItem.innerHTML = '<span></span>';
+    
+    navContainer.appendChild(navItem);
+  });
+  
+  const navItems = document.querySelectorAll('.expertise-stack_nav_item');
+  
+  // Function to check and update active state based on scroll position
+  const updateActiveState = () => {
+    const threshold = window.innerHeight * 0.05; // 5% of viewport
+    let activeIndex = -1;
+    
+    // Find the last item that has its top at or above the threshold
+    stackItems.forEach((item, index) => {
+      const rect = item.getBoundingClientRect();
+      // If item's top is at or above the threshold zone, it could be the active one
+      if (rect.top <= threshold) {
+        activeIndex = index;
+      }
+    });
+    
+    // Update all nav items - only one should be active
+    navItems.forEach((nav, index) => {
+      nav.classList.toggle('is-active', index === activeIndex);
+    });
+  };
+  
+  // Create ScrollTriggers (keep for reference positions)
+  stackItems.forEach((item, index) => {
+    const trigger = ScrollTrigger.create({
+      trigger: item,
+      start: "top top",
+      end: "bottom top",
+      pin: false
+    });
+    
+    triggers.push(trigger);
+  });
+  
+  // Click navigation
+  navItems.forEach((navItem, clickIndex) => {
+    navItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      if (window.lenis) {
+        window.lenis.stop();
+      }
+      
+      const trigger = triggers[clickIndex];
+      if (!trigger) return;
+      
+      const targetPosition = trigger.start + 1;
+      
+      if (window.lenis) {
+        window.lenis.scrollTo(targetPosition, {
+          duration: 1,
+          immediate: false,
+          force: true,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+        });
+      } else {
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+  
+  // Listen to scroll events to update active state
+  window.addEventListener('scroll', updateActiveState, { passive: true });
+  
+  // Initial check
+  updateActiveState();
+  
+  // Refresh ScrollTrigger positions on resize
+  window.addEventListener('resize', () => {
+    ScrollTrigger.refresh();
+    updateActiveState();
+  });
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -1488,6 +1586,7 @@ const init = () => {
   odometers();
   marquees();
   formStuff();
+  expertiseStackNav();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
