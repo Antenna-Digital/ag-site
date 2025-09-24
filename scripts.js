@@ -1487,9 +1487,11 @@ function expertiseStackNav() {
   stackItems.forEach((item, index) => {
     item.id = `expertise-item-${index}`;
     
-    const navItem = document.createElement('a');
+    // Use button instead of anchor to avoid URL hash
+    const navItem = document.createElement('button');
     navItem.className = 'expertise-stack_nav_item';
-    navItem.href = `#expertise-item-${index}`;
+    navItem.setAttribute('data-index', index);
+    navItem.setAttribute('aria-label', `Go to section ${index + 1}`);
     navItem.innerHTML = '<span></span>';
     
     navContainer.appendChild(navItem);
@@ -1545,7 +1547,7 @@ function expertiseStackNav() {
       
       if (window.lenis) {
         window.lenis.scrollTo(targetPosition, {
-          duration: 1,
+          duration: 1.2,
           immediate: false,
           force: true,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
