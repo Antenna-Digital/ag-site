@@ -745,6 +745,100 @@ function compassScrollLock() {
   return compassTrigger;
 }
 
+// Split Panel Scroll Lock Section
+function splitScrollLock() {
+  // Get elements
+  const scrollWrap = document.querySelector('.split-scroll-lock_contain.u-container-large');
+  const listItems = gsap.utils.toArray('.split-scroll-lock_content_list_item');
+  const textWrap = document.querySelector('.split-scroll-lock_content_text_wrap');
+  const textElements = textWrap ? gsap.utils.toArray('.split-scroll-lock_content_text_wrap > *') : [];
+  const outerImages = gsap.utils.toArray('.split-scroll-lock_graphic_outer_image');
+  const innerImages = gsap.utils.toArray('.split-scroll-lock_graphic_inner_image');
+  const itemCount = listItems.length;
+  
+  // Exit if elements don't exist
+  if (!scrollWrap || itemCount === 0) return;
+
+  // Image transition mapping - define which images are active at each step
+  const imageStates = [
+    { outer: 0, inner: 0 }, // State 1
+    { outer: 1, inner: 1 }, // State 2  
+    { outer: 2, inner: 2 }  // State 3
+  ];
+
+  let currentImageState = -1;
+
+  // Function to update active images
+  function updateActiveImages(stateIndex) {
+    if (stateIndex === currentImageState) return;
+    
+    // Remove all active classes
+    outerImages.forEach(img => img.classList.remove('is-active'));
+    innerImages.forEach(img => img.classList.remove('is-active'));
+    
+    // Add active class to current state images
+    if (stateIndex >= 0 && stateIndex < imageStates.length) {
+      const state = imageStates[stateIndex];
+      
+      if (outerImages[state.outer]) {
+        outerImages[state.outer].classList.add('is-active');
+      }
+      if (innerImages[state.inner]) {
+        innerImages[state.inner].classList.add('is-active');
+      }
+    }
+    
+    currentImageState = stateIndex;
+  }
+
+  // Initialize first state
+  updateActiveImages(0);
+  
+  // Create the main ScrollTrigger
+  const splitScrollTrigger = ScrollTrigger.create({
+    trigger: scrollWrap,
+    start: 'center center',
+    end: `+=${itemCount * 100}%`,
+    pin: true,
+    pinSpacing: true,
+    scrub: 1,
+    onUpdate: (self) => {
+      const progress = self.progress;
+      const activeIndex = Math.floor(progress * itemCount);
+      const itemProgress = (progress * itemCount) % 1;
+  
+      // Update list items with progress
+      listItems.forEach((item, index) => {
+        if (index < activeIndex) {
+          item.classList.add('is-active');
+          gsap.set(item, { '--progress-width': '100%' });
+        } else if (index === activeIndex) {
+          item.classList.add('is-active');
+          gsap.set(item, { '--progress-width': `${itemProgress * 100}%` });
+        } else {
+          item.classList.remove('is-active');
+          gsap.set(item, { '--progress-width': '0%' });
+        }
+      });
+  
+      // Update text elements - only the current one is active
+      textElements.forEach((text, index) => {
+        if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
+          text.classList.add('is-active');
+        } else {
+          text.classList.remove('is-active');
+        }
+      });
+      
+      // Update images based on section
+      const sectionIndex = Math.min(activeIndex, imageStates.length - 1);
+      updateActiveImages(sectionIndex);
+    }
+  });
+  
+  return splitScrollTrigger;
+}
+
 // Work Grid Masonry
 function workGridMasonry(){
   if (typeof Macy === 'undefined') {
@@ -1151,7 +1245,7 @@ function odometers() {
   }
 }
 
-// Marquee
+// Marquees
 function marquees() {
   // Enhanced Marquee Controller
   // Progressive enhancement for CSS-only marquee
@@ -1474,6 +1568,7 @@ function formStuff() {
   });
 }
 
+// Expertise Stack Section
 function expertiseStackNav() {
   const stackItems = document.querySelectorAll('.expertise-stack_item');
   const navContainer = document.querySelector('.expertise-stack_nav');
@@ -1582,6 +1677,7 @@ const init = () => {
   swipers();
   workScrollLock();
   compassScrollLock();
+  splitScrollLock();
   workGridMasonry();
   accordionSection();
   timelineAccordion();
