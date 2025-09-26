@@ -759,10 +759,41 @@ function splitScrollLock() {
   // Exit if elements don't exist
   if (!scrollWrap || itemCount === 0) return;
 
+  // Function to calculate and set min-height for text wrap
+  function updateTextWrapHeight() {
+    if (!textWrap || textElements.length === 0) return;
+    
+    // Reset min-height to auto to get natural heights
+    textWrap.style.minHeight = 'auto';
+    
+    // Calculate tallest element height (excluding margin)
+    let maxHeight = 0;
+    textElements.forEach(element => {
+      const height = element.getBoundingClientRect().height;
+      maxHeight = Math.max(maxHeight, height);
+    });
+    
+    // Set min-height
+    textWrap.style.minHeight = `${maxHeight}px`;
+  }
+
+  // Initial height calculation
+  updateTextWrapHeight();
+  
+  // Set up resize observer for responsive height updates
+  const resizeObserver = new ResizeObserver(() => {
+    updateTextWrapHeight();
+  });
+  
+  // Observe the text wrap for size changes
+  if (textWrap) {
+    resizeObserver.observe(textWrap);
+  }
+
   // Image transition mapping - define which images are active at each step
   const imageStates = [
     { outer: 0, inner: 0 }, // State 1
-    { outer: 1, inner: 1 }, // State 2  
+    { outer: 1, inner: 1 }, // State 2
     { outer: 2, inner: 2 }  // State 3
   ];
 
@@ -835,6 +866,14 @@ function splitScrollLock() {
       updateActiveImages(sectionIndex);
     }
   });
+  
+  // Handle ScrollTrigger refresh on window resize
+  window.addEventListener('resize', () => {
+    ScrollTrigger.refresh();
+  });
+  
+  // Cleanup function if needed
+  splitScrollTrigger.resizeObserver = resizeObserver;
   
   return splitScrollTrigger;
 }
