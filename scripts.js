@@ -832,6 +832,7 @@ function splitScrollLock() {
     end: `+=${itemCount * 100}%`,
     pin: true,
     pinSpacing: true,
+    pinType: 'fixed',
     scrub: 1,
     onUpdate: (self) => {
       const progress = self.progress;
@@ -1605,6 +1606,36 @@ function formStuff() {
   window.HubSpotConversations?.on?.('conversationStarted', function() {
     ScrollTrigger.refresh();
   });
+
+
+  // Compass Form
+  const form = document.getElementById('assessment-form');
+  
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get all select elements within the form
+      const selects = form.querySelectorAll('select');
+      
+      // Check if all selects have "yes" as their value
+      let allYes = true;
+      
+      for (let select of selects) {
+        if (select.value.toLowerCase() !== 'yes') {
+          allYes = false;
+          break;
+        }
+      }
+      
+      // Redirect based on the result
+      if (allYes) {
+        window.location.href = 'https://fullyconscious.com/self-assessment';
+      } else {
+        window.location.href = 'https://fullyconscious.com/self-assessment?contact=true';
+      }
+    });
+  }
 }
 
 // Expertise Stack Section
@@ -1708,6 +1739,87 @@ function expertiseStackNav() {
   });
 }
 
+// Hero Vanta BG
+function heroVantaBG() {
+  // Theme configurations
+  const VANTA_THEMES = {
+    'blue-white': {
+      highlightColor: 0xb9c5cc,
+      midtoneColor: 0xdee7e8,
+      lowlightColor: 0xfcfcfc,
+      baseColor: 0xf2f2f2,
+      blurFactor: 0.90,
+      speed: 1.80,
+      zoom: 0.5
+    },
+    'red-orange': {
+      highlightColor: 0xd46a35,
+      midtoneColor: 0xe2e65a,
+      lowlightColor: 0xd4e3ef,
+      baseColor: 0xbfcdd9,
+      blurFactor: 0.9,
+      speed: 1.80,
+      zoom: 0.6
+    }
+  };
+  
+  // Change this to select your desired theme
+  const SELECTED_THEME = 'blue-white'; // or 'red-orange'
+  
+  let vantaEffect = null;
+  
+  // Initialize Vanta effect
+  function initVanta() {
+    const container = document.getElementById('vanta-bg');
+    
+    if (!container) {
+      console.error('Vanta container not found');
+      return;
+    }
+    
+    try {
+      vantaEffect = VANTA.FOG({
+        el: container,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        scaleMobile: 1.00,
+        ...VANTA_THEMES[SELECTED_THEME]
+      });
+      
+    } catch (error) {
+      console.error('Failed to initialize Vanta:', error);
+    }
+  }
+  
+  // Handle window resize
+  function handleResize() {
+    if (vantaEffect) {
+      vantaEffect.resize();
+    }
+  }
+  
+  // Initialize effect
+  initVanta();
+  
+  // Add resize listener with debouncing
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(handleResize, 250);
+  });
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', function() {
+    if (vantaEffect) {
+      vantaEffect.destroy();
+    }
+  });
+};
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -1724,6 +1836,7 @@ const init = () => {
   marquees();
   formStuff();
   expertiseStackNav();
+  heroVantaBG();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
