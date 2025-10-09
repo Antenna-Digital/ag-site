@@ -1820,6 +1820,58 @@ function heroVantaBG() {
   });
 };
 
+// Finsweet Stuff
+// https://finsweet.com/attributes/attributes-api
+function finsweetStuff() {
+  console.debug(
+    "%c [DEBUG] Starting finsweetStuff",
+    "background: #33cc33; color: white"
+  );
+
+  window.FinsweetAttributes ||= [];
+  window.FinsweetAttributes.push([
+    'list',
+    (listInstances) => {
+      listInstances.forEach((list)=>{
+        list.addHook("afterRender", (items) => {
+          ScrollTrigger.refresh();
+          lenis.resize();
+          initScrollAnimations();
+          window.scrollBy(0, 1);
+          setTimeout(() => {
+            window.scrollBy(0, -1);
+          }, 0);
+        })
+      });
+
+      /* Log all stages of lifecycle */
+      /*
+      const phases = [
+        'start',
+        'filter',
+        'sort',
+        'pagination',
+        'beforeRender',
+        'render',
+        'afterRender'
+      ];
+      listInstances.forEach((list) => {
+        phases.forEach((phase) => {
+          list.addHook(phase, (items) => {
+            console.log(`[fs-list] Phase: ${phase}`, {
+              listInstance: list,
+              itemCount: items.length,
+              items
+            });
+            return items;
+          });
+        });
+      });
+      */
+    }
+  ]);
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
@@ -1837,6 +1889,7 @@ const init = () => {
   formStuff();
   expertiseStackNav();
   heroVantaBG();
+  finsweetStuff();
   
   // Delay non-pinned animations slightly
   setTimeout(() => {
