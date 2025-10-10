@@ -1773,7 +1773,7 @@ function heroVantaBG() {
     const container = document.getElementById('vanta-bg');
     
     if (!container) {
-      console.error('Vanta container not found');
+      console.warn('Vanta container not found');
       return;
     }
     
@@ -1813,11 +1813,11 @@ function heroVantaBG() {
   });
   
   // Cleanup on page unload
-  window.addEventListener('beforeunload', function() {
-    if (vantaEffect) {
-      vantaEffect.destroy();
-    }
-  });
+  // window.addEventListener('beforeunload', function() {
+  //   if (vantaEffect) {
+  //     vantaEffect.destroy();
+  //   }
+  // });
 };
 
 // Finsweet Stuff
