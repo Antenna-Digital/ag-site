@@ -1630,9 +1630,9 @@ function formStuff() {
       
       // Redirect based on the result
       if (allYes) {
-        window.location.href = 'https://fullyconscious.com/self-assessment';
+        window.open('https://fullyconscious.com/self-assessment', '_blank');
       } else {
-        window.location.href = 'https://fullyconscious.com/self-assessment?contact=true';
+        window.open('https://fullyconscious.com/self-assessment?contact=true', '_blank');
       }
     });
   }
