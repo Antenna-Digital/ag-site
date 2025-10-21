@@ -389,496 +389,6 @@ function swipers() {
   }
 };
 
-// Work Scroll Lock Section
-function workScrollLock(){
-  // Initialize all carousel sections on the page
-  document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
-    
-    // Get elements within this specific container
-    const carouselLayout = container.querySelector('.work-sl_layout.is-carousel-layout');
-    const collectionWrap = container.querySelector('.work-sl_collection_wrap');
-    const collectionList = container.querySelector('.work-sl_collection_list');
-    const collectionItems = container.querySelectorAll('.work-sl_collection_item');
-    const progressBar = container.querySelector('.work-sl_carousel_progress');
-
-    // Function to calculate scroll distance (will be called on refresh)
-    const getScrollDistance = () => {
-      const computedStyle = window.getComputedStyle(collectionList);
-      const paddingLeft = parseFloat(computedStyle.paddingLeft);
-      const paddingRight = parseFloat(computedStyle.paddingRight);
-      const totalPadding = paddingLeft + paddingRight;
-      return collectionWrap.scrollWidth - window.innerWidth + totalPadding;
-    };
-    
-    // Create timeline for this specific container
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: carouselLayout,
-        start: 'center center',
-        end: () => `+=${getScrollDistance() * 2}`, // Function-based value
-        scrub: true,
-        pin: true,
-        invalidateOnRefresh: true,
-        pinSpacing: true,  // Explicitly set pin spacing
-        // anticipatePin: 1,
-        // scroller: document.body,
-        // pinType: "transform",
-        pinType: "fixed",
-        // immediatePin: true,
-        onUpdate: (self) => {
-          // Update progress bar width based on scroll progress
-          if (progressBar) {
-            // Adjust progress to account for padding
-            const adjustedProgress = Math.max(0, Math.min(1, (self.progress - 0.1) / 0.8));
-            gsap.set(progressBar, {
-              width: `${adjustedProgress * 100}%`
-            });
-          }
-        }
-      }
-    });
-    
-    // Add padding before animation starts (10% of timeline)
-    tl.to({}, { duration: 0.1 });
-    
-    // Horizontal scroll animation (80% of timeline)
-    tl.to(collectionList, {
-      x: () => -getScrollDistance(),
-      ease: 'none',
-      duration: 0.8
-    });
-    
-    // Add padding after animation ends (10% of timeline)
-    tl.to({}, { duration: 0.1 });
-  });
-
-  // Refresh ScrollTrigger on window resize
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      ScrollTrigger.refresh(true); // Force refresh
-    }, 250); // Debounce resize
-  });
-};
-
-// Compass Scroll Lock Section with SVG Chart
-function compassScrollLock() {
-  // Chart data states for different scroll positions
-  const chartStates = [
-    // State 1: Complete the assessment
-    [20, 45, 55, 10, 70, 25, 50, 45],
-    // State 2: Get your score
-    [45, 20, 45, 55, 10, 70, 25, 50],
-    // State 3: View detailed feedback
-    [50, 45, 20, 45, 55, 10, 70, 25]
-  ];
-
-  // Chart configuration
-  const chartConfig = {
-    labels: ['Awake', 'Aware', 'Reflective', 'Attentive', 'Cogent', 'Sentient', 'Visionary', 'Intentional'],
-    centerX: 226,
-    centerY: 226,
-    maxRadius: 225
-  };
-
-  // Get elements
-  const compassWrap = document.querySelector('.compass_wrap');
-  const listItems = gsap.utils.toArray('.compass_content_list_item');
-  const itemCount = listItems.length;
-  
-  // Exit if elements don't exist
-  if (!compassWrap || itemCount === 0) return;
-
-  // Create or get the SVG chart
-  let chartContainer = document.querySelector('.compass_graphic_wrap');
-  if (!chartContainer) {
-    console.error('Chart container not found');
-    return;
-  }
-
-  // Replace canvas with SVG if needed
-  if (chartContainer.tagName === 'CANVAS') {
-    const svgContainer = document.createElement('div');
-    svgContainer.className = chartContainer.className;
-    chartContainer.parentNode.replaceChild(svgContainer, chartContainer);
-    chartContainer = svgContainer;
-  }
-
-  // Create the SVG structure
-  chartContainer.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -50 652 552" style="width: 100%; height: 100%;">
-      <!-- Background rings -->
-      <g class="chart-rings">
-        <path d="M226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
-              fill="#f7f6f4" stroke="none" opacity="0.8"/>
-        <path d="M226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25Z" 
-              fill="#e1dfda" stroke="none" opacity="0.8"/>
-        <path d="M226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5Z" 
-              fill="#f7f6f4" stroke="none" opacity="0.8"/>
-        <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75Z" 
-              fill="#e1dfda" stroke="none" opacity="0.8"/>
-      </g>
-      
-      <!-- Data shape -->
-      <polygon class="data-shape" 
-               points="" 
-               fill="rgba(222, 228, 46, 0.7)" 
-               stroke="#DEE42E" 
-               stroke-width="2"/>
-      
-      <!-- Data points -->
-      <g class="data-points"></g>
-      
-      <!-- Grid lines -->
-      <g class="grid-lines">
-        <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75ZM226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5ZM226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25ZM226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
-              stroke="#11171E" stroke-width="1.5" fill="none" opacity="0.9"/>
-      </g>
-      
-      <!-- Center lines -->
-      <g class="center-lines"></g>
-      
-      <!-- Labels -->
-      <g class="chart-labels"></g>
-    </svg>
-  `;
-
-  // Get SVG elements
-  const svg = chartContainer.querySelector('svg');
-  const dataShape = svg.querySelector('.data-shape');
-  const dataPointsGroup = svg.querySelector('.data-points');
-  const centerLinesGroup = svg.querySelector('.center-lines');
-  const labelsGroup = svg.querySelector('.chart-labels');
-
-  // Function to calculate data points
-  function calculateDataPoints(data) {
-    return data.map((value, index) => {
-      const normalizedValue = (value / 100) * chartConfig.maxRadius;
-      const angle = (index * 2 * Math.PI / data.length) - Math.PI / 2;
-      const x = chartConfig.centerX + normalizedValue * Math.cos(angle);
-      const y = chartConfig.centerY + normalizedValue * Math.sin(angle);
-      return { x, y, value };
-    });
-  }
-
-  // Function to calculate label positions
-  function calculateLabelPosition(index, total, radius) {
-    const angle = (index * 2 * Math.PI / total) - Math.PI / 2;
-    const isCardinal = index % 2 === 0;
-    const actualRadius = isCardinal ? 235 : radius;
-    const x = chartConfig.centerX + actualRadius * Math.cos(angle);
-    const y = chartConfig.centerY + actualRadius * Math.sin(angle);
-    
-    let textAnchor = "middle";
-    let dy = "0";
-    
-    if (!isCardinal) {
-      if (Math.cos(angle) < 0) {
-        textAnchor = "end";
-        return { x: x + 10, y, textAnchor, dy };
-      }
-      if (Math.cos(angle) > 0) {
-        textAnchor = "start";
-        return { x: x - 10, y, textAnchor, dy };
-      }
-    }
-    
-    if (Math.abs(Math.cos(angle)) > 0.85) {
-      textAnchor = Math.cos(angle) > 0 ? "start" : "end";
-    }
-    if (Math.abs(Math.sin(angle)) > 0.85) {
-      dy = Math.sin(angle) > 0 ? "1em" : "-0.5em";
-    }
-
-    return { x, y, textAnchor, dy };
-  }
-
-  // Initialize center lines
-  chartConfig.labels.forEach((_, index) => {
-    const angle = (index * 2 * Math.PI / chartConfig.labels.length) - Math.PI / 2;
-    const endX = chartConfig.centerX + chartConfig.maxRadius * Math.cos(angle);
-    const endY = chartConfig.centerY + chartConfig.maxRadius * Math.sin(angle);
-    
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', chartConfig.centerX);
-    line.setAttribute('y1', chartConfig.centerY);
-    line.setAttribute('x2', endX);
-    line.setAttribute('y2', endY);
-    line.setAttribute('stroke', '#11171E');
-    line.setAttribute('stroke-opacity', '0.1');
-    line.setAttribute('stroke-width', '1.5');
-    centerLinesGroup.appendChild(line);
-  });
-
-  // Initialize labels
-  chartConfig.labels.forEach((label, index) => {
-    const pos = calculateLabelPosition(index, chartConfig.labels.length, 260);
-    
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', pos.x);
-    text.setAttribute('y', pos.y);
-    text.setAttribute('text-anchor', pos.textAnchor);
-    text.setAttribute('dy', pos.dy);
-    text.setAttribute('fill', '#11171E');
-    text.style.fontSize = '16px';
-    text.style.fontFamily = '"Restarthard 2", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    text.textContent = label;
-    labelsGroup.appendChild(text);
-  });
-
-  // Function to update chart
-  function updateChart(data, progress = 1) {
-    const points = calculateDataPoints(data);
-    const pointsString = points.map(p => `${p.x},${p.y}`).join(' ');
-    
-    // Animate polygon points
-    gsap.to(dataShape, {
-      attr: { points: pointsString },
-      duration: 0.5,
-      ease: 'ease'
-    });
-    
-    // Update or create data points
-    const existingPoints = dataPointsGroup.querySelectorAll('circle');
-    
-    points.forEach((point, index) => {
-      let circle = existingPoints[index];
-      
-      if (!circle) {
-        circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('r', '4');
-        circle.setAttribute('fill', '#DEE42E');
-        circle.setAttribute('stroke', '#DEE42E');
-        circle.setAttribute('stroke-width', '1');
-        dataPointsGroup.appendChild(circle);
-      }
-      
-      gsap.to(circle, {
-        attr: { cx: point.x, cy: point.y },
-        duration: 0.5,
-        ease: 'ease'
-      });
-    });
-  }
-
-  // Function to interpolate between data states
-  function interpolateData(data1, data2, progress) {
-    return data1.map((val, i) => val + (data2[i] - val) * progress);
-  }
-
-  let currentSection = 0;
-  
-  // Initialize with first state
-  updateChart(chartStates[0]);
-  
-  // Create the main ScrollTrigger
-  const compassTrigger = ScrollTrigger.create({
-    trigger: compassWrap,
-    start: 'center center-=3%',
-    end: `+=${itemCount * 100}%`,
-    pin: true,
-    pinSpacing: true,
-    // anticipatePin: 1,
-    scroller: document.body,
-    // pinType: "transform",
-    pinType: "fixed",
-    // immediatePin: true,
-    scrub: true,
-    onUpdate: (self) => {
-      const progress = self.progress;
-      const activeIndex = Math.floor(progress * itemCount);
-      const itemProgress = (progress * itemCount) % 1;
-  
-      // Get text elements
-      const textElements = gsap.utils.toArray('.compass_content_text');
-      
-      // Update list items
-      listItems.forEach((item, index) => {
-        if (index < activeIndex) {
-          item.classList.add('is-active');
-          gsap.set(item, { '--progress-width': '100%' });
-        } else if (index === activeIndex) {
-          item.classList.add('is-active');
-          gsap.set(item, { '--progress-width': `${itemProgress * 100}%` });
-        } else {
-          item.classList.remove('is-active');
-          gsap.set(item, { '--progress-width': '0%' });
-        }
-      });
-  
-      // Update text elements - only the current one is active
-      textElements.forEach((text, index) => {
-        if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
-          text.classList.add('is-active');
-        } else {
-          text.classList.remove('is-active');
-        }
-      });
-      
-      // Update chart based on scroll
-      const sectionIndex = Math.min(activeIndex, chartStates.length - 1);
-      
-      if (sectionIndex !== currentSection || (itemProgress > 0 && sectionIndex < chartStates.length - 1)) {
-        let dataToShow;
-        
-        // Interpolate between states for smooth transitions
-        if (itemProgress > 0 && sectionIndex < chartStates.length - 1) {
-          dataToShow = interpolateData(
-            chartStates[sectionIndex],
-            chartStates[sectionIndex + 1],
-            itemProgress
-          );
-        } else {
-          dataToShow = chartStates[sectionIndex];
-        }
-        
-        updateChart(dataToShow, itemProgress);
-        
-        if (sectionIndex !== currentSection) {
-          currentSection = sectionIndex;
-        }
-      }
-    }
-  });
-  
-  return compassTrigger;
-}
-
-// Split Panel Scroll Lock Section
-function splitScrollLock() {
-  // Get elements
-  const scrollWrap = document.querySelector('.split-scroll-lock_contain.u-container-large');
-  const listItems = gsap.utils.toArray('.split-scroll-lock_content_list_item');
-  const textWrap = document.querySelector('.split-scroll-lock_content_text_wrap');
-  const textElements = textWrap ? gsap.utils.toArray('.split-scroll-lock_content_text_wrap > *') : [];
-  const outerImages = gsap.utils.toArray('.split-scroll-lock_graphic_outer_image');
-  const innerImages = gsap.utils.toArray('.split-scroll-lock_graphic_inner_image');
-  const itemCount = listItems.length;
-  
-  // Exit if elements don't exist
-  if (!scrollWrap || itemCount === 0) return;
-
-  // Function to calculate and set min-height for text wrap
-  function updateTextWrapHeight() {
-    if (!textWrap || textElements.length === 0) return;
-    
-    // Reset min-height to auto to get natural heights
-    textWrap.style.minHeight = 'auto';
-    
-    // Calculate tallest element height (excluding margin)
-    let maxHeight = 0;
-    textElements.forEach(element => {
-      const height = element.getBoundingClientRect().height;
-      maxHeight = Math.max(maxHeight, height);
-    });
-    
-    // Set min-height
-    textWrap.style.minHeight = `${maxHeight}px`;
-  }
-
-  // Initial height calculation
-  updateTextWrapHeight();
-  
-  // Set up resize observer for responsive height updates
-  const resizeObserver = new ResizeObserver(() => {
-    updateTextWrapHeight();
-  });
-  
-  // Observe the text wrap for size changes
-  if (textWrap) {
-    resizeObserver.observe(textWrap);
-  }
-
-  // Image transition mapping - define which images are active at each step
-  const imageStates = [
-    { outer: 0, inner: 0 }, // State 1
-    { outer: 1, inner: 1 }, // State 2
-    { outer: 2, inner: 2 }  // State 3
-  ];
-
-  let currentImageState = -1;
-
-  // Function to update active images
-  function updateActiveImages(stateIndex) {
-    if (stateIndex === currentImageState) return;
-    
-    // Remove all active classes
-    outerImages.forEach(img => img.classList.remove('is-active'));
-    innerImages.forEach(img => img.classList.remove('is-active'));
-    
-    // Add active class to current state images
-    if (stateIndex >= 0 && stateIndex < imageStates.length) {
-      const state = imageStates[stateIndex];
-      
-      if (outerImages[state.outer]) {
-        outerImages[state.outer].classList.add('is-active');
-      }
-      if (innerImages[state.inner]) {
-        innerImages[state.inner].classList.add('is-active');
-      }
-    }
-    
-    currentImageState = stateIndex;
-  }
-
-  // Initialize first state
-  updateActiveImages(0);
-  
-  // Create the main ScrollTrigger
-  const splitScrollTrigger = ScrollTrigger.create({
-    trigger: scrollWrap,
-    start: 'center center',
-    end: `+=${itemCount * 100}%`,
-    pin: true,
-    pinSpacing: true,
-    pinType: 'fixed',
-    scrub: 1,
-    onUpdate: (self) => {
-      const progress = self.progress;
-      const activeIndex = Math.floor(progress * itemCount);
-      const itemProgress = (progress * itemCount) % 1;
-  
-      // Update list items with progress
-      listItems.forEach((item, index) => {
-        if (index < activeIndex) {
-          item.classList.add('is-active');
-          gsap.set(item, { '--progress-width': '100%' });
-        } else if (index === activeIndex) {
-          item.classList.add('is-active');
-          gsap.set(item, { '--progress-width': `${itemProgress * 100}%` });
-        } else {
-          item.classList.remove('is-active');
-          gsap.set(item, { '--progress-width': '0%' });
-        }
-      });
-  
-      // Update text elements - only the current one is active
-      textElements.forEach((text, index) => {
-        if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
-          text.classList.add('is-active');
-        } else {
-          text.classList.remove('is-active');
-        }
-      });
-      
-      // Update images based on section
-      const sectionIndex = Math.min(activeIndex, imageStates.length - 1);
-      updateActiveImages(sectionIndex);
-    }
-  });
-  
-  // Handle ScrollTrigger refresh on window resize
-  window.addEventListener('resize', () => {
-    ScrollTrigger.refresh();
-  });
-  
-  // Cleanup function if needed
-  splitScrollTrigger.resizeObserver = resizeObserver;
-  
-  return splitScrollTrigger;
-}
-
 // Work Grid Masonry
 function workGridMasonry(){
   if (typeof Macy === 'undefined') {
@@ -1836,7 +1346,8 @@ function finsweetStuff() {
         list.addHook("afterRender", (items) => {
           ScrollTrigger.refresh();
           lenis.resize();
-          initScrollAnimations();
+          // initScrollAnimations();
+          initGsapAnimations();
           window.scrollBy(0, 1);
           setTimeout(() => {
             window.scrollBy(0, -1);
@@ -1872,15 +1383,649 @@ function finsweetStuff() {
   ]);
 }
 
+// Global GSAP Variables
+let headingYPercent = 150;
+let paragraphYPercent = 150;
+let buttonsYPercent = 150;
+let defaultStagger = 0.15;
+let defaultEasingIn = 'power3.in';
+let defaultEasingOut = 'power3.out';
+let defaultEasingInOut = 'power3.inOut';
+
+// GSAP Animations
+function initGsapAnimations() {
+  workScrollLock();
+  compassScrollLock();
+  splitScrollLock();
+  document.fonts.ready.then(() => {
+    headingWithImages();
+  });
+
+  // Refresh after all animations registered
+  ScrollTrigger.refresh();
+};
+
+// Work Scroll Lock Component
+function workScrollLock(){
+  // Initialize all carousel sections on the page
+  document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
+    
+    // Get elements within this specific container
+    const carouselLayout = container.querySelector('.work-sl_layout.is-carousel-layout');
+    const collectionWrap = container.querySelector('.work-sl_collection_wrap');
+    const collectionList = container.querySelector('.work-sl_collection_list');
+    const collectionItems = container.querySelectorAll('.work-sl_collection_item');
+    const progressBar = container.querySelector('.work-sl_carousel_progress');
+
+    // Function to calculate scroll distance (will be called on refresh)
+    const getScrollDistance = () => {
+      const computedStyle = window.getComputedStyle(collectionList);
+      const paddingLeft = parseFloat(computedStyle.paddingLeft);
+      const paddingRight = parseFloat(computedStyle.paddingRight);
+      const totalPadding = paddingLeft + paddingRight;
+      return collectionWrap.scrollWidth - window.innerWidth + totalPadding;
+    };
+    
+    // Create timeline for this specific container
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: carouselLayout,
+        start: 'center center',
+        end: () => `+=${getScrollDistance() * 2}`, // Function-based value
+        scrub: true,
+        pin: true,
+        invalidateOnRefresh: true,
+        pinSpacing: true,  // Explicitly set pin spacing
+        // anticipatePin: 1,
+        // scroller: document.body,
+        // pinType: "transform",
+        pinType: "fixed",
+        // immediatePin: true,
+        onUpdate: (self) => {
+          // Update progress bar width based on scroll progress
+          if (progressBar) {
+            // Adjust progress to account for padding
+            const adjustedProgress = Math.max(0, Math.min(1, (self.progress - 0.1) / 0.8));
+            gsap.set(progressBar, {
+              width: `${adjustedProgress * 100}%`
+            });
+          }
+        }
+      }
+    });
+    
+    // Add padding before animation starts (10% of timeline)
+    tl.to({}, { duration: 0.1 });
+    
+    // Horizontal scroll animation (80% of timeline)
+    tl.to(collectionList, {
+      x: () => -getScrollDistance(),
+      ease: 'none',
+      duration: 0.8
+    });
+    
+    // Add padding after animation ends (10% of timeline)
+    tl.to({}, { duration: 0.1 });
+  });
+
+  // Refresh ScrollTrigger on window resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      ScrollTrigger.refresh(true); // Force refresh
+    }, 250); // Debounce resize
+  });
+};
+
+// Compass Scroll Lock Component with SVG Chart
+function compassScrollLock() {
+  // Chart data states for different scroll positions
+  const chartStates = [
+    // State 1: Complete the assessment
+    [20, 45, 55, 10, 70, 25, 50, 45],
+    // State 2: Get your score
+    [45, 20, 45, 55, 10, 70, 25, 50],
+    // State 3: View detailed feedback
+    [50, 45, 20, 45, 55, 10, 70, 25]
+  ];
+
+  // Chart configuration
+  const chartConfig = {
+    labels: ['Awake', 'Aware', 'Reflective', 'Attentive', 'Cogent', 'Sentient', 'Visionary', 'Intentional'],
+    centerX: 226,
+    centerY: 226,
+    maxRadius: 225
+  };
+
+  // Get elements
+  const compassWrap = document.querySelector('.compass_wrap');
+  const listItems = gsap.utils.toArray('.compass_content_list_item');
+  const itemCount = listItems.length;
+  
+  // Exit if elements don't exist
+  if (!compassWrap || itemCount === 0) return;
+
+  // Create or get the SVG chart
+  let chartContainer = document.querySelector('.compass_graphic_wrap');
+  if (!chartContainer) {
+    console.error('Chart container not found');
+    return;
+  }
+
+  // Replace canvas with SVG if needed
+  if (chartContainer.tagName === 'CANVAS') {
+    const svgContainer = document.createElement('div');
+    svgContainer.className = chartContainer.className;
+    chartContainer.parentNode.replaceChild(svgContainer, chartContainer);
+    chartContainer = svgContainer;
+  }
+
+  // Create the SVG structure
+  chartContainer.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -50 652 552" style="width: 100%; height: 100%;">
+      <!-- Background rings -->
+      <g class="chart-rings">
+        <path d="M226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
+              fill="#f7f6f4" stroke="none" opacity="0.8"/>
+        <path d="M226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25Z" 
+              fill="#e1dfda" stroke="none" opacity="0.8"/>
+        <path d="M226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5Z" 
+              fill="#f7f6f4" stroke="none" opacity="0.8"/>
+        <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75Z" 
+              fill="#e1dfda" stroke="none" opacity="0.8"/>
+      </g>
+      
+      <!-- Data shape -->
+      <polygon class="data-shape" 
+               points="" 
+               fill="rgba(222, 228, 46, 0.7)" 
+               stroke="#DEE42E" 
+               stroke-width="2"/>
+      
+      <!-- Data points -->
+      <g class="data-points"></g>
+      
+      <!-- Grid lines -->
+      <g class="grid-lines">
+        <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75ZM226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5ZM226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25ZM226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
+              stroke="#11171E" stroke-width="1.5" fill="none" opacity="0.9"/>
+      </g>
+      
+      <!-- Center lines -->
+      <g class="center-lines"></g>
+      
+      <!-- Labels -->
+      <g class="chart-labels"></g>
+    </svg>
+  `;
+
+  // Get SVG elements
+  const svg = chartContainer.querySelector('svg');
+  const dataShape = svg.querySelector('.data-shape');
+  const dataPointsGroup = svg.querySelector('.data-points');
+  const centerLinesGroup = svg.querySelector('.center-lines');
+  const labelsGroup = svg.querySelector('.chart-labels');
+
+  // Function to calculate data points
+  function calculateDataPoints(data) {
+    return data.map((value, index) => {
+      const normalizedValue = (value / 100) * chartConfig.maxRadius;
+      const angle = (index * 2 * Math.PI / data.length) - Math.PI / 2;
+      const x = chartConfig.centerX + normalizedValue * Math.cos(angle);
+      const y = chartConfig.centerY + normalizedValue * Math.sin(angle);
+      return { x, y, value };
+    });
+  }
+
+  // Function to calculate label positions
+  function calculateLabelPosition(index, total, radius) {
+    const angle = (index * 2 * Math.PI / total) - Math.PI / 2;
+    const isCardinal = index % 2 === 0;
+    const actualRadius = isCardinal ? 235 : radius;
+    const x = chartConfig.centerX + actualRadius * Math.cos(angle);
+    const y = chartConfig.centerY + actualRadius * Math.sin(angle);
+    
+    let textAnchor = "middle";
+    let dy = "0";
+    
+    if (!isCardinal) {
+      if (Math.cos(angle) < 0) {
+        textAnchor = "end";
+        return { x: x + 10, y, textAnchor, dy };
+      }
+      if (Math.cos(angle) > 0) {
+        textAnchor = "start";
+        return { x: x - 10, y, textAnchor, dy };
+      }
+    }
+    
+    if (Math.abs(Math.cos(angle)) > 0.85) {
+      textAnchor = Math.cos(angle) > 0 ? "start" : "end";
+    }
+    if (Math.abs(Math.sin(angle)) > 0.85) {
+      dy = Math.sin(angle) > 0 ? "1em" : "-0.5em";
+    }
+
+    return { x, y, textAnchor, dy };
+  }
+
+  // Initialize center lines
+  chartConfig.labels.forEach((_, index) => {
+    const angle = (index * 2 * Math.PI / chartConfig.labels.length) - Math.PI / 2;
+    const endX = chartConfig.centerX + chartConfig.maxRadius * Math.cos(angle);
+    const endY = chartConfig.centerY + chartConfig.maxRadius * Math.sin(angle);
+    
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', chartConfig.centerX);
+    line.setAttribute('y1', chartConfig.centerY);
+    line.setAttribute('x2', endX);
+    line.setAttribute('y2', endY);
+    line.setAttribute('stroke', '#11171E');
+    line.setAttribute('stroke-opacity', '0.1');
+    line.setAttribute('stroke-width', '1.5');
+    centerLinesGroup.appendChild(line);
+  });
+
+  // Initialize labels
+  chartConfig.labels.forEach((label, index) => {
+    const pos = calculateLabelPosition(index, chartConfig.labels.length, 260);
+    
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', pos.x);
+    text.setAttribute('y', pos.y);
+    text.setAttribute('text-anchor', pos.textAnchor);
+    text.setAttribute('dy', pos.dy);
+    text.setAttribute('fill', '#11171E');
+    text.style.fontSize = '16px';
+    text.style.fontFamily = '"Restarthard 2", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    text.textContent = label;
+    labelsGroup.appendChild(text);
+  });
+
+  // Function to update chart
+  function updateChart(data, progress = 1) {
+    const points = calculateDataPoints(data);
+    const pointsString = points.map(p => `${p.x},${p.y}`).join(' ');
+    
+    // Animate polygon points
+    gsap.to(dataShape, {
+      attr: { points: pointsString },
+      duration: 0.5,
+      ease: 'ease'
+    });
+    
+    // Update or create data points
+    const existingPoints = dataPointsGroup.querySelectorAll('circle');
+    
+    points.forEach((point, index) => {
+      let circle = existingPoints[index];
+      
+      if (!circle) {
+        circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', '#DEE42E');
+        circle.setAttribute('stroke', '#DEE42E');
+        circle.setAttribute('stroke-width', '1');
+        dataPointsGroup.appendChild(circle);
+      }
+      
+      gsap.to(circle, {
+        attr: { cx: point.x, cy: point.y },
+        duration: 0.5,
+        ease: 'ease'
+      });
+    });
+  }
+
+  // Function to interpolate between data states
+  function interpolateData(data1, data2, progress) {
+    return data1.map((val, i) => val + (data2[i] - val) * progress);
+  }
+
+  let currentSection = 0;
+  
+  // Initialize with first state
+  updateChart(chartStates[0]);
+  
+  // Create the main ScrollTrigger
+  const compassTrigger = ScrollTrigger.create({
+    trigger: compassWrap,
+    start: 'center center-=3%',
+    end: `+=${itemCount * 100}%`,
+    pin: true,
+    pinSpacing: true,
+    // anticipatePin: 1,
+    scroller: document.body,
+    // pinType: "transform",
+    pinType: "fixed",
+    // immediatePin: true,
+    scrub: true,
+    onUpdate: (self) => {
+      const progress = self.progress;
+      const activeIndex = Math.floor(progress * itemCount);
+      const itemProgress = (progress * itemCount) % 1;
+  
+      // Get text elements
+      const textElements = gsap.utils.toArray('.compass_content_text');
+      
+      // Update list items
+      listItems.forEach((item, index) => {
+        if (index < activeIndex) {
+          item.classList.add('is-active');
+          gsap.set(item, { '--progress-width': '100%' });
+        } else if (index === activeIndex) {
+          item.classList.add('is-active');
+          gsap.set(item, { '--progress-width': `${itemProgress * 100}%` });
+        } else {
+          item.classList.remove('is-active');
+          gsap.set(item, { '--progress-width': '0%' });
+        }
+      });
+  
+      // Update text elements - only the current one is active
+      textElements.forEach((text, index) => {
+        if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
+          text.classList.add('is-active');
+        } else {
+          text.classList.remove('is-active');
+        }
+      });
+      
+      // Update chart based on scroll
+      const sectionIndex = Math.min(activeIndex, chartStates.length - 1);
+      
+      if (sectionIndex !== currentSection || (itemProgress > 0 && sectionIndex < chartStates.length - 1)) {
+        let dataToShow;
+        
+        // Interpolate between states for smooth transitions
+        if (itemProgress > 0 && sectionIndex < chartStates.length - 1) {
+          dataToShow = interpolateData(
+            chartStates[sectionIndex],
+            chartStates[sectionIndex + 1],
+            itemProgress
+          );
+        } else {
+          dataToShow = chartStates[sectionIndex];
+        }
+        
+        updateChart(dataToShow, itemProgress);
+        
+        if (sectionIndex !== currentSection) {
+          currentSection = sectionIndex;
+        }
+      }
+    }
+  });
+  
+  return compassTrigger;
+}
+
+// Split Panel Scroll Lock Component
+function splitScrollLock() {
+  // Get elements
+  const scrollWrap = document.querySelector('.split-scroll-lock_contain.u-container-large');
+  const listItems = gsap.utils.toArray('.split-scroll-lock_content_list_item');
+  const textWrap = document.querySelector('.split-scroll-lock_content_text_wrap');
+  const textElements = textWrap ? gsap.utils.toArray('.split-scroll-lock_content_text_wrap > *') : [];
+  const outerImages = gsap.utils.toArray('.split-scroll-lock_graphic_outer_image');
+  const innerImages = gsap.utils.toArray('.split-scroll-lock_graphic_inner_image');
+  const itemCount = listItems.length;
+  
+  // Exit if elements don't exist
+  if (!scrollWrap || itemCount === 0) return;
+
+  // Function to calculate and set min-height for text wrap
+  function updateTextWrapHeight() {
+    if (!textWrap || textElements.length === 0) return;
+    
+    // Reset min-height to auto to get natural heights
+    textWrap.style.minHeight = 'auto';
+    
+    // Calculate tallest element height (excluding margin)
+    let maxHeight = 0;
+    textElements.forEach(element => {
+      const height = element.getBoundingClientRect().height;
+      maxHeight = Math.max(maxHeight, height);
+    });
+    
+    // Set min-height
+    textWrap.style.minHeight = `${maxHeight}px`;
+  }
+
+  // Initial height calculation
+  updateTextWrapHeight();
+  
+  // Set up resize observer for responsive height updates
+  const resizeObserver = new ResizeObserver(() => {
+    updateTextWrapHeight();
+  });
+  
+  // Observe the text wrap for size changes
+  if (textWrap) {
+    resizeObserver.observe(textWrap);
+  }
+
+  // Image transition mapping - define which images are active at each step
+  const imageStates = [
+    { outer: 0, inner: 0 }, // State 1
+    { outer: 1, inner: 1 }, // State 2
+    { outer: 2, inner: 2 }  // State 3
+  ];
+
+  let currentImageState = -1;
+
+  // Function to update active images
+  function updateActiveImages(stateIndex) {
+    if (stateIndex === currentImageState) return;
+    
+    // Remove all active classes
+    outerImages.forEach(img => img.classList.remove('is-active'));
+    innerImages.forEach(img => img.classList.remove('is-active'));
+    
+    // Add active class to current state images
+    if (stateIndex >= 0 && stateIndex < imageStates.length) {
+      const state = imageStates[stateIndex];
+      
+      if (outerImages[state.outer]) {
+        outerImages[state.outer].classList.add('is-active');
+      }
+      if (innerImages[state.inner]) {
+        innerImages[state.inner].classList.add('is-active');
+      }
+    }
+    
+    currentImageState = stateIndex;
+  }
+
+  // Initialize first state
+  updateActiveImages(0);
+  
+  // Create the main ScrollTrigger
+  const splitScrollTrigger = ScrollTrigger.create({
+    trigger: scrollWrap,
+    start: 'center center',
+    end: `+=${itemCount * 100}%`,
+    pin: true,
+    pinSpacing: true,
+    pinType: 'fixed',
+    scrub: 1,
+    onUpdate: (self) => {
+      const progress = self.progress;
+      const activeIndex = Math.floor(progress * itemCount);
+      const itemProgress = (progress * itemCount) % 1;
+  
+      // Update list items with progress
+      listItems.forEach((item, index) => {
+        if (index < activeIndex) {
+          item.classList.add('is-active');
+          gsap.set(item, { '--progress-width': '100%' });
+        } else if (index === activeIndex) {
+          item.classList.add('is-active');
+          gsap.set(item, { '--progress-width': `${itemProgress * 100}%` });
+        } else {
+          item.classList.remove('is-active');
+          gsap.set(item, { '--progress-width': '0%' });
+        }
+      });
+  
+      // Update text elements - only the current one is active
+      textElements.forEach((text, index) => {
+        if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
+          text.classList.add('is-active');
+        } else {
+          text.classList.remove('is-active');
+        }
+      });
+      
+      // Update images based on section
+      const sectionIndex = Math.min(activeIndex, imageStates.length - 1);
+      updateActiveImages(sectionIndex);
+    }
+  });
+  
+  // Handle ScrollTrigger refresh on window resize
+  window.addEventListener('resize', () => {
+    ScrollTrigger.refresh();
+  });
+  
+  // Cleanup function if needed
+  splitScrollTrigger.resizeObserver = resizeObserver;
+  
+  return splitScrollTrigger;
+}
+
+// Heading with Images Component
+function headingWithImages() {
+  const components = document.querySelectorAll('.about_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.about_contain');
+    const headingText = component.querySelectorAll('.about_heading_text');
+    const headingImages = component.querySelectorAll('.about_heading_image');
+    const paragraphs = component.querySelectorAll('.about_text_wrap .c-paragraph *');
+    const buttons = component.querySelectorAll('.about_text_wrap .button_main_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    let headingWithImagesTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text with autoSplit
+    headingText.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text with autoSplit
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (headingWithImagesTL) {
+        headingWithImagesTL.kill();
+      }
+
+      headingWithImagesTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        headingWithImagesTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">");
+      }
+
+      if (headingImages.length > 0) {
+        headingWithImagesTL.fromTo(headingImages, {
+          width: 0
+        },
+        {
+          width: 'auto',
+          duration: 1.5,
+          ease: defaultEasingInOut,
+          stagger: defaultStagger
+        }, ">");
+      }
+
+      if (allParagraphLines.length > 0) {
+        headingWithImagesTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">");
+      }
+
+      if (buttons.length > 0) {
+        headingWithImagesTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">");
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
 // Init Function
 const init = () => {
   console.debug("%cRun init", "color: lightgreen;");
 
   setupLenis();
   swipers();
-  workScrollLock();
-  compassScrollLock();
-  splitScrollLock();
+  initGsapAnimations();
   workGridMasonry();
   accordionSection();
   timelineAccordion();
@@ -1892,14 +2037,44 @@ const init = () => {
   finsweetStuff();
   
   // Delay non-pinned animations slightly
-  setTimeout(() => {
-    initScrollAnimations();
-  }, 50);
+  // setTimeout(() => {
+  //   initScrollAnimations();
+  // }, 50);
   
   // Single refresh after everything
   setTimeout(() => {
     ScrollTrigger.refresh(true);
   }, 200);
+
+  // Track which elements have been measured to avoid unnecessary refreshes
+  const measuredSizes = new WeakMap();
+
+  const resizeObserver = new ResizeObserver((entries) => {
+    let needsRefresh = false;
+    
+    entries.forEach(entry => {
+      const element = entry.target;
+      const newHeight = entry.borderBoxSize[0].blockSize;
+      const previousHeight = measuredSizes.get(element);
+      
+      // Only flag for refresh if height actually changed (not initial measurement)
+      if (previousHeight !== undefined && previousHeight !== newHeight) {
+        needsRefresh = true;
+      }
+      
+      measuredSizes.set(element, newHeight);
+    });
+    
+    // Batch refresh once after all measurements
+    if (needsRefresh) {
+      ScrollTrigger.refresh();
+    }
+  });
+
+  // Observe only components that cause layout shifts
+  document.querySelectorAll('.accordion-section_wrap, .load-more, .about_wrap').forEach(el => {
+    resizeObserver.observe(el);
+  });
   
 }; // end init
 
