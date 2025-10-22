@@ -1388,6 +1388,7 @@ let headingYPercent = 150;
 let paragraphYPercent = 150;
 let buttonsYPercent = 150;
 let defaultStagger = 0.15;
+let defaultPosition = ">-0.25";
 let defaultEasingIn = 'power3.in';
 let defaultEasingOut = 'power3.out';
 let defaultEasingInOut = 'power3.inOut';
@@ -2028,7 +2029,7 @@ function headingWithImagesComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (headingImages.length > 0) {
@@ -2040,7 +2041,7 @@ function headingWithImagesComponent() {
           duration: 1.5,
           ease: defaultEasingInOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (allParagraphLines.length > 0) {
@@ -2054,7 +2055,7 @@ function headingWithImagesComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -2068,7 +2069,7 @@ function headingWithImagesComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2086,6 +2087,7 @@ function workScrollLockComponent() {
     const footerContainer = component.querySelector('.work-sl_layout.is-footer');
     const headings = headerContainer.querySelectorAll('.work-sl_heading_wrap .c-heading');
     const paragraphs = headerContainer.querySelectorAll('.work-sl_content_wrap .c-paragraph *');
+    const carousel = component.querySelector('.work-sl_layout.is-carousel-layout');
     const buttons = footerContainer.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -2158,7 +2160,7 @@ function workScrollLockComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (allParagraphLines.length > 0) {
@@ -2172,7 +2174,18 @@ function workScrollLockComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
+      }
+
+      if (carousel) {
+        workScrollLockComponentTL.fromTo(carousel, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+        })
       }
 
       if (buttons.length > 0) {
@@ -2186,7 +2199,7 @@ function workScrollLockComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2260,7 +2273,7 @@ function showreelComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (image) {
@@ -2273,7 +2286,7 @@ function showreelComponent() {
           opacity: 1,
           duration: 1.25,
           ease: defaultEasingOut
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2366,7 +2379,7 @@ function ourExpertiseComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (images.length > 0) {
@@ -2392,7 +2405,7 @@ function ourExpertiseComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -2406,7 +2419,7 @@ function ourExpertiseComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2441,7 +2454,7 @@ function ourExpertiseComponent() {
         duration: 1,
         ease: defaultEasingOut,
         stagger: defaultStagger
-      }, ">");
+      }, defaultPosition);
     }
   });
 }
@@ -2527,7 +2540,7 @@ function logoCarouselComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (allParagraphLines.length > 0) {
@@ -2541,7 +2554,7 @@ function logoCarouselComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (carouselWrap) {
@@ -2553,7 +2566,7 @@ function logoCarouselComponent() {
           duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2661,7 +2674,7 @@ function consciousCompassComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (allHeadingLines.length > 0) {
@@ -2675,7 +2688,7 @@ function consciousCompassComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (compassGraphic) {
@@ -2687,7 +2700,7 @@ function consciousCompassComponent() {
           duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (allParagraphLines.length > 0) {
@@ -2701,7 +2714,7 @@ function consciousCompassComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (listItems.length > 0) {
@@ -2715,7 +2728,7 @@ function consciousCompassComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -2729,7 +2742,7 @@ function consciousCompassComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2836,7 +2849,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (allHeadingLines.length > 0) {
@@ -2850,7 +2863,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (allParagraphLines.length > 0) {
@@ -2864,7 +2877,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -2878,7 +2891,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (featuredPodcastSlider) {
@@ -2890,7 +2903,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (thumbsPodcastSliders.length > 0) {
@@ -2902,7 +2915,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -2991,7 +3004,7 @@ function aboveFooterCTAComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, 0);
       }
 
       if (allHeadingLines.length > 0) {
@@ -3005,7 +3018,7 @@ function aboveFooterCTAComponent() {
           duration: 1.25,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
 
       if (images.length > 0) {
@@ -3017,7 +3030,7 @@ function aboveFooterCTAComponent() {
           duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">");
+        }, defaultPosition);
       }
     }
 
@@ -3139,7 +3152,7 @@ function footerComponent() {
           opacity: 1,
           duration: 1,
           ease: defaultEasingOut
-        }, ">-0.5");
+        }, ">-1");
       }
     }
 
