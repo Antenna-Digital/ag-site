@@ -1404,6 +1404,7 @@ function initGsapAnimations() {
     navComponent();
     homepageHeroComponent();
     innerHeroBasicComponent();
+    innerHeroStyledComponent();
     headingWithImagesComponent();
     workScrollLockComponent();
     showreelComponent();
@@ -2259,6 +2260,143 @@ function innerHeroBasicComponent() {
 
       if (graphics.length > 0) {
         innerHeroBasicTL.fromTo(graphics, {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 2.5)
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Inner Hero - Styles Component - GSAP Reveals
+function innerHeroStyledComponent() {
+  const components = document.querySelectorAll('.hero-inner-styled_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.hero-inner-styled_contain');
+    const headings = component.querySelectorAll('.hero-inner-styled_heading_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.hero-inner-styled_text_wrap .c-paragraph *');
+    const buttons = component.querySelectorAll('.hero-inner-styled_text_wrap .button_main_wrap');
+    const graphics = component.querySelectorAll('.hero-inner-styled_graphics_1 > * > *, .hero-inner-styled_graphics_2 > * > *');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let innerHeroStyledTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (innerHeroStyledTL) {
+        innerHeroStyledTL.kill();
+      }
+
+      innerHeroStyledTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        innerHeroStyledTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        innerHeroStyledTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (buttons.length > 0) {
+        innerHeroStyledTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (graphics.length > 0) {
+        innerHeroStyledTL.fromTo(graphics, {
           opacity: 0,
         },
         {
