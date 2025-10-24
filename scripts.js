@@ -1412,6 +1412,7 @@ function initGsapAnimations() {
     consciousCompassComponent();
     podcastEpisodesSliderComponent();
     aboveFooterCTAComponent();
+    splitScrollLockComponent();
     footerComponent();
     setTimeout(compassTeaserComponent, 200);
     setTimeout(fitAssessmentComponent, 200);
@@ -3407,6 +3408,216 @@ function aboveFooterCTAComponent() {
         {
           opacity: 1,
           duration: 0.8,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Split Scroll Lock Component - GSAP Reveals
+function splitScrollLockComponent() {
+  const components = document.querySelectorAll('.split-scroll-lock_wrap');
+
+  components.forEach(component => {
+    const headerContainer = component.querySelector('.split-scroll-lock_contain.is-header');
+    const container = component.querySelector('.split-scroll-lock_contain.is-lock');
+    const eyebrows = headerContainer.querySelectorAll('.eyebrow_text *');
+    const headings = headerContainer.querySelectorAll('.c-heading');
+    const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph *');
+    const imageContainer = container.querySelector('.split-scroll-lock_graphic_wrap');
+    const paragraphs = container.querySelectorAll('.split-scroll-lock_content_text.is-active .c-paragraph *');
+    const listItems = container.querySelectorAll('.split-scroll-lock_content_list_item');
+    const buttons = container.querySelectorAll('.button_main_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(headerContainer)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let splitScrollLockTL;
+    let allEyebrowLines = [];
+    let allHeadingLines = [];
+    let allHeaderParagraphLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let eyebrowSplits = [];
+    let headingSplits = [];
+    let headerParagraphSplits = [];
+    let paragraphSplits = [];
+
+    // Split eyebrow text
+    eyebrows.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      eyebrowSplits.push(split);
+      allEyebrowLines.push(...split.lines);
+    });
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split header paragraph text
+    headerParagraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headerParagraphSplits.push(split);
+      allHeaderParagraphLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (splitScrollLockTL) {
+        splitScrollLockTL.kill();
+      }
+
+      splitScrollLockTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: headerContainer,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          eyebrowSplits.forEach(split => split.revert());
+          headingSplits.forEach(split => split.revert());
+          headerParagraphSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allEyebrowLines.length > 0) {
+        splitScrollLockTL.fromTo(allEyebrowLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allHeadingLines.length > 0) {
+        splitScrollLockTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (allHeaderParagraphLines.length > 0) {
+        splitScrollLockTL.fromTo(allHeaderParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (imageContainer) {
+        splitScrollLockTL.fromTo(imageContainer, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: defaultEasingOut
+        }, defaultPosition);
+      }
+
+      if (allParagraphLines.length > 0) {
+        splitScrollLockTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (listItems.length > 0) {
+        splitScrollLockTL.fromTo(listItems, {
+          yPercent: 100,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.5");
+      }
+
+      if (buttons.length > 0) {
+        splitScrollLockTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, defaultPosition);
