@@ -1403,6 +1403,7 @@ function initGsapAnimations() {
   document.fonts.ready.then(() => {
     navComponent();
     homepageHeroComponent();
+    innerHeroBasicComponent();
     headingWithImagesComponent();
     workScrollLockComponent();
     showreelComponent();
@@ -1412,6 +1413,8 @@ function initGsapAnimations() {
     podcastEpisodesSliderComponent();
     aboveFooterCTAComponent();
     footerComponent();
+    setTimeout(compassTeaserComponent, 200);
+    setTimeout(fitAssessmentComponent, 200);
   });
 
   // Refresh after all animations registered
@@ -2125,6 +2128,143 @@ function homepageHeroComponent() {
           opacity: 1,
           duration: 1,
           ease: defaultEasingOut
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Inner Hero - Basic Component - GSAP Reveals
+function innerHeroBasicComponent() {
+  const components = document.querySelectorAll('.hero-inner_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.hero-inner_contain');
+    const headings = component.querySelectorAll('.hero-inner_heading_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.hero-inner_content_wrap .c-paragraph *');
+    const buttons = component.querySelectorAll('.hero-inner_content_wrap .button_main_wrap');
+    const graphics = component.querySelectorAll('.hero-inner_graphics_image_wrap > *');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let innerHeroBasicTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (innerHeroBasicTL) {
+        innerHeroBasicTL.kill();
+      }
+
+      innerHeroBasicTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        innerHeroBasicTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        innerHeroBasicTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (buttons.length > 0) {
+        innerHeroBasicTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (graphics.length > 0) {
+        innerHeroBasicTL.fromTo(graphics, {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 2.5)
         }, defaultPosition);
       }
     }
@@ -3267,6 +3407,350 @@ function aboveFooterCTAComponent() {
         {
           opacity: 1,
           duration: 0.8,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Compass Teaser Component - GSAP Reveals
+function compassTeaserComponent() {
+  const components = document.querySelectorAll('.conscious-compass-teaser_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.conscious-compass-teaser_contain');
+    const eyebrows = component.querySelectorAll('.ct_page-label');
+    const headings = component.querySelectorAll('.ct_header-section h2');
+    const paragraphs = component.querySelectorAll('.ct_sub-heading, .ct_intro-text');
+    const questionGroups = component.querySelectorAll('.ct_question-group');
+    const buttons = component.querySelectorAll('button.ct_btn-submit');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let compassTeaserComponentTL;
+    let allEyebrowLines = [];
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let eyebrowSplits = [];
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split eyebrow text
+    eyebrows.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      eyebrowSplits.push(split);
+      allEyebrowLines.push(...split.lines);
+    });
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (compassTeaserComponentTL) {
+        compassTeaserComponentTL.kill();
+      }
+
+      compassTeaserComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          eyebrowSplits.forEach(split => split.revert());
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allEyebrowLines.length > 0) {
+        compassTeaserComponentTL.fromTo(allEyebrowLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allHeadingLines.length > 0) {
+        compassTeaserComponentTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (allParagraphLines.length > 0) {
+        compassTeaserComponentTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (questionGroups.length > 0) {
+        compassTeaserComponentTL.fromTo(questionGroups, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (buttons.length > 0) {
+        compassTeaserComponentTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// FIT Assessment Component - GSAP Reveals
+function fitAssessmentComponent() {
+  const components = document.querySelectorAll('.fit-assessment_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.fit-assessment_contain');
+    const innerContainer = component.querySelector('.fit_container');
+    const eyebrows = component.querySelectorAll('.fit_highlight');
+    const headings = component.querySelectorAll('.fit_content h1, .fit_content h2');
+    const paragraphs = component.querySelectorAll('.fit_content > p');
+    const formGroups = component.querySelectorAll('.fit_form-group');
+    const buttons = component.querySelectorAll('button.fit_button-swipe');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let fitAssessmentComponentTL;
+    let allEyebrowLines = [];
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let eyebrowSplits = [];
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split eyebrow text
+    eyebrows.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      eyebrowSplits.push(split);
+      allEyebrowLines.push(...split.lines);
+    });
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (fitAssessmentComponentTL) {
+        fitAssessmentComponentTL.kill();
+      }
+
+      fitAssessmentComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          eyebrowSplits.forEach(split => split.revert());
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (innerContainer) {
+        fitAssessmentComponentTL.fromTo(innerContainer, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, 0)
+      }
+
+      if (allEyebrowLines.length > 0) {
+        fitAssessmentComponentTL.fromTo(allEyebrowLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (allHeadingLines.length > 0) {
+        fitAssessmentComponentTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (allParagraphLines.length > 0) {
+        fitAssessmentComponentTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (formGroups.length > 0) {
+        fitAssessmentComponentTL.fromTo(formGroups, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (buttons.length > 0) {
+        fitAssessmentComponentTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, defaultPosition);
