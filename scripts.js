@@ -1405,6 +1405,7 @@ function initGsapAnimations() {
     homepageHeroComponent();
     innerHeroBasicComponent();
     innerHeroStyledComponent();
+    innerHeroImageGridComponent();
     headingWithImagesComponent();
     workScrollLockComponent();
     showreelComponent();
@@ -1414,6 +1415,13 @@ function initGsapAnimations() {
     podcastEpisodesSliderComponent();
     aboveFooterCTAComponent();
     splitScrollLockComponent();
+    iconGridComponent();
+    featuredWorkComponent();
+    testimonialComponent();
+    compassCTAComponent();
+    splitPanelImageArrayComponent();
+    compassFormComponent();
+    culturalImpactComponent();
     footerComponent();
     setTimeout(compassTeaserComponent, 200);
     setTimeout(fitAssessmentComponent, 200);
@@ -2413,6 +2421,145 @@ function innerHeroStyledComponent() {
   });
 }
 
+// Inner Hero - Image Grid - GSAP Reveals
+function innerHeroImageGridComponent() {
+  const components = document.querySelectorAll('.hero-inner-image-grid_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.hero-inner-image-grid_contain');
+    const headings = component.querySelectorAll('.hero-inner-image-grid_heading_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.hero-inner-image-grid_text_wrap .c-paragraph *');
+    const buttons = component.querySelectorAll('.hero-inner-image-grid_text_wrap .button_main_wrap');
+    const graphics = component.querySelectorAll('.m-image-grid_wrap > *');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let innerHeroImageGridTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (innerHeroImageGridTL) {
+        innerHeroImageGridTL.kill();
+      }
+
+      innerHeroImageGridTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        innerHeroImageGridTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        innerHeroImageGridTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (buttons.length > 0) {
+        innerHeroImageGridTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (graphics.length > 0) {
+        innerHeroImageGridTL.fromTo(graphics, {
+          yPercent: 50,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 2.5)
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
 // Heading with Images Component - GSAP Reveals
 function headingWithImagesComponent() {
   const components = document.querySelectorAll('.about_wrap');
@@ -3084,7 +3231,7 @@ function consciousCompassComponent() {
     const eyebrows = headerContainer.querySelectorAll('.eyebrow_text *');
     const headings = headerContainer.querySelectorAll('.c-heading');
     const compassGraphic = container.querySelector('.compass_graphic_wrap');
-    const paragraphs = container.querySelectorAll('.compass_content_text.is-active .c-paragraph *');
+    const paragraphs = container.querySelectorAll('.compass_content_text .c-paragraph *');
     const listItems = container.querySelectorAll('.compass_content_list_item');
     const buttons = container.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -3176,7 +3323,7 @@ function consciousCompassComponent() {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, 0);
@@ -3219,7 +3366,7 @@ function consciousCompassComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-1");
       }
 
       if (listItems.length > 0) {
@@ -3233,7 +3380,7 @@ function consciousCompassComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">-0.5");
+        }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -3357,7 +3504,7 @@ function podcastEpisodesSliderComponent() {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, 0);
@@ -3388,7 +3535,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-0.75");
       }
 
       if (buttons.length > 0) {
@@ -3414,7 +3561,7 @@ function podcastEpisodesSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-0.75");
       }
 
       if (thumbsPodcastSliders.length > 0) {
@@ -3519,7 +3666,7 @@ function aboveFooterCTAComponent() {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, 0);
@@ -3568,7 +3715,7 @@ function splitScrollLockComponent() {
     const headings = headerContainer.querySelectorAll('.c-heading');
     const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph *');
     const imageContainer = container.querySelector('.split-scroll-lock_graphic_wrap');
-    const paragraphs = container.querySelectorAll('.split-scroll-lock_content_text.is-active .c-paragraph *');
+    const paragraphs = container.querySelectorAll('.split-scroll-lock_content_text .c-paragraph *');
     const listItems = container.querySelectorAll('.split-scroll-lock_content_list_item');
     const buttons = container.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -3674,7 +3821,7 @@ function splitScrollLockComponent() {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, 0);
@@ -3730,7 +3877,7 @@ function splitScrollLockComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-1");
       }
 
       if (listItems.length > 0) {
@@ -3744,7 +3891,7 @@ function splitScrollLockComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">-0.5");
+        }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -3764,6 +3911,1209 @@ function splitScrollLockComponent() {
 
     // Initial call to create animation
     createAnimation();
+  });
+}
+
+// Icon Grid Component - GSAP Reveals
+function iconGridComponent() {
+  const components = document.querySelectorAll('.icon-grid_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.icon-grid_contain');
+    const headings = component.querySelectorAll('.icon-grid_header_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.icon-grid_header_wrap .c-paragraph *');
+    const items = component.querySelectorAll('.icon-grid_item');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let iconGridComponentTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (iconGridComponentTL) {
+        iconGridComponentTL.kill();
+      }
+
+      iconGridComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        iconGridComponentTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        iconGridComponentTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      items.forEach(item => {
+        const itemHeader = item.querySelectorAll('.icon-grid_item_header');
+        const itemHeadings = item.querySelectorAll('.icon-grid_item_label');
+        const itemIcons = item.querySelectorAll('.icon-grid_item_icon_wrap');
+        const itemParagraphs = item.querySelectorAll('.c-paragraph *');
+
+        let allItemHeadingLines = [];
+        let allItemParagraphLines = [];
+        let itemHeadingSplits = [];
+        let itemParagraphSplits = [];
+
+        // Split heading text
+        itemHeadings.forEach(text => {
+          const split = new SplitText(text, {
+            type: 'lines',
+            mask: "lines",
+            linesClass: "gsap-line"
+          });
+          itemHeadingSplits.push(split);
+          allItemHeadingLines.push(...split.lines);
+        });
+
+        // Split paragraph text
+        itemParagraphs.forEach(text => {
+          const split = new SplitText(text, {
+            type: 'lines',
+            mask: "lines",
+            linesClass: "gsap-line"
+          });
+          itemParagraphSplits.push(split);
+          allItemParagraphLines.push(...split.lines);
+        });
+
+        if (itemHeader.length > 0) {
+          iconGridComponentTL.fromTo(itemHeader, {
+            opacity: 0
+          },
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
+        }
+
+        if (allItemHeadingLines.length > 0) {
+          iconGridComponentTL.fromTo(allItemHeadingLines, {
+            yPercent: headingYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger,
+            onComplete: () => {
+              itemHeadingSplits.forEach(split => split.revert());
+            }
+          }, ">-1");
+        }
+
+        if (itemIcons.length > 0) {
+          iconGridComponentTL.fromTo(itemIcons, {
+            opacity: 0
+          },
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
+        }
+  
+        if (allItemParagraphLines.length > 0) {
+          iconGridComponentTL.fromTo(allItemParagraphLines, {
+            yPercent: paragraphYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger,
+            onComplete: () => {
+              itemParagraphSplits.forEach(split => split.revert());
+            }
+          }, ">-0.75");
+        }
+      })
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Featured (Related) Work Component - GSAP Reveals
+function featuredWorkComponent() {
+  const components = document.querySelectorAll('.work-related_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.work-related_contain');
+    const headings = container.querySelectorAll('.work-related_heading, .work-related_grid_headline');
+    const items = component.querySelectorAll('.work-related_collection_item');
+    const buttons = component.querySelectorAll('.button_main_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let featuredWorkComponentTL;
+    let allHeadingLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (featuredWorkComponentTL) {
+        featuredWorkComponentTL.kill();
+      }
+
+      featuredWorkComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        featuredWorkComponentTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 5)
+        }, 0);
+      }
+      
+      if (items.length > 0) {
+        featuredWorkComponentTL.fromTo(items, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (buttons.length > 0) {
+        featuredWorkComponentTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Testimonial Component - GSAP Reveals
+function testimonialComponent() {
+  const components = document.querySelectorAll('.testimonial_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.testimonial_contain');
+    const graphics = component.querySelectorAll('.testimonial_graphics_wrap > *');
+    const paragraphs = component.querySelectorAll('.testimonial_content_name, .testimonial_content_info_wrap, .testimonial_content .c-paragraph *');
+    const buttons = component.querySelectorAll('.button_main_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let testimonialComponentTL;
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let paragraphSplits = [];
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (testimonialComponentTL) {
+        testimonialComponentTL.kill();
+      }
+
+      testimonialComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          paragraphSplits.forEach(split => split.revert());
+
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (graphics.length > 0) {
+        testimonialComponentTL.fromTo(graphics, {
+          yPercent: 50,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 2)
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        testimonialComponentTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (buttons.length > 0) {
+        testimonialComponentTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Compass CTA Component - GSAP Reveals
+function compassCTAComponent() {
+  const components = document.querySelectorAll('.compass-cta_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.compass-cta_contain');
+    const headings = component.querySelectorAll('.compass-cta_content_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.compass-cta_content_wrap .c-paragraph *');
+    const buttons = component.querySelectorAll('.button_main_wrap');
+    const image = component.querySelector('.compass-cta_media_svg');
+    const shape = component.querySelector('.compass-cta_corner-block');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let compassCTAComponentTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (compassCTAComponentTL) {
+        compassCTAComponentTL.kill();
+      }
+
+      compassCTAComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        compassCTAComponentTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        compassCTAComponentTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (buttons.length > 0) {
+        compassCTAComponentTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (image) {
+        compassCTAComponentTL.fromTo(image, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, ">-0.75");
+      }
+
+      if (shape) {
+        compassCTAComponentTL.fromTo(shape, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: defaultEasingOut
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Split Panel with Image Array Component - GSAP Reveals
+function splitPanelImageArrayComponent() {
+  const components = document.querySelectorAll('.split-panel-image-array_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.split-panel-image-array_contain');
+    const headings = component.querySelectorAll('.split-panel-image-array_content_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.split-panel-image-array_content_wrap .c-paragraph *');
+    const buttons = component.querySelectorAll('.split-panel-image-array_content_wrap .button_main_wrap');
+    const graphics = component.querySelectorAll('.split-panel-image-array_images_array_wrap > *');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let splitPanelImageArrayTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (splitPanelImageArrayTL) {
+        splitPanelImageArrayTL.kill();
+      }
+
+      splitPanelImageArrayTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (graphics.length > 0) {
+        splitPanelImageArrayTL.fromTo(graphics, {
+          yPercent: 50,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 2)
+        }, 0);
+      }
+
+      if (allHeadingLines.length > 0) {
+        splitPanelImageArrayTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (allParagraphLines.length > 0) {
+        splitPanelImageArrayTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (buttons.length > 0) {
+        splitPanelImageArrayTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Compass Form Component - GSAP Reveals
+function compassFormComponent() {
+  const components = document.querySelectorAll('.compass-form_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.compass-form_contain');
+    const headings = component.querySelectorAll('.compass-form_content_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.compass-form_content_wrap .c-paragraph *');
+    const formFields = component.querySelectorAll('.form_main_label_wrap');
+    const buttons = component.querySelectorAll('.button_main_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let compassFormComponentTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (compassFormComponentTL) {
+        compassFormComponentTL.kill();
+      }
+
+      compassFormComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        compassFormComponentTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        compassFormComponentTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      formFields.forEach(field => {
+        const fieldLabels = field.querySelectorAll('.form_main_label_text');
+        const fieldInput = field.querySelector('.form_main_select_wrap');
+
+        let allFieldLabelLines = [];
+        let fieldLabelSplits = [];
+
+        // Split field label text
+        fieldLabels.forEach(text => {
+          const split = new SplitText(text, {
+            type: 'lines',
+            mask: "lines",
+            linesClass: "gsap-line"
+          });
+          fieldLabelSplits.push(split);
+          allFieldLabelLines.push(...split.lines);
+        });
+
+        if (allFieldLabelLines.length > 0) {
+          compassFormComponentTL.fromTo(allFieldLabelLines, {
+            yPercent: headingYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger,
+            onComplete: () => {
+              fieldLabelSplits.forEach(split => split.revert());
+            }
+          }, ">-0.5");
+        }
+
+        if (fieldInput) {
+          compassFormComponentTL.fromTo(fieldInput, {
+            yPercent: 50,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, ">-0.6");
+        }
+      });
+
+      if (buttons.length > 0) {
+        compassFormComponentTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.6");
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
+// Cultural Impact Component - GSAP Reveals
+function culturalImpactComponent() {
+  const components = document.querySelectorAll('.culture_wrap');
+
+  components.forEach(component => {
+    const headerContainer = component.querySelector('.culture_content_wrap');
+    const headerHeadings = headerContainer.querySelectorAll('.c-heading');
+    const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph *');
+
+    const podcastContainer = component.querySelector('.culture_grid_podcast_wrap');
+    const podcastImage = podcastContainer.querySelector('.culture_grid_podcast_image');
+    const podcastHeadings = podcastContainer.querySelectorAll('.c-heading');
+    const podcastParagraphs = podcastContainer.querySelectorAll('.c-paragraph *');
+    const podcastButtons = podcastContainer.querySelectorAll('.button_main_wrap');
+
+    const noLogoContainer = component.querySelector('.culture_grid_no-logo_wrap');
+    const noLogoImage = noLogoContainer.querySelector('.culture_grid_no-logo_image');
+    const noLogoHeadings = noLogoContainer.querySelectorAll('.c-heading');
+    const noLogoParagraphs = noLogoContainer.querySelectorAll('.c-paragraph *');
+    const noLogoButtons = noLogoContainer.querySelectorAll('.button_main_wrap');
+
+    const hiddenItems = [...component.querySelectorAll('[data-gsap-hide]')];
+    if (component.hasAttribute('data-gsap-hide')) {
+      hiddenItems.push(component);
+    }
+
+    // Header animation
+    if (shouldSkipAnimation(headerContainer)) {
+      headerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+    } else {
+      let headerHeadingSplits = [];
+      let headerParagraphSplits = [];
+      let allHeaderHeadingLines = [];
+      let allHeaderParagraphLines = [];
+
+      // Split header heading text
+      headerHeadings.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        headerHeadingSplits.push(split);
+        allHeaderHeadingLines.push(...split.lines);
+      });
+
+      // Split header paragraph text
+      headerParagraphs.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        headerParagraphSplits.push(split);
+        allHeaderParagraphLines.push(...split.lines);
+      });
+
+      const headerTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: headerContainer,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          headerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          headerHeadingSplits.forEach(split => split.revert());
+          headerParagraphSplits.forEach(split => split.revert());
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeaderHeadingLines.length > 0) {
+        headerTL.fromTo(allHeaderHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allHeaderParagraphLines.length > 0) {
+        headerTL.fromTo(allHeaderParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+    }
+
+    // Podcast animation
+    if (shouldSkipAnimation(podcastContainer)) {
+      podcastContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+    } else {
+      let podcastHeadingSplits = [];
+      let podcastParagraphSplits = [];
+      let allPodcastHeadingLines = [];
+      let allPodcastParagraphLines = [];
+
+      // Split podcast heading text
+      podcastHeadings.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        podcastHeadingSplits.push(split);
+        allPodcastHeadingLines.push(...split.lines);
+      });
+
+      // Split podcast paragraph text
+      podcastParagraphs.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        podcastParagraphSplits.push(split);
+        allPodcastParagraphLines.push(...split.lines);
+      });
+
+      const podcastTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: podcastContainer,
+          start: 'top 40%',
+          once: true
+        },
+        onStart: () => {
+          podcastContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          podcastHeadingSplits.forEach(split => split.revert());
+          podcastParagraphSplits.forEach(split => split.revert());
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (podcastImage) {
+        podcastTL.fromTo(podcastImage, {
+          yPercent: 15,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, 0);
+      }
+
+      if (allPodcastHeadingLines.length > 0) {
+        podcastTL.fromTo(allPodcastHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (allPodcastParagraphLines.length > 0) {
+        podcastTL.fromTo(allPodcastParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (podcastButtons.length > 0) {
+        podcastTL.fromTo(podcastButtons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+    }
+
+    // NoLogo animation
+    if (shouldSkipAnimation(noLogoContainer)) {
+      noLogoContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+    } else {
+      let noLogoHeadingSplits = [];
+      let noLogoParagraphSplits = [];
+      let allNoLogoHeadingLines = [];
+      let allNoLogoParagraphLines = [];
+
+      // Split noLogo heading text
+      noLogoHeadings.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        noLogoHeadingSplits.push(split);
+        allNoLogoHeadingLines.push(...split.lines);
+      });
+
+      // Split noLogo paragraph text
+      noLogoParagraphs.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        noLogoParagraphSplits.push(split);
+        allNoLogoParagraphLines.push(...split.lines);
+      });
+
+      const noLogoTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: noLogoContainer,
+          start: 'top 40%',
+          once: true
+        },
+        onStart: () => {
+          noLogoContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          noLogoHeadingSplits.forEach(split => split.revert());
+          noLogoParagraphSplits.forEach(split => split.revert());
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (noLogoImage) {
+        noLogoTL.fromTo(noLogoImage, {
+          yPercent: 15,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, 0);
+      }
+
+      if (allNoLogoHeadingLines.length > 0) {
+        noLogoTL.fromTo(allNoLogoHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (allNoLogoParagraphLines.length > 0) {
+        noLogoTL.fromTo(allNoLogoParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (noLogoButtons.length > 0) {
+        noLogoTL.fromTo(noLogoButtons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+    }
   });
 }
 
@@ -3867,7 +5217,7 @@ function compassTeaserComponent() {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, 0);
@@ -3907,10 +5257,10 @@ function compassTeaserComponent() {
         },
         {
           opacity: 1,
-          duration: 0.8,
+          duration: 1,
           ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          stagger: (defaultStagger * 1.5)
+        }, ">-0.5");
       }
 
       if (buttons.length > 0) {
@@ -4045,7 +5395,7 @@ function fitAssessmentComponent() {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.8,
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, defaultPosition);
