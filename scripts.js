@@ -1407,6 +1407,7 @@ function initGsapAnimations() {
     innerHeroBasicComponent();
     innerHeroStyledComponent();
     innerHeroImageGridComponent();
+    cmsHeroPodcastComponent();
     headingWithImagesComponent();
     workScrollLockComponent();
     showreelComponent();
@@ -2572,6 +2573,156 @@ function innerHeroImageGridComponent() {
   });
 }
 
+// CMS Hero - Podcast Component - GSAP Reveals
+function cmsHeroPodcastComponent() {
+  const components = document.querySelectorAll('.hero-podcast_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.hero-podcast_contain');
+    const headings = component.querySelectorAll('.hero-podcast_content_heading');
+    const paragraphs = component.querySelectorAll('.hero-podcast_content_subline_wrap, .hero-podcast_content_length');
+    const buttons = component.querySelectorAll('.hero-podcast_content_wrap .button_main_wrap');
+    const image = component.querySelector('.hero-podcast_image');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    // Check if animation should be skipped
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return; // Exit early, skip animation setup
+    }
+
+    let cmsHeroPodcastTL;
+    let allHeadingLines = [];
+    // let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    // let paragraphSplits = [];
+
+    // Split heading text
+    headings.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Split paragraph text
+    // paragraphs.forEach(text => {
+    //   const split = new SplitText(text, {
+    //     type: 'lines',
+    //     mask: "lines",
+    //     linesClass: "gsap-line"
+    //   });
+    //   paragraphSplits.push(split);
+    //   allParagraphLines.push(...split.lines);
+    // });
+
+    // Function to create/recreate animation
+    function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
+      if (cmsHeroPodcastTL) {
+        cmsHeroPodcastTL.kill();
+      }
+
+      cmsHeroPodcastTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          // paragraphSplits.forEach(split => split.revert());
+  
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        cmsHeroPodcastTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      // if (allParagraphLines.length > 0) {
+      //   cmsHeroPodcastTL.fromTo(allParagraphLines, {
+      //     yPercent: paragraphYPercent,
+      //     opacity: 0
+      //   },
+      //   {
+      //     yPercent: 0,
+      //     opacity: 1,
+      //     duration: 1,
+      //     ease: defaultEasingOut,
+      //     stagger: defaultStagger
+      //   }, ">-0.75");
+      // }
+
+      if (paragraphs) {
+          cmsHeroPodcastTL.fromTo(paragraphs, {
+            yPercent: paragraphYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
+      }
+
+      if (buttons.length > 0) {
+        cmsHeroPodcastTL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
+
+      if (image) {
+        cmsHeroPodcastTL.fromTo(image, {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, ">-1");
+      }
+    }
+
+    // Initial call to create animation
+    createAnimation();
+  });
+}
+
 // Heading with Images Component - GSAP Reveals
 function headingWithImagesComponent() {
   const components = document.querySelectorAll('.about_wrap');
@@ -3034,18 +3185,6 @@ function ourExpertiseComponent() {
         }, 0);
       }
 
-      if (images.length > 0) {
-        ourExpertiseComponentTL.fromTo(images, {
-          opacity: 0,
-        },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, "<1");
-      }
-
       if (allParagraphLines.length > 0) {
         ourExpertiseComponentTL.fromTo(allParagraphLines, {
           yPercent: paragraphYPercent,
@@ -3072,6 +3211,18 @@ function ourExpertiseComponent() {
           ease: defaultEasingOut,
           stagger: defaultStagger
         }, defaultPosition);
+      }
+
+      if (images.length > 0) {
+        ourExpertiseComponentTL.fromTo(images, {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 1);
       }
     }
 
