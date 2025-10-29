@@ -1443,6 +1443,7 @@ function initGsapAnimations() {
     cmsWorkCreditsComponent();
     contactFormComponent();
     basicContentComponent();
+    expertiseStackComponent();
     footerComponent();
     setTimeout(compassTeaserComponent, 200);
     setTimeout(fitAssessmentComponent, 200);
@@ -2039,7 +2040,7 @@ function homepageHeroComponent() {
   components.forEach(component => {
     const container = component.querySelector('.hero-home_contain');
     const headings = component.querySelectorAll('.hero-home_content_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.hero-home_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.hero-home_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.hero-home_content_wrap .button_main_wrap');
     const graphic = component.querySelectorAll('.hero-home_graphic_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -2175,7 +2176,7 @@ function innerHeroBasicComponent() {
   components.forEach(component => {
     const container = component.querySelector('.hero-inner_contain');
     const headings = component.querySelectorAll('.hero-inner_heading_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.hero-inner_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.hero-inner_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.hero-inner_content_wrap .button_main_wrap');
     const graphics = component.querySelectorAll('.hero-inner_graphics_image_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -2312,7 +2313,7 @@ function innerHeroStyledComponent() {
   components.forEach(component => {
     const container = component.querySelector('.hero-inner-styled_contain');
     const headings = component.querySelectorAll('.hero-inner-styled_heading_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.hero-inner-styled_text_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.hero-inner-styled_text_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.hero-inner-styled_text_wrap .button_main_wrap');
     const graphics = component.querySelectorAll('.hero-inner-styled_graphics_1 > * > *, .hero-inner-styled_graphics_2 > * > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -2449,7 +2450,7 @@ function innerHeroImageGridComponent() {
   components.forEach(component => {
     const container = component.querySelector('.hero-inner-image-grid_contain');
     const headings = component.querySelectorAll('.hero-inner-image-grid_heading_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.hero-inner-image-grid_text_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.hero-inner-image-grid_text_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.hero-inner-image-grid_text_wrap .button_main_wrap');
     const graphics = component.querySelectorAll('.m-image-grid_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -2739,7 +2740,7 @@ function cmsHeroWorkComponent() {
     const container = component.querySelector('.hero-work_contain');
     const eyebrows = component.querySelectorAll('.eyebrow_text *');
     const headings = component.querySelectorAll('.hero-work_title');
-    const paragraphs = component.querySelectorAll('.hero-work_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.hero-work_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -2892,7 +2893,7 @@ function headingWithImagesComponent() {
     const container = component.querySelector('.about_contain');
     const headingText = component.querySelectorAll('.about_heading_text');
     const headingImages = component.querySelectorAll('.about_heading_image');
-    const paragraphs = component.querySelectorAll('.about_text_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.about_text_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.about_text_wrap .button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -3029,7 +3030,7 @@ function workScrollLockComponent() {
     const headerContainer = component.querySelector('.work-sl_layout.is-header');
     const footerContainer = component.querySelector('.work-sl_layout.is-footer');
     const headings = headerContainer.querySelectorAll('.work-sl_heading_wrap .c-heading');
-    const paragraphs = headerContainer.querySelectorAll('.work-sl_content_wrap .c-paragraph *');
+    const paragraphs = headerContainer.querySelectorAll('.work-sl_content_wrap .c-paragraph > *');
     const carousel = component.querySelector('.work-sl_layout.is-carousel-layout');
     const buttons = footerContainer.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -3259,7 +3260,7 @@ function ourExpertiseComponent() {
   components.forEach(component => {
     const container = component.querySelector('.our-expertise_layout');
     const headings = container.querySelectorAll('.our-expertise_heading_wrap .c-heading');
-    const paragraphs = container.querySelectorAll('.our-expertise_content_wrap .c-paragraph *');
+    const paragraphs = container.querySelectorAll('.our-expertise_content_wrap .c-paragraph > *');
     const buttons = container.querySelectorAll('.button_main_wrap');
     const images = container.querySelectorAll('.our-expertise_images_wrap .our-expertise_image');
     const hiddenItems = container.querySelectorAll('[data-gsap-hide]');
@@ -3430,7 +3431,7 @@ function logoCarouselComponent() {
   components.forEach(component => {
     const container = component.querySelector('.logo-carousel_contain');
     const headings = component.querySelectorAll('.logo-carousel_content_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.logo-carousel_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.logo-carousel_content_wrap .c-paragraph > *');
     const carouselWrap = component.querySelector('.logo-carousel_inner_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -3555,7 +3556,7 @@ function consciousCompassComponent() {
     const eyebrows = headerContainer.querySelectorAll('.eyebrow_text *');
     const headings = headerContainer.querySelectorAll('.c-heading');
     const compassGraphic = container.querySelector('.compass_graphic_wrap');
-    const paragraphs = container.querySelectorAll('.compass_content_text .c-paragraph *');
+    const paragraphs = container.querySelectorAll('.compass_content_text .c-paragraph > *');
     const listItems = container.querySelectorAll('.compass_content_list_item');
     const buttons = container.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -3735,7 +3736,7 @@ function podcastEpisodesSliderComponent() {
     const container = component.querySelector('.podcast-eps_contain');
     const eyebrows = component.querySelectorAll('.podcast-eps_content_wrap .eyebrow_text *');
     const headings = component.querySelectorAll('.podcast-eps_content_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.podcast-eps_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.podcast-eps_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const featuredPodcastSlider = component.querySelector('.podcast-eps_slider_featured-col');
     const thumbsPodcastSliders = component.querySelectorAll('.podcast-eps_slider_thumbs_wrap > *');
@@ -4115,9 +4116,9 @@ function splitScrollLockComponent() {
     const container = component.querySelector('.split-scroll-lock_contain.is-lock');
     const eyebrows = headerContainer.querySelectorAll('.eyebrow_text *');
     const headings = headerContainer.querySelectorAll('.c-heading');
-    const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph *');
+    const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph > *');
     const imageContainer = container.querySelector('.split-scroll-lock_graphic_wrap');
-    const paragraphs = container.querySelectorAll('.split-scroll-lock_content_text .c-paragraph *');
+    const paragraphs = container.querySelectorAll('.split-scroll-lock_content_text .c-paragraph > *');
     const listItems = container.querySelectorAll('.split-scroll-lock_content_list_item');
     const buttons = container.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -4323,7 +4324,7 @@ function iconGridComponent() {
   components.forEach(component => {
     const container = component.querySelector('.icon-grid_contain');
     const headings = component.querySelectorAll('.icon-grid_header_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.icon-grid_header_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.icon-grid_header_wrap .c-paragraph > *');
     const items = component.querySelectorAll('.icon-grid_item');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -4424,7 +4425,7 @@ function iconGridComponent() {
         const itemHeader = item.querySelectorAll('.icon-grid_item_header');
         const itemHeadings = item.querySelectorAll('.icon-grid_item_label');
         const itemIcons = item.querySelectorAll('.icon-grid_item_icon_wrap');
-        const itemParagraphs = item.querySelectorAll('.c-paragraph *');
+        const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
 
         let allItemHeadingLines = [];
         let allItemParagraphLines = [];
@@ -4633,7 +4634,7 @@ function testimonialComponent() {
   components.forEach(component => {
     const container = component.querySelector('.testimonial_contain');
     const graphics = component.querySelectorAll('.testimonial_graphics_wrap > *');
-    const paragraphs = component.querySelectorAll('.testimonial_content_name, .testimonial_content_info_wrap, .testimonial_content .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.testimonial_content_name, .testimonial_content_info_wrap, .testimonial_content .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -4743,7 +4744,7 @@ function compassCTAComponent() {
   components.forEach(component => {
     const container = component.querySelector('.compass-cta_contain');
     const headings = component.querySelectorAll('.compass-cta_content_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.compass-cta_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.compass-cta_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const image = component.querySelector('.compass-cta_media_svg');
     const shape = component.querySelector('.compass-cta_corner-block');
@@ -4891,7 +4892,7 @@ function splitPanelImageArrayComponent() {
   components.forEach(component => {
     const container = component.querySelector('.split-panel-image-array_contain');
     const headings = component.querySelectorAll('.split-panel-image-array_content_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.split-panel-image-array_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.split-panel-image-array_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.split-panel-image-array_content_wrap .button_main_wrap');
     const graphics = component.querySelectorAll('.split-panel-image-array_images_array_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -5030,7 +5031,7 @@ function compassFormComponent() {
   components.forEach(component => {
     const container = component.querySelector('.compass-form_contain');
     const headings = component.querySelectorAll('.compass-form_content_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.compass-form_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.compass-form_content_wrap .c-paragraph > *');
     const formFields = component.querySelectorAll('.form_main_label_wrap');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -5204,18 +5205,18 @@ function culturalImpactComponent() {
   components.forEach(component => {
     const headerContainer = component.querySelector('.culture_content_wrap');
     const headerHeadings = headerContainer.querySelectorAll('.c-heading');
-    const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph *');
+    const headerParagraphs = headerContainer.querySelectorAll('.c-paragraph > *');
 
     const podcastContainer = component.querySelector('.culture_grid_podcast_wrap');
     const podcastImage = podcastContainer.querySelector('.culture_grid_podcast_image');
     const podcastHeadings = podcastContainer.querySelectorAll('.c-heading');
-    const podcastParagraphs = podcastContainer.querySelectorAll('.c-paragraph *');
+    const podcastParagraphs = podcastContainer.querySelectorAll('.c-paragraph > *');
     const podcastButtons = podcastContainer.querySelectorAll('.button_main_wrap');
 
     const noLogoContainer = component.querySelector('.culture_grid_no-logo_wrap');
     const noLogoImage = noLogoContainer.querySelector('.culture_grid_no-logo_image');
     const noLogoHeadings = noLogoContainer.querySelectorAll('.c-heading');
-    const noLogoParagraphs = noLogoContainer.querySelectorAll('.c-paragraph *');
+    const noLogoParagraphs = noLogoContainer.querySelectorAll('.c-paragraph > *');
     const noLogoButtons = noLogoContainer.querySelectorAll('.button_main_wrap');
 
     const hiddenItems = [...component.querySelectorAll('[data-gsap-hide]')];
@@ -5538,7 +5539,7 @@ function podcastListComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const footerContainer = component.querySelector('.podcast-list_list_sub_wrap');
     const footerHeadings = footerContainer.querySelectorAll('.podcast-list_list_sub_content_wrap .c-heading');
-    const footerParagraphs = footerContainer.querySelectorAll('.podcast-list_list_sub_content_wrap .c-paragraph *');
+    const footerParagraphs = footerContainer.querySelectorAll('.podcast-list_list_sub_content_wrap .c-paragraph > *');
     const footerSignup = footerContainer.querySelector('.podcast-list_list_sub_form_wrap');
 
     // Main container animation - skip if already initialized
@@ -5748,7 +5749,7 @@ function statGridComponent() {
   components.forEach(component => {
     const container = component.querySelector('.stat-grid_contain');
     const headings = component.querySelectorAll('.stat-grid_heading_wrap .c-heading');
-    const paragraphs = component.querySelectorAll('.stat-grid_heading_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.stat-grid_heading_wrap .c-paragraph > *');
     const items = component.querySelectorAll('.stat-grid_item');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -5849,7 +5850,7 @@ function statGridComponent() {
         const itemHeader = item.querySelectorAll('.stat-grid_item_header');
         const itemHeadings = item.querySelectorAll('.stat-grid_item_label');
         const itemStats = item.querySelectorAll('.stat-grid_item_value_wrap');
-        const itemParagraphs = item.querySelectorAll('.c-paragraph *');
+        const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
   
         // Get the actual odometer elements (children of the wraps)
         const odometerElements = item.querySelectorAll('.stat-grid_item_value');
@@ -5972,7 +5973,7 @@ function officesComponent() {
   components.forEach(component => {
     const container = component.querySelector('.offices_contain');
     const headings = component.querySelectorAll('.offices_heading_wrap .c-heading, .offices-grid_text_subheading');
-    const paragraphs = component.querySelectorAll('.offices_text_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.offices_text_wrap .c-paragraph > *');
     const image = component.querySelector('.offices_image');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -6110,7 +6111,7 @@ function twoImageSliderComponent() {
   components.forEach(component => {
     const container = component.querySelector('.two-image-slider_contain');
     const headings = component.querySelectorAll('.two-image-slider_heading_wrap .c-heading, .two-image-slider_text_swiper_heading');
-    const paragraphs = component.querySelectorAll('.two-image-slider_text_wrap .c-paragraph *, .two-image-slider_text_swiper_text *');
+    const paragraphs = component.querySelectorAll('.two-image-slider_text_wrap .c-paragraph > *, .two-image-slider_text_swiper_text *');
     const swiperStuff = component.querySelectorAll('.two-image-slider_main_swiper, .two-image-slider_nav_wrap, .two-image-slider_secondary_swiper');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -6190,7 +6191,7 @@ function twoImageSliderComponent() {
           opacity: 1,
           duration: 1.25,
           ease: defaultEasingOut,
-          stagger: defaultStagger
+          stagger: 1
         }, 0);
       }
 
@@ -6205,7 +6206,7 @@ function twoImageSliderComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, ">-0.75");
+        }, "<0.75");
       }
 
       if (swiperStuff.length > 0) {
@@ -6249,7 +6250,7 @@ function accordionSectionComponent() {
   components.forEach(component => {
     const container = component.querySelector('.accordion-section_contain');
     const headings = component.querySelectorAll('.accordion-section_content_wrap .c-heading, .accordion-section_content_subheading');
-    const paragraphs = component.querySelectorAll('.accordion-section_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.accordion-section_content_wrap .c-paragraph > *');
     const accordionItems = component.querySelectorAll('.accordion-section_accordion_item');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -6389,7 +6390,7 @@ function splitPanelImageComponent() {
     const container = component.querySelector('.split-panel-image_contain');
     const eyebrows = component.querySelectorAll('.split-panel-image_content_inner .eyebrow_text *');
     const headings = component.querySelectorAll('.split-panel-image_content_inner .c-heading, .accordion-section_content_subheading');
-    const paragraphs = component.querySelectorAll('.split-panel-image_content_inner .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.split-panel-image_content_inner .c-paragraph > *');
     const image = component.querySelectorAll('.split-panel-image_image');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -6553,7 +6554,7 @@ function careersComponent() {
   components.forEach(component => {
     const container = component.querySelector('.careers_contain');
     const headings = component.querySelectorAll('.careers_heading_wrap .c-heading, .careers_content_subheading');
-    const paragraphs = component.querySelectorAll('.careers_content_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.careers_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const careersBoard = component.querySelector('.careers_board_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -6754,7 +6755,7 @@ function contactFormComponent() {
   components.forEach(component => {
     const container = component.querySelector('.contact-section_contain');
     const headings = component.querySelectorAll('.contact-section_sidebar .c-heading');
-    const paragraphs = component.querySelectorAll('.contact-section_sidebar .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.contact-section_sidebar .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const formWrap = component.querySelector('.contact-section_main');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -6955,7 +6956,7 @@ function cmsPodcastBodyComponent() {
 
     const bodyContainer = component.querySelector('.podcast-info_contain.is-body');
     const bodyHeadings = bodyContainer.querySelectorAll('.podcast-info_content_heading, .podcast-info_content_subheading');
-    const bodyParagraphs = bodyContainer.querySelectorAll('.c-paragraph *');
+    const bodyParagraphs = bodyContainer.querySelectorAll('.c-paragraph > *');
     const bodyButtons = bodyContainer.querySelectorAll('.button_main_wrap');
 
     const navContainer = component.querySelector('.podcast-info_contain.is-nav');
@@ -7121,7 +7122,7 @@ function cmsWorkOverviewComponent() {
     const container = component.querySelector('.work-overview_contain');
     const headings = component.querySelectorAll('.work-overview_heading_wrap .work-overview_heading');
     const pieces = component.querySelectorAll('.work-overview_desc_pt-1_wrap, .work-overview_desc_pt-2_wrap, .work-overview_info_wrap, .work-overview_stats_wrap');
-    // const paragraphs = component.querySelectorAll('.work-overview_content_wrap .c-paragraph *');
+    // const paragraphs = component.querySelectorAll('.work-overview_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -7208,7 +7209,7 @@ function cmsWorkOverviewComponent() {
         pieces.forEach(piece => {
           const pieceBoxes = piece.querySelectorAll('.work-overview_info_item');
           const pieceHeadings = piece.querySelectorAll('.work-overview_desc_heading, .work-overview_stats_item_value');
-          const pieceParagraphs = piece.querySelectorAll('.c-paragraph *, .work-overview_info_item_label, .work-overview_info_item_value, .work-overview_info_item_tags_list, .work-overview_stats_item_label');
+          const pieceParagraphs = piece.querySelectorAll('.c-paragraph > *, .work-overview_info_item_label, .work-overview_info_item_value, .work-overview_info_item_tags_list, .work-overview_stats_item_label');
 
           const pieceHeadingLines = [];
           const pieceParagraphLines = [];
@@ -7337,7 +7338,7 @@ function cmsWorkImageGridComponent() {
           pieceImages.push(piece);
         }
         const pieceHeadings = piece.querySelectorAll('.work-image-grid_content-image_heading');
-        const pieceParagraphs = piece.querySelectorAll('.work-image-grid_content-image_content_wrap .c-paragraph *');
+        const pieceParagraphs = piece.querySelectorAll('.work-image-grid_content-image_content_wrap .c-paragraph > *');
         const pieceButtons = piece.querySelectorAll('.button_main_wrap');
         const pieceHiddenItems = [...piece.querySelectorAll('[data-gsap-hide]')];
         if (piece.hasAttribute('data-gsap-hide')) {
@@ -7464,7 +7465,7 @@ function cmsWorkSplitContentComponent() {
   components.forEach(component => {
     const container = component.querySelector('.work-split-content_contain');
     const headings = component.querySelectorAll('.work-split-content_heading');
-    const paragraphs = component.querySelectorAll('.work-split-content_text_wrap .c-paragraph *');
+    const paragraphs = component.querySelectorAll('.work-split-content_text_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -7897,6 +7898,229 @@ function cmsWorkCreditsComponent() {
 
     // Initial call to create animation
     createAnimation();
+  });
+}
+
+// Expertise Stack Component - GSAP Reveals
+function expertiseStackComponent() {
+  const components = document.querySelectorAll('.expertise-stack_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.expertise-stack_contain.is-header');
+    const headings = container.querySelectorAll('.c-heading');
+    const paragraphs = container.querySelectorAll('.c-paragraph > *');
+    const itemsContainer = component.querySelector('.expertise-stack_contain.is-stack');
+    const items = component.querySelectorAll('.expertise-stack_item');
+
+    // Container animation
+    if (shouldSkipAnimation(container)) {
+      container.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+      itemsContainer.removeAttribute('data-gsap-hide');
+    } else {
+      let allHeadingLines = [];
+      let allParagraphLines = [];
+      let headingSplits = [];
+      let paragraphSplits = [];
+
+      // Split heading text
+      headings.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        headingSplits.push(split);
+        allHeadingLines.push(...split.lines);
+      });
+
+      // Split paragraph text
+      paragraphs.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        paragraphSplits.push(split);
+        allParagraphLines.push(...split.lines);
+      });
+
+      const containerTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 80%',
+          once: true
+        },
+        onStart: () => {
+          container.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
+          itemsContainer.removeAttribute('data-gsap-hide');
+        },
+        onComplete: () => {
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
+  
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
+        }
+      });
+
+      if (allHeadingLines.length > 0) {
+        containerTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (allParagraphLines.length > 0) {
+        containerTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
+      if (itemsContainer) {
+        containerTL.fromTo(itemsContainer, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut
+        }, ">-0.75");
+      }
+    }
+
+    // Individual item animations
+    if (items.length > 0) {
+      items.forEach(item => {
+        if (shouldSkipAnimation(item)) {
+          item.querySelectorAll('[data-gsap-hide]').forEach(el => el.removeAttribute('data-gsap-hide'));
+          return;
+        }
+
+        const itemImages = item.querySelectorAll('.expertise-stack_item_image_wrap');
+        const itemHeadings = item.querySelectorAll('.expertise-stack_item_heading .c-heading');
+        const itemParagraphs = item.querySelectorAll('.expertise-stack_item_text .c-paragraph > *');
+        const itemButtons = item.querySelectorAll('.button_main_wrap');
+
+        const itemHeadingLines = [];
+        const itemParagraphLines = [];
+        const itemHeadingSplits = [];
+        const itemParagraphSplits = [];
+
+        // Split heading text
+        itemHeadings.forEach(text => {
+          const split = new SplitText(text, {
+            type: 'lines',
+            mask: "lines",
+            linesClass: "gsap-line"
+          });
+          itemHeadingSplits.push(split);
+          itemHeadingLines.push(...split.lines);
+        });
+
+        // Split paragraph text
+        itemParagraphs.forEach(text => {
+          const split = new SplitText(text, {
+            type: 'lines',
+            mask: "lines",
+            linesClass: "gsap-line"
+          });
+          itemParagraphSplits.push(split);
+          itemParagraphLines.push(...split.lines);
+        });
+
+        const itemTL = gsap.timeline({
+          scrollTrigger: {
+            trigger: item,
+            start: 'top 50%',
+            once: true
+          },
+          onStart: () => {
+            item.querySelectorAll('[data-gsap-hide]').forEach(el => el.removeAttribute('data-gsap-hide'));
+          },
+          onComplete: () => {
+            itemHeadingSplits.forEach(split => split.revert());
+            itemParagraphSplits.forEach(split => split.revert());
+            
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                ScrollTrigger.refresh();
+              });
+            });
+          }
+        });
+
+        if (itemImages.length > 0) {
+          itemTL.fromTo(itemImages, {
+            opacity: 0
+          },
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, 0);
+        }
+
+        if (itemHeadingLines.length > 0) {
+          itemTL.fromTo(itemHeadingLines, {
+            yPercent: headingYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
+        }
+
+        if (itemParagraphLines.length > 0) {
+          itemTL.fromTo(itemParagraphLines, {
+            yPercent: paragraphYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
+        }
+
+        if (itemButtons.length > 0) {
+          itemTL.fromTo(itemButtons, {
+            yPercent: buttonsYPercent,
+            opacity: 0,
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
+        }
+      });
+    }
   });
 }
 
