@@ -2889,7 +2889,7 @@ function cmsHeroWorkComponent() {
 function headingWithImagesComponent() {
   const components = document.querySelectorAll('.about_wrap');
 
-  components.forEach(component => {
+  components.forEach((component, index) => {
     const container = component.querySelector('.about_contain');
     const headingText = component.querySelectorAll('.about_heading_text');
     const headingImages = component.querySelectorAll('.about_heading_image');
@@ -2931,6 +2931,19 @@ function headingWithImagesComponent() {
       paragraphSplits.push(split);
       allParagraphLines.push(...split.lines);
     });
+
+    // Expose splits to window for console access
+    if (!window.headingWithImagesSplits) window.headingWithImagesSplits = [];
+    window.headingWithImagesSplits[index] = {
+      headingSplits,
+      paragraphSplits,
+      revertHeadings: () => headingSplits.forEach(s => s.revert()),
+      revertParagraphs: () => paragraphSplits.forEach(s => s.revert()),
+      revertAll: () => {
+        headingSplits.forEach(s => s.revert());
+        paragraphSplits.forEach(s => s.revert());
+      }
+    };
 
     // Function to create/recreate animation
     function createAnimation() {
@@ -4863,9 +4876,9 @@ function compassCTAComponent() {
         },
         {
           opacity: 1,
-          duration: 1,
+          duration: 1.25,
           ease: defaultEasingOut
-        }, ">-1");
+        }, 0.5);
       }
 
       if (shape) {
@@ -5338,7 +5351,7 @@ function culturalImpactComponent() {
       const podcastTL = gsap.timeline({
         scrollTrigger: {
           trigger: podcastContainer,
-          start: 'top 40%',
+          start: 'top 50%',
           once: true
         },
         onStart: () => {
@@ -5445,7 +5458,7 @@ function culturalImpactComponent() {
       const noLogoTL = gsap.timeline({
         scrollTrigger: {
           trigger: noLogoContainer,
-          start: 'top 40%',
+          start: 'top 50%',
           once: true
         },
         onStart: () => {
@@ -5746,7 +5759,7 @@ function podcastListComponent() {
 function statGridComponent() {
   const components = document.querySelectorAll('.stat-grid_wrap');
 
-  components.forEach(component => {
+  components.forEach((component, index) => {
     const container = component.querySelector('.stat-grid_contain');
     const headings = component.querySelectorAll('.stat-grid_heading_wrap .c-heading');
     const paragraphs = component.querySelectorAll('.stat-grid_heading_wrap .c-paragraph > *');
@@ -5787,6 +5800,19 @@ function statGridComponent() {
       paragraphSplits.push(split);
       allParagraphLines.push(...split.lines);
     });
+
+    // Expose splits to window for console access
+    if (!window.statGridSplits) window.statGridSplits = [];
+    window.statGridSplits[index] = {
+      headingSplits,
+      paragraphSplits,
+      revertHeadings: () => headingSplits.forEach(s => s.revert()),
+      revertParagraphs: () => paragraphSplits.forEach(s => s.revert()),
+      revertAll: () => {
+        headingSplits.forEach(s => s.revert());
+        paragraphSplits.forEach(s => s.revert());
+      }
+    };
 
     // Function to create/recreate animation
     function createAnimation() {
@@ -6522,9 +6548,9 @@ function splitPanelImageComponent() {
         },
         {
           opacity: 1,
-          duration: 1,
+          duration: 1.25,
           ease: defaultEasingOut
-        }, ">-0.75");
+        }, 0.5);
 
       if (buttons.length > 0) {
         splitPanelImageComponentTL.fromTo(buttons, {
