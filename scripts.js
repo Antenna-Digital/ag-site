@@ -2051,6 +2051,10 @@ function homepageHeroComponent() {
       return; // Exit early, skip animation setup
     }
 
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
     let homepageHeroTL;
     let allHeadingLines = [];
     let allParagraphLines = [];
@@ -2058,27 +2062,30 @@ function homepageHeroComponent() {
     let headingSplits = [];
     let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
+    // Only split text if NOT on iOS
+    if (!isIOS) {
+      // Split heading text
+      headings.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        headingSplits.push(split);
+        allHeadingLines.push(...split.lines);
       });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
 
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
+      // Split paragraph text
+      paragraphs.forEach(text => {
+        const split = new SplitText(text, {
+          type: 'lines',
+          mask: "lines",
+          linesClass: "gsap-line"
+        });
+        paragraphSplits.push(split);
+        allParagraphLines.push(...split.lines);
       });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
+    }
 
     // Function to create/recreate animation
     function createAnimation() {
@@ -2098,8 +2105,11 @@ function homepageHeroComponent() {
           hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          // Only revert if splits exist (non-iOS)
+          if (!isIOS) {
+            headingSplits.forEach(split => split.revert());
+            paragraphSplits.forEach(split => split.revert());
+          }
   
           // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
@@ -2110,34 +2120,68 @@ function homepageHeroComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        homepageHeroTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
+      // iOS: Animate whole elements
+      if (isIOS) {
+        if (headings.length > 0) {
+          homepageHeroTL.fromTo(headings, {
+            yPercent: headingYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, 0);
+        }
+
+        if (paragraphs.length > 0) {
+          homepageHeroTL.fromTo(paragraphs, {
+            yPercent: paragraphYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
+        }
+      } 
+      // Non-iOS: Animate split lines
+      else {
+        if (allHeadingLines.length > 0) {
+          homepageHeroTL.fromTo(allHeadingLines, {
+            yPercent: headingYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, 0);
+        }
+
+        if (allParagraphLines.length > 0) {
+          homepageHeroTL.fromTo(allParagraphLines, {
+            yPercent: paragraphYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
+        }
       }
 
-      if (allParagraphLines.length > 0) {
-        homepageHeroTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
-
+      // Buttons and graphics animate the same on all devices
       if (buttons.length > 0) {
         homepageHeroTL.fromTo(buttons, {
           yPercent: buttonsYPercent,
