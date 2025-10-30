@@ -2024,7 +2024,7 @@ function navComponent() {
           opacity: 1,
           duration: 1.25,
           ease: defaultEasingOut
-        }, 1.5);
+        }, 1);
       }
     }
 
@@ -2135,7 +2135,7 @@ function homepageHeroComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-0.75");
       }
 
       if (buttons.length > 0) {
@@ -3125,7 +3125,7 @@ function workScrollLockComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-0.65");
       }
 
       if (carousel) {
@@ -3358,7 +3358,7 @@ function ourExpertiseComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-0.65");
       }
 
       if (buttons.length > 0) {
@@ -3525,7 +3525,7 @@ function logoCarouselComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: defaultStagger
-        }, defaultPosition);
+        }, ">-0.65");
       }
 
       if (carouselWrap) {
@@ -8132,7 +8132,7 @@ function compassTeaserComponent() {
     const container = component.querySelector('.conscious-compass-teaser_contain');
     const eyebrows = component.querySelectorAll('.ct_page-label');
     const headings = component.querySelectorAll('.ct_header-section h2');
-    const paragraphs = component.querySelectorAll('.ct_sub-heading, .ct_intro-text');
+    const paragraphs = component.querySelectorAll('.ct_sub-heading, .ct_intro-text, .ct_intro-text_attr, .ct_intro-text_attr_text');
     const questionGroups = component.querySelectorAll('.ct_question-group');
     const buttons = component.querySelectorAll('button.ct_btn-submit');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -8267,7 +8267,7 @@ function compassTeaserComponent() {
           duration: 1,
           ease: defaultEasingOut,
           stagger: (defaultStagger * 1.5)
-        }, ">-0.5");
+        }, ">-1");
       }
 
       if (buttons.length > 0) {
