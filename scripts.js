@@ -6,6 +6,7 @@ if ('scrollRestoration' in history) {
 }
 
 let lenis;
+let odometersAnimating = false;
 
 // Lenis setup
 function setupLenis() {
@@ -51,6 +52,7 @@ let defaultEasingInOut = 'power3.inOut';
 // iOS Detection (cached for performance)
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isPortrait = window.innerHeight > window.innerWidth || window.innerWidth < 768;
 
 /**
  * Returns appropriate ScrollTrigger start position based on viewport
@@ -88,7 +90,7 @@ function getAnimationStart(mobilePercent = 60, desktopPercent = 80) {
 function createTextSplits(elements, options = {}) {
   const splits = [];
   const lines = [];
-  const shouldSplit = !isIOS;
+  const shouldSplit = !isPortrait;
 
   if (!shouldSplit || !elements || elements.length === 0) {
     return { splits, lines, shouldSplit };
@@ -174,7 +176,7 @@ function animateText(timeline, config) {
 }
 
 function scheduleScrollTriggerRefresh(layoutChanged = false) {
-  if (!layoutChanged) return;
+  if (!layoutChanged || odometersAnimating) return;
 
   clearTimeout(refreshTimeout);
   refreshTimeout = setTimeout(() => {
@@ -837,14 +839,15 @@ function odometers() {
                 start: "top 90%",
                 invalidateOnRefresh: !0,
                 onEnter: function onEnter() {
+                  odometersAnimating = true;
+
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
 
-                    // Force layout recalculation after odometer completes
-                    gsap.delayedCall(3.2, function() {
-                      statVal.classList.add('force-block');
-                      void statVal.offsetHeight; // Force immediate reflow
-                      statVal.classList.remove('force-block');
+                    // Clear the flag after longest possible animation
+                    const maxDuration = (statValues.length - 1) * 0.15 + 3;
+                    gsap.delayedCall(maxDuration + 0.5, function() {
+                      odometersAnimating = false;
                     });
                   });
                 },
