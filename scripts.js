@@ -1405,8 +1405,8 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 /**
- * Returns appropriate ScrollTrigger start position based on device
- * Defaults to mobile: 60%, desktop: 80%
+ * Returns appropriate ScrollTrigger start position based on viewport
+ * Uses aspect ratio to detect tall/narrow screens (mobile portrait)
  * 
  * @param {String|Number} mobilePercent - Mobile start position (e.g., '60%' or 60)
  * @param {String|Number} desktopPercent - Desktop start position (e.g., '80%' or 80)
@@ -1421,7 +1421,10 @@ function getAnimationStart(mobilePercent = 60, desktopPercent = 80) {
     ? desktopPercent 
     : `${desktopPercent}%`;
   
-  return isIOS ? `top ${mobile}` : `top ${desktop}`;
+  // Check if viewport is portrait (taller than wide) or narrow
+  const isPortraitOrNarrow = window.innerHeight > window.innerWidth || window.innerWidth < 768;
+  
+  return isPortraitOrNarrow ? `top ${mobile}` : `top ${desktop}`;
 }
 
 /**
@@ -6392,7 +6395,7 @@ function expertiseStackComponent() {
           elements: itemHeadings,
           lines: itemHeadingSplitData.lines,
           shouldSplit: itemHeadingSplitData.shouldSplit,
-          position: ">-1",
+          position: 0.25,
           duration: 1.25
         });
 
