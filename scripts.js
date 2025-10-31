@@ -6442,7 +6442,7 @@ function footerComponent() {
           opacity: 1,
           duration: 1,
           ease: defaultEasingOut
-        }, ">-0.5");
+        }, 1);
       }
 
       if (copyrightWrap) {
