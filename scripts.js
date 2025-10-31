@@ -810,6 +810,8 @@ function odometers() {
     statSections.forEach((section) => {
       const statValues = section.querySelectorAll(".stat-grid_item_value");
       const statInit = function (statValues) {
+        let maxDelay = 0;
+
         statValues.forEach(function (statVal, index) {
           const originalValue = statVal.innerHTML.trim();
           if (originalValue !== "") {
@@ -832,6 +834,8 @@ function odometers() {
               duration: 3000,
             });
             var delay = index * 0.15;
+            maxDelay = Math.max(maxDelay, delay);
+
             gsap.to(statVal, {
               ease: "none",
               scrollTrigger: {
@@ -839,24 +843,21 @@ function odometers() {
                 start: "top 90%",
                 invalidateOnRefresh: !0,
                 onEnter: function onEnter() {
-                  // odometersAnimating = true;
+                  odometersAnimating = true;
 
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
-  
-                    // Force scroll recalculation after odometer completes
-                    gsap.delayedCall(3.2, function() {
-                      const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                      window.scrollTo(0, currentScroll - 1);
-                      requestAnimationFrame(() => {
-                        window.scrollTo(0, currentScroll);
-                      });
-                    });
                   });
                 },
               },
             });
           }
+        });
+  
+        // Refresh layout after ALL odometers in this section complete
+        const totalDuration = maxDelay + 3.2;
+        gsap.delayedCall(totalDuration, function() {
+          ScrollTrigger.refresh();
         });
       };
       statInit(statValues);
