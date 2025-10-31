@@ -4564,7 +4564,7 @@ function statGridComponent() {
         const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
 
         const itemHeadingSplitData = createTextSplits(itemHeadings);
-        const itemStatSplitData = createTextSplits(itemStats);
+        // const itemStatSplitData = createTextSplits(itemStats);
         const itemParagraphSplitData = createTextSplits(itemParagraphs);
 
         if (itemHeader.length > 0) {
