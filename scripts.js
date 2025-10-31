@@ -1405,6 +1405,26 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 /**
+ * Returns appropriate ScrollTrigger start position based on device
+ * Defaults to mobile: 60%, desktop: 80%
+ * 
+ * @param {String|Number} mobilePercent - Mobile start position (e.g., '60%' or 60)
+ * @param {String|Number} desktopPercent - Desktop start position (e.g., '80%' or 80)
+ * @returns {String} ScrollTrigger start position (e.g., 'top 60%')
+ */
+function getAnimationStart(mobilePercent = 60, desktopPercent = 80) {
+  // Normalize inputs - handle both '60%' and 60
+  const mobile = typeof mobilePercent === 'string' 
+    ? mobilePercent 
+    : `${mobilePercent}%`;
+  const desktop = typeof desktopPercent === 'string' 
+    ? desktopPercent 
+    : `${desktopPercent}%`;
+  
+  return isIOS ? `top ${mobile}` : `top ${desktop}`;
+}
+
+/**
  * Creates text splits for animation, skipping on iOS devices.
  * Returns an object with split instances and lines arrays.
  * 
@@ -2019,7 +2039,7 @@ function navComponent() {
       navTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2073,7 +2093,7 @@ function homepageHeroComponent() {
       homepageHeroTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2171,7 +2191,7 @@ function innerHeroBasicComponent() {
       innerHeroBasicTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2270,7 +2290,7 @@ function innerHeroStyledComponent() {
       innerHeroStyledTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2369,7 +2389,7 @@ function innerHeroImageGridComponent() {
       innerHeroImageGridTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2469,7 +2489,7 @@ function cmsHeroPodcastComponent() {
       cmsHeroPodcastTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2571,7 +2591,7 @@ function cmsHeroWorkComponent() {
       cmsHeroWorkTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2669,7 +2689,7 @@ function headingWithImagesComponent() {
       headingWithImagesTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2769,7 +2789,7 @@ function workScrollLockComponent() {
       workScrollLockComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: headerContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2864,7 +2884,7 @@ function showreelComponent() {
       showreelComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -2942,7 +2962,7 @@ function ourExpertiseComponent() {
       ourExpertiseComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3017,7 +3037,7 @@ function ourExpertiseComponent() {
     const ourExpertiseComponentGridTL = gsap.timeline({
       scrollTrigger: {
         trigger: gridContainer,
-        start: 'top 80%',
+        start: getAnimationStart(),
         once: true
       },
       onStart: () => {
@@ -3070,7 +3090,7 @@ function logoCarouselComponent() {
       logoCarouselTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3159,7 +3179,7 @@ function consciousCompassComponent() {
       consciousCompassTL = gsap.timeline({
         scrollTrigger: {
           trigger: headerContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3286,7 +3306,7 @@ function podcastEpisodesSliderComponent() {
       podcastEpisodesSliderTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3407,7 +3427,7 @@ function aboveFooterCTAComponent() {
       aboveFooterCTAComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3487,7 +3507,7 @@ function workGridComponent() {
       workGridComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3569,7 +3589,7 @@ function splitScrollLockComponent() {
       splitScrollLockTL = gsap.timeline({
         scrollTrigger: {
           trigger: headerContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3702,7 +3722,7 @@ function iconGridComponent() {
       iconGridComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3839,7 +3859,7 @@ function featuredWorkComponent() {
       featuredWorkComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -3928,7 +3948,7 @@ function testimonialComponent() {
       testimonialComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4021,7 +4041,7 @@ function compassCTAComponent() {
       compassCTAComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4130,7 +4150,7 @@ function splitPanelImageArrayComponent() {
       splitPanelImageArrayTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4231,7 +4251,7 @@ function compassFormComponent() {
       compassFormComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4354,7 +4374,7 @@ function culturalImpactComponent() {
       const headerTL = gsap.timeline({
         scrollTrigger: {
           trigger: headerContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4402,7 +4422,7 @@ function culturalImpactComponent() {
       const podcastTL = gsap.timeline({
         scrollTrigger: {
           trigger: podcastContainer,
-          start: 'top 50%',
+          start: getAnimationStart(30, 50),
           once: true
         },
         onStart: () => {
@@ -4477,7 +4497,7 @@ function culturalImpactComponent() {
       const noLogoTL = gsap.timeline({
         scrollTrigger: {
           trigger: noLogoContainer,
-          start: 'top 50%',
+          start: getAnimationStart(30, 50),
           once: true
         },
         onStart: () => {
@@ -4593,7 +4613,7 @@ function podcastListComponent() {
       const podcastListComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4657,7 +4677,7 @@ function podcastListComponent() {
       const footerTL = gsap.timeline({
         scrollTrigger: {
           trigger: footerContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4739,7 +4759,7 @@ function statGridComponent() {
       statGridComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4876,7 +4896,7 @@ function officesComponent() {
       officesComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -4976,7 +4996,7 @@ function twoImageSliderComponent() {
       twoImageSliderComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5080,7 +5100,7 @@ function accordionSectionComponent() {
       accordionSectionComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5183,7 +5203,7 @@ function splitPanelImageComponent() {
       splitPanelImageComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5292,7 +5312,7 @@ function careersComponent() {
       careersComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5387,7 +5407,7 @@ function careerPostComponent() {
       careerPostTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5448,7 +5468,7 @@ function contactFormComponent() {
       contactFormTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5540,7 +5560,7 @@ function basicContentComponent() {
       basicContentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5599,7 +5619,7 @@ function cmsPodcastBodyComponent() {
       const embedTL = gsap.timeline({
         scrollTrigger: {
           trigger: embedContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5639,7 +5659,7 @@ function cmsPodcastBodyComponent() {
       const bodyTL = gsap.timeline({
         scrollTrigger: {
           trigger: bodyContainer,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5735,7 +5755,7 @@ function cmsWorkOverviewComponent() {
       cmsWorkOverviewTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -5872,7 +5892,7 @@ function cmsWorkImageGridComponent() {
         const cmsWorkImageGridPieceTL = gsap.timeline({
           scrollTrigger: {
             trigger: piece,
-            start: 'top 80%',
+            start: getAnimationStart(),
             once: true
           },
           onStart: () => {
@@ -5968,7 +5988,7 @@ function cmsWorkSplitContentComponent() {
       cmsWorkSplitContentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6053,7 +6073,7 @@ function cmsWorkFullImageComponent() {
       cmsWorkFullImageTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6112,7 +6132,7 @@ function cmsWorkTestimonialComponent() {
       cmsWorkTestimonialTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6198,7 +6218,7 @@ function cmsWorkCreditsComponent() {
       cmsWorkCreditsComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6267,7 +6287,7 @@ function expertiseStackComponent() {
       const containerTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6337,7 +6357,7 @@ function expertiseStackComponent() {
         const itemTL = gsap.timeline({
           scrollTrigger: {
             trigger: item,
-            start: 'top 50%',
+            start: getAnimationStart(30, 50),
             once: true
           },
           onStart: () => {
@@ -6436,7 +6456,7 @@ function compassTeaserComponent() {
       compassTeaserComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6549,7 +6569,7 @@ function fitAssessmentComponent() {
       fitAssessmentComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
@@ -6670,7 +6690,7 @@ function footerComponent() {
       footerComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: 'top 80%',
+          start: getAnimationStart(),
           once: true
         },
         onStart: () => {
