@@ -834,11 +834,18 @@ function odometers() {
               ease: "none",
               scrollTrigger: {
                 trigger: statVal,
-                start: getAnimationStart(70, 90),
+                start: "top 90%",
                 invalidateOnRefresh: !0,
                 onEnter: function onEnter() {
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
+
+                    // Force layout recalculation after odometer completes
+                    gsap.delayedCall(3.2, function() {
+                      statVal.classList.add('force-block');
+                      void statVal.offsetHeight; // Force immediate reflow
+                      statVal.classList.remove('force-block');
+                    });
                   });
                 },
               },
