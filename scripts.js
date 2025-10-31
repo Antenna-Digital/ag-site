@@ -32,159 +32,6 @@ function setupLenis() {
   requestAnimationFrame(raf);
 }
 
-// Global Animations
-function initScrollAnimations(){
-  const configs = {
-    'fadeslide-up': {
-      yOffset: 40,
-      duration: 0.8,
-      stagger: 0.15,
-      animateProps: { opacity: 1, y: 0 },
-      initialProps: el => ({ opacity: 0, y: 40 })
-    },
-    'fade': {
-      duration: 0.8,
-      stagger: 0.15,
-      animateProps: { opacity: 1 },
-      initialProps: el => ({ opacity: 0 })
-    }
-    // Add more animation types here as needed
-  };
-
-  const globalConfig = {
-    attr: '[data-anim]', // Now selects all data-anim elements
-    batchWindow: 100,
-    triggerPercent: 0.90,
-    get triggerPoint() { return `top ${this.triggerPercent * 100}%` }
-  };
-
-  // Track which elements have already animated
-  const animatedElements = new Set();
-
-  function getAnimConfig(el) {
-    const animType = el.getAttribute('data-anim');
-    return configs[animType] || configs['fadeslide-up']; // Default fallback
-  }
-
-  function handleInitialElements() {
-    const scrollY = window.scrollY || window.pageYOffset;
-    const triggerY = scrollY + (window.innerHeight * globalConfig.triggerPercent);
-    const viewportTop = scrollY;
-
-    const elements = gsap.utils.toArray(globalConfig.attr);
-    const above = [];
-    const inView = [];
-
-    elements.forEach(el => {
-      const rect = el.getBoundingClientRect();
-      const elementY = rect.top + scrollY;
-
-      if (elementY < viewportTop) {
-        above.push(el);
-        animatedElements.add(el);
-      } else if (elementY < triggerY) {
-        inView.push(el);
-        animatedElements.add(el);
-      }
-    });
-
-    // Instantly show elements above viewport
-    above.forEach(el => {
-      const config = getAnimConfig(el);
-      gsap.set(el, config.animateProps);
-    });
-
-    // Group inView elements by animation type for proper staggering
-    const inViewByType = {};
-    inView.forEach(el => {
-      const animType = el.getAttribute('data-anim');
-      if (!inViewByType[animType]) inViewByType[animType] = [];
-      inViewByType[animType].push(el);
-    });
-
-    // Animate each group with its own stagger
-    Object.entries(inViewByType).forEach(([animType, elements]) => {
-      const config = configs[animType] || configs['fadeslide-up'];
-      
-      // Sort elements by their position for consistent stagger order
-      elements.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-      
-      elements.forEach((el, index) => {
-        const customDelay = parseInt(el.getAttribute('data-anim-delay') || 0) / 1000; // Convert ms to seconds
-        const staggerDelay = index * config.stagger;
-        const totalDelay = staggerDelay + customDelay;
-        
-        gsap.to(el, {
-          ...config.animateProps,
-          duration: config.duration,
-          ease: "power3.out",
-          delay: totalDelay,
-          overwrite: 'auto'
-        });
-      });
-    });
-  }
-
-  // Create triggers AFTER checking initial state
-  setTimeout(() => {
-    handleInitialElements();
-
-    // Group queues by animation type
-    const queues = {};
-    const timers = {};
-
-    function flushQueue(animType) {
-      const queue = queues[animType];
-      if (!queue || !queue.length) return;
-    
-      const config = configs[animType] || configs['fadeslide-up'];
-      
-      // Sort queue by position for consistent stagger
-      queue.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-      
-      queue.forEach((el, index) => {
-        const customDelay = parseInt(el.getAttribute('data-anim-delay') || 0) / 1000; // Convert ms to seconds
-        const staggerDelay = index * config.stagger;
-        const totalDelay = staggerDelay + customDelay;
-        
-        gsap.to(el, {
-          ...config.animateProps,
-          duration: config.duration,
-          ease: "power3.out",
-          delay: totalDelay,
-          overwrite: 'auto'
-        });
-      });
-      
-      queues[animType] = [];
-    }
-
-    gsap.utils.toArray(globalConfig.attr).forEach(el => {
-      if (animatedElements.has(el)) return;
-
-      const animType = el.getAttribute('data-anim');
-
-      ScrollTrigger.create({
-        trigger: el,
-        start: globalConfig.triggerPoint,
-        once: true,
-        onEnter: () => {
-          if (!animatedElements.has(el)) {
-            animatedElements.add(el);
-
-            // Initialize queue for this animation type if needed
-            if (!queues[animType]) queues[animType] = [];
-
-            queues[animType].push(el);
-            clearTimeout(timers[animType]);
-            timers[animType] = setTimeout(() => flushQueue(animType), globalConfig.batchWindow);
-          }
-        }
-      });
-    });
-  }, 100);
-};
-
 // Swipers
 function swipers() {
 	// Podcast Slider
@@ -1346,7 +1193,6 @@ function finsweetStuff() {
         list.addHook("afterRender", (items) => {
           ScrollTrigger.refresh();
           lenis.resize();
-          // initScrollAnimations();
           // initGsapAnimations();
           podcastListComponent();
           window.scrollBy(0, 1);
@@ -1523,6 +1369,16 @@ function animateText(timeline, config) {
       ...toVars
     }, position);
   }
+}
+
+function scheduleScrollTriggerRefresh(layoutChanged = false) {
+  if (!layoutChanged) return;
+
+  clearTimeout(refreshTimeout);
+  refreshTimeout = setTimeout(() => {
+    lenis?.resize();
+    ScrollTrigger.refresh();
+  }, 100);
 }
 
 //-----------------//
@@ -2108,11 +1964,7 @@ function homepageHeroComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -2206,11 +2058,7 @@ function innerHeroBasicComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
           
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -2305,11 +2153,7 @@ function innerHeroStyledComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -2404,11 +2248,7 @@ function innerHeroImageGridComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -2503,11 +2343,7 @@ function cmsHeroPodcastComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -2607,11 +2443,7 @@ function cmsHeroWorkComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -2704,11 +2536,7 @@ function headingWithImagesComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -2804,11 +2632,7 @@ function workScrollLockComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -2898,11 +2722,7 @@ function showreelComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -2977,11 +2797,7 @@ function ourExpertiseComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -3105,11 +2921,7 @@ function logoCarouselComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -3195,11 +3007,7 @@ function consciousCompassComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -3322,11 +3130,7 @@ function podcastEpisodesSliderComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -3442,11 +3246,7 @@ function aboveFooterCTAComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -3517,11 +3317,7 @@ function workGridComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
       
@@ -3606,11 +3402,7 @@ function splitScrollLockComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -3737,11 +3529,7 @@ function iconGridComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -3873,11 +3661,7 @@ function featuredWorkComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -3962,11 +3746,7 @@ function testimonialComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -4056,11 +3836,7 @@ function compassCTAComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -4165,11 +3941,7 @@ function splitPanelImageArrayComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -4266,11 +4038,7 @@ function compassFormComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -4388,11 +4156,7 @@ function culturalImpactComponent() {
             headerHeadingSplitData.splits.forEach(split => split.revert());
             headerParagraphSplitData.splits.forEach(split => split.revert());
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -4436,11 +4200,7 @@ function culturalImpactComponent() {
             podcastHeadingSplitData.splits.forEach(split => split.revert());
             podcastParagraphSplitData.splits.forEach(split => split.revert());
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -4511,11 +4271,7 @@ function culturalImpactComponent() {
             noLogoHeadingSplitData.splits.forEach(split => split.revert());
             noLogoParagraphSplitData.splits.forEach(split => split.revert());
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -4626,11 +4382,7 @@ function podcastListComponent() {
           if (headingSplitData.shouldSplit) {
             headingSplitData.splits.forEach(split => split.revert());
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -4691,11 +4443,7 @@ function podcastListComponent() {
             footerHeadingSplitData.splits.forEach(split => split.revert());
             footerParagraphSplitData.splits.forEach(split => split.revert());
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -4774,11 +4522,7 @@ function statGridComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -4911,11 +4655,7 @@ function officesComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5011,11 +4751,7 @@ function twoImageSliderComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -5115,11 +4851,7 @@ function accordionSectionComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -5219,11 +4951,7 @@ function splitPanelImageComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5327,11 +5055,7 @@ function careersComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5417,11 +5141,7 @@ function careerPostComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5483,11 +5203,7 @@ function contactFormComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -5570,11 +5286,7 @@ function basicContentComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5629,11 +5341,7 @@ function cmsPodcastBodyComponent() {
           embedContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5674,11 +5382,7 @@ function cmsPodcastBodyComponent() {
             bodyHeadingSplitData.splits.forEach(split => split.revert());
             bodyParagraphSplitData.splits.forEach(split => split.revert());
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -5769,11 +5473,7 @@ function cmsWorkOverviewComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -5907,11 +5607,7 @@ function cmsWorkImageGridComponent() {
               pieceParagraphSplitData.splits.forEach(split => split.revert());
             }
 
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                ScrollTrigger.refresh();
-              });
-            });
+            scheduleScrollTriggerRefresh();
           }
         });
 
@@ -6002,11 +5698,7 @@ function cmsWorkSplitContentComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -6083,11 +5775,7 @@ function cmsWorkFullImageComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -6146,11 +5834,7 @@ function cmsWorkTestimonialComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -6232,11 +5916,7 @@ function cmsWorkCreditsComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -6303,11 +5983,7 @@ function expertiseStackComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -6372,11 +6048,7 @@ function expertiseStackComponent() {
               itemParagraphSplitData.splits.forEach(split => split.revert());
             }
             
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                ScrollTrigger.refresh();
-              });
-            });
+            scheduleScrollTriggerRefresh();
           }
         });
 
@@ -6472,11 +6144,7 @@ function compassTeaserComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -6585,11 +6253,7 @@ function fitAssessmentComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
           }
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh(true);
         }
       });
 
@@ -6704,11 +6368,7 @@ function footerComponent() {
             headingSplitData.splits.forEach(split => split.revert());
           }
   
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-          });
+          scheduleScrollTriggerRefresh();
         }
       });
 
@@ -6786,12 +6446,7 @@ const init = () => {
   expertiseStackNav();
   heroVantaBG();
   finsweetStuff();
-  
-  // Delay non-pinned animations slightly
-  // setTimeout(() => {
-  //   initScrollAnimations();
-  // }, 50);
-  
+
   // Single refresh after everything
   setTimeout(() => {
     ScrollTrigger.refresh(true);
