@@ -1391,10 +1391,116 @@ let buttonsYPercent = 150;
 let headingY = 40;
 let paragraphY = 40;
 let defaultStagger = 0.1;
-let defaultPosition = ">-0.25";
+let defaultPosition = ">-0.5";
 let defaultEasingIn = 'power3.in';
 let defaultEasingOut = 'power3.out';
 let defaultEasingInOut = 'power3.inOut';
+
+// =====================================================
+// TEXT ANIMATION HELPERS - iOS Compatible
+// =====================================================
+
+// iOS Detection (cached for performance)
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+/**
+ * Creates text splits for animation, skipping on iOS devices.
+ * Returns an object with split instances and lines arrays.
+ * 
+ * Modern Technique: Uses object destructuring in return for clean API
+ * 
+ * @param {NodeList|Array} elements - Elements to split
+ * @param {Object} options - SplitText configuration
+ * @returns {Object} { splits: Array, lines: Array, shouldSplit: Boolean }
+ */
+function createTextSplits(elements, options = {}) {
+  const splits = [];
+  const lines = [];
+  const shouldSplit = !isIOS;
+
+  if (!shouldSplit || !elements || elements.length === 0) {
+    return { splits, lines, shouldSplit };
+  }
+
+  const defaultOptions = {
+    type: 'lines',
+    mask: 'lines',
+    linesClass: 'gsap-line',
+    ...options // Spread operator merges user options with defaults
+  };
+
+  elements.forEach(element => {
+    const split = new SplitText(element, defaultOptions);
+    splits.push(split);
+    lines.push(...split.lines); // Spread operator flattens arrays
+  });
+
+  return { splits, lines, shouldSplit };
+}
+
+/**
+ * Animates text elements with appropriate method based on device.
+ * Uses line-by-line animation on desktop, whole-element animation on iOS.
+ * 
+ * Modern Technique: Single function handles both animation modes
+ * 
+ * @param {gsap.core.Timeline} timeline - GSAP timeline to add animation to
+ * @param {Object} config - Animation configuration
+ * @param {NodeList|Array} config.elements - Elements to animate
+ * @param {Array} config.lines - Split lines (from createTextSplits)
+ * @param {Boolean} config.shouldSplit - Whether splitting occurred
+ * @param {Number} config.yPercent - Line animation yPercent (default: headingYPercent)
+ * @param {Number} config.y - Whole element y offset for iOS (default: headingY)
+ * @param {String} config.position - Timeline position (default: ">")
+ * @param {Number} config.duration - Animation duration
+ * @param {Object} config.fromVars - Additional from vars
+ * @param {Object} config.toVars - Additional to vars
+ */
+function animateText(timeline, config) {
+  const {
+    elements,
+    lines,
+    shouldSplit,
+    yPercent = headingYPercent,
+    y = headingY,
+    position = ">",
+    duration = 1.25,
+    fromVars = {},
+    toVars = {}
+  } = config; // Object destructuring with default values
+
+  // iOS: Animate whole elements
+  if (!shouldSplit && elements && elements.length > 0) {
+    timeline.fromTo(elements, {
+      y,
+      opacity: 0,
+      ...fromVars // Spread allows custom properties
+    }, {
+      y: 0,
+      opacity: 1,
+      duration,
+      ease: defaultEasingOut,
+      stagger: defaultStagger,
+      ...toVars
+    }, position);
+  }
+  // Desktop: Animate split lines
+  else if (shouldSplit && lines && lines.length > 0) {
+    timeline.fromTo(lines, {
+      yPercent,
+      opacity: 0,
+      ...fromVars
+    }, {
+      yPercent: 0,
+      opacity: 1,
+      duration,
+      ease: defaultEasingOut,
+      stagger: defaultStagger,
+      ...toVars
+    }, position);
+  }
+}
 
 //-----------------//
 /* GSAP Animations */
@@ -1456,35 +1562,21 @@ function initGsapAnimations() {
 };
 
 // Helper function
-// ---------------
-// Trigger when top of container hits 80% from top of viewport
-// shouldSkipAnimation(container, 'top 80%')
-// ---------------
-// Trigger when bottom of container hits 10% from top of viewport
-// shouldSkipAnimation(container, 'bottom 10%')
-// ---------------
-// Trigger when top of container hits center
-// shouldSkipAnimation(container, 'top 50%')
-// ---------------
 function shouldSkipAnimation(container, startPosition = 'bottom 20%') {
   const scrollY = window.scrollY || window.pageYOffset;
   const viewportHeight = window.innerHeight;
   const rect = container.getBoundingClientRect();
   
-  // Parse the start position
   const [edge, percentString] = startPosition.split(' ');
   const percent = parseFloat(percentString) / 100;
   
   let triggerY;
   
   if (edge === 'top') {
-    // Top of element relative to viewport percentage from top
     triggerY = rect.top + scrollY;
   } else if (edge === 'bottom') {
-    // Bottom of element relative to viewport percentage from top
     triggerY = rect.bottom + scrollY;
   } else {
-    // Fallback to top if unrecognized
     triggerY = rect.top + scrollY;
   }
   
@@ -1495,17 +1587,13 @@ function shouldSkipAnimation(container, startPosition = 'bottom 20%') {
 
 // Work Scroll Lock Component
 function workScrollLock(){
-  // Initialize all carousel sections on the page
   document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
-    
-    // Get elements within this specific container
     const carouselLayout = container.querySelector('.work-sl_layout.is-carousel-layout');
     const collectionWrap = container.querySelector('.work-sl_collection_wrap');
     const collectionList = container.querySelector('.work-sl_collection_list');
     const collectionItems = container.querySelectorAll('.work-sl_collection_item');
     const progressBar = container.querySelector('.work-sl_carousel_progress');
 
-    // Function to calculate scroll distance (will be called on refresh)
     const getScrollDistance = () => {
       const computedStyle = window.getComputedStyle(collectionList);
       const paddingLeft = parseFloat(computedStyle.paddingLeft);
@@ -1514,25 +1602,18 @@ function workScrollLock(){
       return collectionWrap.scrollWidth - window.innerWidth + totalPadding;
     };
     
-    // Create timeline for this specific container
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: carouselLayout,
         start: 'center center',
-        end: () => `+=${getScrollDistance() * 2}`, // Function-based value
+        end: () => `+=${getScrollDistance() * 2}`,
         scrub: true,
         pin: true,
         invalidateOnRefresh: true,
-        pinSpacing: true,  // Explicitly set pin spacing
-        // anticipatePin: 1,
-        // scroller: document.body,
-        // pinType: "transform",
+        pinSpacing: true,
         pinType: "fixed",
-        // immediatePin: true,
         onUpdate: (self) => {
-          // Update progress bar width based on scroll progress
           if (progressBar) {
-            // Adjust progress to account for padding
             const adjustedProgress = Math.max(0, Math.min(1, (self.progress - 0.1) / 0.8));
             gsap.set(progressBar, {
               width: `${adjustedProgress * 100}%`
@@ -1542,43 +1623,32 @@ function workScrollLock(){
       }
     });
     
-    // Add padding before animation starts (10% of timeline)
     tl.to({}, { duration: 0.1 });
-    
-    // Horizontal scroll animation (80% of timeline)
     tl.to(collectionList, {
       x: () => -getScrollDistance(),
       ease: 'none',
       duration: 0.8
     });
-    
-    // Add padding after animation ends (10% of timeline)
     tl.to({}, { duration: 0.1 });
   });
 
-  // Refresh ScrollTrigger on window resize
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      ScrollTrigger.refresh(true); // Force refresh
-    }, 250); // Debounce resize
+      ScrollTrigger.refresh(true);
+    }, 250);
   });
 };
 
 // Compass Scroll Lock Component with SVG Chart
 function compassScrollLock() {
-  // Chart data states for different scroll positions
   const chartStates = [
-    // State 1: Complete the assessment
     [20, 45, 55, 10, 70, 25, 50, 45],
-    // State 2: Get your score
     [45, 20, 45, 55, 10, 70, 25, 50],
-    // State 3: View detailed feedback
     [50, 45, 20, 45, 55, 10, 70, 25]
   ];
 
-  // Chart configuration
   const chartConfig = {
     labels: ['Awake', 'Aware', 'Reflective', 'Attentive', 'Cogent', 'Sentient', 'Visionary', 'Intentional'],
     centerX: 226,
@@ -1586,22 +1656,18 @@ function compassScrollLock() {
     maxRadius: 225
   };
 
-  // Get elements
   const compassWrap = document.querySelector('.compass_wrap');
   const listItems = gsap.utils.toArray('.compass_content_list_item');
   const itemCount = listItems.length;
   
-  // Exit if elements don't exist
   if (!compassWrap || itemCount === 0) return;
 
-  // Create or get the SVG chart
   let chartContainer = document.querySelector('.compass_graphic_wrap');
   if (!chartContainer) {
     console.error('Chart container not found');
     return;
   }
 
-  // Replace canvas with SVG if needed
   if (chartContainer.tagName === 'CANVAS') {
     const svgContainer = document.createElement('div');
     svgContainer.className = chartContainer.className;
@@ -1609,10 +1675,8 @@ function compassScrollLock() {
     chartContainer = svgContainer;
   }
 
-  // Create the SVG structure
   chartContainer.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -50 652 552" style="width: 100%; height: 100%;">
-      <!-- Background rings -->
       <g class="chart-rings">
         <path d="M226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
               fill="#f7f6f4" stroke="none" opacity="0.8"/>
@@ -1623,39 +1687,27 @@ function compassScrollLock() {
         <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75Z" 
               fill="#e1dfda" stroke="none" opacity="0.8"/>
       </g>
-      
-      <!-- Data shape -->
       <polygon class="data-shape" 
                points="" 
                fill="rgba(222, 228, 46, 0.7)" 
                stroke="#DEE42E" 
                stroke-width="2"/>
-      
-      <!-- Data points -->
       <g class="data-points"></g>
-      
-      <!-- Grid lines -->
       <g class="grid-lines">
         <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75ZM226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5ZM226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25ZM226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
               stroke="#11171E" stroke-width="1.5" fill="none" opacity="0.9"/>
       </g>
-      
-      <!-- Center lines -->
       <g class="center-lines"></g>
-      
-      <!-- Labels -->
       <g class="chart-labels"></g>
     </svg>
   `;
 
-  // Get SVG elements
   const svg = chartContainer.querySelector('svg');
   const dataShape = svg.querySelector('.data-shape');
   const dataPointsGroup = svg.querySelector('.data-points');
   const centerLinesGroup = svg.querySelector('.center-lines');
   const labelsGroup = svg.querySelector('.chart-labels');
 
-  // Function to calculate data points
   function calculateDataPoints(data) {
     return data.map((value, index) => {
       const normalizedValue = (value / 100) * chartConfig.maxRadius;
@@ -1666,7 +1718,6 @@ function compassScrollLock() {
     });
   }
 
-  // Function to calculate label positions
   function calculateLabelPosition(index, total, radius) {
     const angle = (index * 2 * Math.PI / total) - Math.PI / 2;
     const isCardinal = index % 2 === 0;
@@ -1698,7 +1749,6 @@ function compassScrollLock() {
     return { x, y, textAnchor, dy };
   }
 
-  // Initialize center lines
   chartConfig.labels.forEach((_, index) => {
     const angle = (index * 2 * Math.PI / chartConfig.labels.length) - Math.PI / 2;
     const endX = chartConfig.centerX + chartConfig.maxRadius * Math.cos(angle);
@@ -1715,7 +1765,6 @@ function compassScrollLock() {
     centerLinesGroup.appendChild(line);
   });
 
-  // Initialize labels
   chartConfig.labels.forEach((label, index) => {
     const pos = calculateLabelPosition(index, chartConfig.labels.length, 260);
     
@@ -1731,19 +1780,16 @@ function compassScrollLock() {
     labelsGroup.appendChild(text);
   });
 
-  // Function to update chart
   function updateChart(data, progress = 1) {
     const points = calculateDataPoints(data);
     const pointsString = points.map(p => `${p.x},${p.y}`).join(' ');
     
-    // Animate polygon points
     gsap.to(dataShape, {
       attr: { points: pointsString },
       duration: 0.5,
       ease: 'ease'
     });
     
-    // Update or create data points
     const existingPoints = dataPointsGroup.querySelectorAll('circle');
     
     points.forEach((point, index) => {
@@ -1766,38 +1812,29 @@ function compassScrollLock() {
     });
   }
 
-  // Function to interpolate between data states
   function interpolateData(data1, data2, progress) {
     return data1.map((val, i) => val + (data2[i] - val) * progress);
   }
 
   let currentSection = 0;
-  
-  // Initialize with first state
   updateChart(chartStates[0]);
   
-  // Create the main ScrollTrigger
   const compassTrigger = ScrollTrigger.create({
     trigger: compassWrap,
     start: 'center center-=3%',
     end: `+=${itemCount * 100}%`,
     pin: true,
     pinSpacing: true,
-    // anticipatePin: 1,
     scroller: document.body,
-    // pinType: "transform",
     pinType: "fixed",
-    // immediatePin: true,
     scrub: true,
     onUpdate: (self) => {
       const progress = self.progress;
       const activeIndex = Math.floor(progress * itemCount);
       const itemProgress = (progress * itemCount) % 1;
   
-      // Get text elements
       const textElements = gsap.utils.toArray('.compass_content_text');
       
-      // Update list items
       listItems.forEach((item, index) => {
         if (index < activeIndex) {
           item.classList.add('is-active');
@@ -1811,7 +1848,6 @@ function compassScrollLock() {
         }
       });
   
-      // Update text elements - only the current one is active
       textElements.forEach((text, index) => {
         if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
           text.classList.add('is-active');
@@ -1820,13 +1856,11 @@ function compassScrollLock() {
         }
       });
       
-      // Update chart based on scroll
       const sectionIndex = Math.min(activeIndex, chartStates.length - 1);
       
       if (sectionIndex !== currentSection || (itemProgress > 0 && sectionIndex < chartStates.length - 1)) {
         let dataToShow;
         
-        // Interpolate between states for smooth transitions
         if (itemProgress > 0 && sectionIndex < chartStates.length - 1) {
           dataToShow = interpolateData(
             chartStates[sectionIndex],
@@ -1851,7 +1885,6 @@ function compassScrollLock() {
 
 // Split Panel Scroll Lock Component
 function splitScrollLock() {
-  // Get elements
   const scrollWrap = document.querySelector('.split-scroll-lock_contain.u-container-large');
   const listItems = gsap.utils.toArray('.split-scroll-lock_content_list_item');
   const textWrap = document.querySelector('.split-scroll-lock_content_text_wrap');
@@ -1860,58 +1893,46 @@ function splitScrollLock() {
   const innerImages = gsap.utils.toArray('.split-scroll-lock_graphic_inner_image');
   const itemCount = listItems.length;
   
-  // Exit if elements don't exist
   if (!scrollWrap || itemCount === 0) return;
 
-  // Function to calculate and set min-height for text wrap
   function updateTextWrapHeight() {
     if (!textWrap || textElements.length === 0) return;
     
-    // Reset min-height to auto to get natural heights
     textWrap.style.minHeight = 'auto';
     
-    // Calculate tallest element height (excluding margin)
     let maxHeight = 0;
     textElements.forEach(element => {
       const height = element.getBoundingClientRect().height;
       maxHeight = Math.max(maxHeight, height);
     });
     
-    // Set min-height
     textWrap.style.minHeight = `${maxHeight}px`;
   }
 
-  // Initial height calculation
   updateTextWrapHeight();
   
-  // Set up resize observer for responsive height updates
   const resizeObserver = new ResizeObserver(() => {
     updateTextWrapHeight();
   });
   
-  // Observe the text wrap for size changes
   if (textWrap) {
     resizeObserver.observe(textWrap);
   }
 
-  // Image transition mapping - define which images are active at each step
   const imageStates = [
-    { outer: 0, inner: 0 }, // State 1
-    { outer: 1, inner: 1 }, // State 2
-    { outer: 2, inner: 2 }  // State 3
+    { outer: 0, inner: 0 },
+    { outer: 1, inner: 1 },
+    { outer: 2, inner: 2 }
   ];
 
   let currentImageState = -1;
 
-  // Function to update active images
   function updateActiveImages(stateIndex) {
     if (stateIndex === currentImageState) return;
     
-    // Remove all active classes
     outerImages.forEach(img => img.classList.remove('is-active'));
     innerImages.forEach(img => img.classList.remove('is-active'));
     
-    // Add active class to current state images
     if (stateIndex >= 0 && stateIndex < imageStates.length) {
       const state = imageStates[stateIndex];
       
@@ -1926,10 +1947,8 @@ function splitScrollLock() {
     currentImageState = stateIndex;
   }
 
-  // Initialize first state
   updateActiveImages(0);
   
-  // Create the main ScrollTrigger
   const splitScrollTrigger = ScrollTrigger.create({
     trigger: scrollWrap,
     start: 'center center',
@@ -1943,7 +1962,6 @@ function splitScrollLock() {
       const activeIndex = Math.floor(progress * itemCount);
       const itemProgress = (progress * itemCount) % 1;
   
-      // Update list items with progress
       listItems.forEach((item, index) => {
         if (index < activeIndex) {
           item.classList.add('is-active');
@@ -1957,7 +1975,6 @@ function splitScrollLock() {
         }
       });
   
-      // Update text elements - only the current one is active
       textElements.forEach((text, index) => {
         if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
           text.classList.add('is-active');
@@ -1966,18 +1983,15 @@ function splitScrollLock() {
         }
       });
       
-      // Update images based on section
       const sectionIndex = Math.min(activeIndex, imageStates.length - 1);
       updateActiveImages(sectionIndex);
     }
   });
   
-  // Handle ScrollTrigger refresh on window resize
   window.addEventListener('resize', () => {
     ScrollTrigger.refresh();
   });
   
-  // Cleanup function if needed
   splitScrollTrigger.resizeObserver = resizeObserver;
   
   return splitScrollTrigger;
@@ -1990,18 +2004,14 @@ function navComponent() {
   components.forEach(component => {
     const container = component;
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container, 'bottom 0%')) {
       container.removeAttribute('data-gsap-hide');
-      return; // Exit early, skip animation setup
+      return;
     }
 
     let navTL;
-    let hasAnimated = false;
 
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (navTL) {
         navTL.kill();
       }
@@ -2014,7 +2024,6 @@ function navComponent() {
         },
         onStart: () => {
           container.removeAttribute('data-gsap-hide');
-          hasAnimated = true; // Mark as animated
         }
       });
 
@@ -2030,7 +2039,6 @@ function navComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2047,51 +2055,17 @@ function homepageHeroComponent() {
     const graphic = component.querySelectorAll('.hero-home_graphic_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
-    // Detect iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
 
     let homepageHeroTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Only split text if NOT on iOS
-    if (!isIOS) {
-      // Split heading text
-      headings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        headingSplits.push(split);
-        allHeadingLines.push(...split.lines);
-      });
-
-      // Split paragraph text
-      paragraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        paragraphSplits.push(split);
-        allParagraphLines.push(...split.lines);
-      });
-    }
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (homepageHeroTL) {
         homepageHeroTL.kill();
       }
@@ -2104,16 +2078,13 @@ function homepageHeroComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          // Only revert if splits exist (non-iOS)
-          if (!isIOS) {
-            headingSplits.forEach(split => split.revert());
-            paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
           }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -2122,68 +2093,24 @@ function homepageHeroComponent() {
         }
       });
 
-      // iOS: Animate whole elements
-      if (isIOS) {
-        if (headings.length > 0) {
-          homepageHeroTL.fromTo(headings, {
-            y: headingY,
-            opacity: 0
-          },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, 0);
-        }
+      animateText(homepageHeroTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-        if (paragraphs.length > 0) {
-          homepageHeroTL.fromTo(paragraphs, {
-            y: paragraphY,
-            opacity: 0
-          },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-0.75");
-        }
-      } 
-      // Non-iOS: Animate split lines
-      else {
-        if (allHeadingLines.length > 0) {
-          homepageHeroTL.fromTo(allHeadingLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, 0);
-        }
+      animateText(homepageHeroTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
-        if (allParagraphLines.length > 0) {
-          homepageHeroTL.fromTo(allParagraphLines, {
-            yPercent: paragraphYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-0.75");
-        }
-      }
-
-      // Buttons and graphics animate the same on all devices
       if (buttons.length > 0) {
         homepageHeroTL.fromTo(buttons, {
           yPercent: buttonsYPercent,
@@ -2210,7 +2137,6 @@ function homepageHeroComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2227,44 +2153,17 @@ function innerHeroBasicComponent() {
     const graphics = component.querySelectorAll('.hero-inner_graphics_image_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let innerHeroBasicTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (innerHeroBasicTL) {
         innerHeroBasicTL.kill();
       }
@@ -2277,13 +2176,13 @@ function innerHeroBasicComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
-  
-          // Wait for layout to fully settle after revert
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
+          
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -2292,33 +2191,23 @@ function innerHeroBasicComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        innerHeroBasicTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(innerHeroBasicTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        innerHeroBasicTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(innerHeroBasicTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         innerHeroBasicTL.fromTo(buttons, {
@@ -2347,7 +2236,6 @@ function innerHeroBasicComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2364,44 +2252,17 @@ function innerHeroStyledComponent() {
     const graphics = component.querySelectorAll('.hero-inner-styled_graphics_1 > * > *, .hero-inner-styled_graphics_2 > * > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let innerHeroStyledTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (innerHeroStyledTL) {
         innerHeroStyledTL.kill();
       }
@@ -2414,13 +2275,13 @@ function innerHeroStyledComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -2429,33 +2290,23 @@ function innerHeroStyledComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        innerHeroStyledTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(innerHeroStyledTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        innerHeroStyledTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(innerHeroStyledTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         innerHeroStyledTL.fromTo(buttons, {
@@ -2484,7 +2335,6 @@ function innerHeroStyledComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2501,44 +2351,17 @@ function innerHeroImageGridComponent() {
     const graphics = component.querySelectorAll('.m-image-grid_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let innerHeroImageGridTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (innerHeroImageGridTL) {
         innerHeroImageGridTL.kill();
       }
@@ -2551,13 +2374,13 @@ function innerHeroImageGridComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -2566,33 +2389,23 @@ function innerHeroImageGridComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        innerHeroImageGridTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(innerHeroImageGridTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        innerHeroImageGridTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(innerHeroImageGridTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         innerHeroImageGridTL.fromTo(buttons, {
@@ -2623,7 +2436,6 @@ function innerHeroImageGridComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2640,44 +2452,16 @@ function cmsHeroPodcastComponent() {
     const image = component.querySelector('.hero-podcast_image');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+
     let cmsHeroPodcastTL;
-    let allHeadingLines = [];
-    // let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    // let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    // paragraphs.forEach(text => {
-    //   const split = new SplitText(text, {
-    //     type: 'lines',
-    //     mask: "lines",
-    //     linesClass: "gsap-line"
-    //   });
-    //   paragraphSplits.push(split);
-    //   allParagraphLines.push(...split.lines);
-    // });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (cmsHeroPodcastTL) {
         cmsHeroPodcastTL.kill();
       }
@@ -2690,13 +2474,12 @@ function cmsHeroPodcastComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          // paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -2705,33 +2488,13 @@ function cmsHeroPodcastComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        cmsHeroPodcastTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
-
-      // if (allParagraphLines.length > 0) {
-      //   cmsHeroPodcastTL.fromTo(allParagraphLines, {
-      //     yPercent: paragraphYPercent,
-      //     opacity: 0
-      //   },
-      //   {
-      //     yPercent: 0,
-      //     opacity: 1,
-      //     duration: 1,
-      //     ease: defaultEasingOut,
-      //     stagger: defaultStagger
-      //   }, ">-0.75");
-      // }
+      animateText(cmsHeroPodcastTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
       if (paragraphs) {
           cmsHeroPodcastTL.fromTo(paragraphs, {
@@ -2773,7 +2536,6 @@ function cmsHeroPodcastComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2790,57 +2552,18 @@ function cmsHeroWorkComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let cmsHeroWorkTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (cmsHeroWorkTL) {
         cmsHeroWorkTL.kill();
       }
@@ -2853,14 +2576,14 @@ function cmsHeroWorkComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -2869,47 +2592,33 @@ function cmsHeroWorkComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        consciousCompassTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(cmsHeroWorkTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        cmsHeroWorkTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(cmsHeroWorkTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        cmsHeroWorkTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(cmsHeroWorkTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         cmsHeroWorkTL.fromTo(buttons, {
@@ -2926,7 +2635,6 @@ function cmsHeroWorkComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -2943,57 +2651,17 @@ function headingWithImagesComponent() {
     const buttons = component.querySelectorAll('.about_text_wrap .button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headingText);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let headingWithImagesTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headingText.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Expose splits to window for console access
-    if (!window.headingWithImagesSplits) window.headingWithImagesSplits = [];
-    window.headingWithImagesSplits[index] = {
-      headingSplits,
-      paragraphSplits,
-      revertHeadings: () => headingSplits.forEach(s => s.revert()),
-      revertParagraphs: () => paragraphSplits.forEach(s => s.revert()),
-      revertAll: () => {
-        headingSplits.forEach(s => s.revert());
-        paragraphSplits.forEach(s => s.revert());
-      }
-    };
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (headingWithImagesTL) {
         headingWithImagesTL.kill();
       }
@@ -3006,13 +2674,13 @@ function headingWithImagesComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3021,19 +2689,13 @@ function headingWithImagesComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        headingWithImagesTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(headingWithImagesTL, {
+        elements: headingText,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
       if (headingImages.length > 0) {
         headingWithImagesTL.fromTo(headingImages, {
@@ -3047,19 +2709,15 @@ function headingWithImagesComponent() {
         }, defaultPosition);
       }
 
-      if (allParagraphLines.length > 0) {
-        headingWithImagesTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(headingWithImagesTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         headingWithImagesTL.fromTo(buttons, {
@@ -3076,7 +2734,6 @@ function headingWithImagesComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -3094,44 +2751,17 @@ function workScrollLockComponent() {
     const buttons = footerContainer.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(headerContainer)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let workScrollLockComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (workScrollLockComponentTL) {
         workScrollLockComponentTL.kill();
       }
@@ -3144,13 +2774,13 @@ function workScrollLockComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3159,33 +2789,23 @@ function workScrollLockComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        workScrollLockComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(workScrollLockComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        workScrollLockComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.65");
-      }
+      animateText(workScrollLockComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.65",
+        duration: 1
+      });
 
       if (carousel) {
         workScrollLockComponentTL.fromTo(carousel, {
@@ -3213,7 +2833,6 @@ function workScrollLockComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -3228,31 +2847,16 @@ function showreelComponent() {
     const image = container.querySelector('.showreel_image_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+
     let showreelComponentTL;
-    let allHeadingLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (showreelComponentTL) {
         showreelComponentTL.kill();
       }
@@ -3265,12 +2869,12 @@ function showreelComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3279,19 +2883,13 @@ function showreelComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        showreelComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(showreelComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
       if (image) {
         showreelComponentTL.fromTo(image, {
@@ -3307,7 +2905,6 @@ function showreelComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -3327,44 +2924,17 @@ function ourExpertiseComponent() {
     const gridItems = gridContainer.querySelectorAll('.our-expertise_grid_item');
     const gridHiddenItems = gridContainer.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let ourExpertiseComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (ourExpertiseComponentTL) {
         ourExpertiseComponentTL.kill();
       }
@@ -3377,13 +2947,13 @@ function ourExpertiseComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3392,33 +2962,23 @@ function ourExpertiseComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        ourExpertiseComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(ourExpertiseComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        ourExpertiseComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.65");
-      }
+      animateText(ourExpertiseComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.65",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         ourExpertiseComponentTL.fromTo(buttons, {
@@ -3442,18 +3002,16 @@ function ourExpertiseComponent() {
           opacity: 1,
           duration: 1,
           ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 1);
+          stagger: (defaultStagger * 2.5)
+        }, 1.25);
       }
     }
 
-    // Initial call to create animation
     createAnimation();
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(gridContainer)) {
       gridHiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
     const ourExpertiseComponentGridTL = gsap.timeline({
@@ -3477,7 +3035,7 @@ function ourExpertiseComponent() {
         opacity: 1,
         duration: 1,
         ease: defaultEasingOut,
-        stagger: defaultStagger
+        stagger: (defaultStagger * 2)
       }, defaultPosition);
     }
   });
@@ -3494,44 +3052,17 @@ function logoCarouselComponent() {
     const carouselWrap = component.querySelector('.logo-carousel_inner_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let logoCarouselTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (logoCarouselTL) {
         logoCarouselTL.kill();
       }
@@ -3544,13 +3075,13 @@ function logoCarouselComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3559,33 +3090,23 @@ function logoCarouselComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        logoCarouselTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(logoCarouselTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        logoCarouselTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.65");
-      }
+      animateText(logoCarouselTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.65",
+        duration: 1
+      });
 
       if (carouselWrap) {
         logoCarouselTL.fromTo(carouselWrap, {
@@ -3600,7 +3121,6 @@ function logoCarouselComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -3620,57 +3140,18 @@ function consciousCompassComponent() {
     const buttons = container.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(headerContainer)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let consciousCompassTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (consciousCompassTL) {
         consciousCompassTL.kill();
       }
@@ -3683,14 +3164,14 @@ function consciousCompassComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3699,33 +3180,23 @@ function consciousCompassComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        consciousCompassTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(consciousCompassTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        consciousCompassTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(consciousCompassTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
       if (compassGraphic) {
         consciousCompassTL.fromTo(compassGraphic, {
@@ -3739,19 +3210,15 @@ function consciousCompassComponent() {
         }, defaultPosition);
       }
 
-      if (allParagraphLines.length > 0) {
-        consciousCompassTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-1");
-      }
+      animateText(consciousCompassTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-1",
+        duration: 1
+      });
 
       if (listItems.length > 0) {
         consciousCompassTL.fromTo(listItems, {
@@ -3782,7 +3249,6 @@ function consciousCompassComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -3801,57 +3267,18 @@ function podcastEpisodesSliderComponent() {
     const thumbsPodcastSliders = component.querySelectorAll('.podcast-eps_slider_thumbs_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let podcastEpisodesSliderTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (podcastEpisodesSliderTL) {
         podcastEpisodesSliderTL.kill();
       }
@@ -3864,14 +3291,14 @@ function podcastEpisodesSliderComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -3880,47 +3307,33 @@ function podcastEpisodesSliderComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        podcastEpisodesSliderTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(podcastEpisodesSliderTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        podcastEpisodesSliderTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(podcastEpisodesSliderTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        podcastEpisodesSliderTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(podcastEpisodesSliderTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         podcastEpisodesSliderTL.fromTo(buttons, {
@@ -3961,7 +3374,6 @@ function podcastEpisodesSliderComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -3977,44 +3389,17 @@ function aboveFooterCTAComponent() {
     const images = component.querySelectorAll('.footer-cta_background-images *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+
     let aboveFooterCTAComponentTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (aboveFooterCTAComponentTL) {
         aboveFooterCTAComponentTL.kill();
       }
@@ -4027,13 +3412,13 @@ function aboveFooterCTAComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4042,33 +3427,23 @@ function aboveFooterCTAComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        aboveFooterCTAComponentTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(aboveFooterCTAComponentTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        aboveFooterCTAComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(aboveFooterCTAComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
       if (images.length > 0) {
         aboveFooterCTAComponentTL.fromTo(images, {
@@ -4083,7 +3458,6 @@ function aboveFooterCTAComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4098,18 +3472,14 @@ function workGridComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
     let workGridComponentTL;
-    let hasAnimated = false;
 
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (workGridComponentTL) {
         workGridComponentTL.kill();
       }
@@ -4122,10 +3492,8 @@ function workGridComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4161,7 +3529,6 @@ function workGridComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4182,70 +3549,19 @@ function splitScrollLockComponent() {
     const buttons = container.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(headerContainer)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const headerParagraphSplitData = createTextSplits(headerParagraphs);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let splitScrollLockTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allHeaderParagraphLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let headerParagraphSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split header paragraph text
-    headerParagraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headerParagraphSplits.push(split);
-      allHeaderParagraphLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (splitScrollLockTL) {
         splitScrollLockTL.kill();
       }
@@ -4258,15 +3574,15 @@ function splitScrollLockComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          headerParagraphSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            headerParagraphSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4275,47 +3591,33 @@ function splitScrollLockComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        splitScrollLockTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(splitScrollLockTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        splitScrollLockTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(splitScrollLockTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allHeaderParagraphLines.length > 0) {
-        splitScrollLockTL.fromTo(allHeaderParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(splitScrollLockTL, {
+        elements: headerParagraphs,
+        lines: headerParagraphSplitData.lines,
+        shouldSplit: headerParagraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (imageContainer) {
         splitScrollLockTL.fromTo(imageContainer, {
@@ -4328,19 +3630,15 @@ function splitScrollLockComponent() {
         }, defaultPosition);
       }
 
-      if (allParagraphLines.length > 0) {
-        splitScrollLockTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-1");
-      }
+      animateText(splitScrollLockTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-1",
+        duration: 1
+      });
 
       if (listItems.length > 0) {
         splitScrollLockTL.fromTo(listItems, {
@@ -4371,7 +3669,6 @@ function splitScrollLockComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4387,44 +3684,17 @@ function iconGridComponent() {
     const items = component.querySelectorAll('.icon-grid_item');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let iconGridComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (iconGridComponentTL) {
         iconGridComponentTL.kill();
       }
@@ -4437,13 +3707,13 @@ function iconGridComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4452,33 +3722,23 @@ function iconGridComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        iconGridComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(iconGridComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        iconGridComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(iconGridComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       items.forEach(item => {
         const itemHeader = item.querySelectorAll('.icon-grid_item_header');
@@ -4486,32 +3746,8 @@ function iconGridComponent() {
         const itemIcons = item.querySelectorAll('.icon-grid_item_icon_wrap');
         const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
 
-        let allItemHeadingLines = [];
-        let allItemParagraphLines = [];
-        let itemHeadingSplits = [];
-        let itemParagraphSplits = [];
-
-        // Split heading text
-        itemHeadings.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemHeadingSplits.push(split);
-          allItemHeadingLines.push(...split.lines);
-        });
-
-        // Split paragraph text
-        itemParagraphs.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemParagraphSplits.push(split);
-          allItemParagraphLines.push(...split.lines);
-        });
+        const itemHeadingSplitData = createTextSplits(itemHeadings);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs);
 
         if (itemHeader.length > 0) {
           iconGridComponentTL.fromTo(itemHeader, {
@@ -4525,22 +3761,20 @@ function iconGridComponent() {
           }, ">-1");
         }
 
-        if (allItemHeadingLines.length > 0) {
-          iconGridComponentTL.fromTo(allItemHeadingLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger,
+        animateText(iconGridComponentTL, {
+          elements: itemHeadings,
+          lines: itemHeadingSplitData.lines,
+          shouldSplit: itemHeadingSplitData.shouldSplit,
+          position: ">-1",
+          duration: 1,
+          toVars: {
             onComplete: () => {
-              itemHeadingSplits.forEach(split => split.revert());
+              if (itemHeadingSplitData.shouldSplit) {
+                itemHeadingSplitData.splits.forEach(split => split.revert());
+              }
             }
-          }, ">-1");
-        }
+          }
+        });
 
         if (itemIcons.length > 0) {
           iconGridComponentTL.fromTo(itemIcons, {
@@ -4554,26 +3788,25 @@ function iconGridComponent() {
           }, ">-1");
         }
   
-        if (allItemParagraphLines.length > 0) {
-          iconGridComponentTL.fromTo(allItemParagraphLines, {
-            yPercent: paragraphYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger,
+        animateText(iconGridComponentTL, {
+          elements: itemParagraphs,
+          lines: itemParagraphSplitData.lines,
+          shouldSplit: itemParagraphSplitData.shouldSplit,
+          yPercent: paragraphYPercent,
+          y: paragraphY,
+          position: ">-0.75",
+          duration: 1,
+          toVars: {
             onComplete: () => {
-              itemParagraphSplits.forEach(split => split.revert());
+              if (itemParagraphSplitData.shouldSplit) {
+                itemParagraphSplitData.splits.forEach(split => split.revert());
+              }
             }
-          }, ">-0.75");
-        }
+          }
+        });
       })
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4589,31 +3822,16 @@ function featuredWorkComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+
     let featuredWorkComponentTL;
-    let allHeadingLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (featuredWorkComponentTL) {
         featuredWorkComponentTL.kill();
       }
@@ -4626,12 +3844,12 @@ function featuredWorkComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4640,19 +3858,16 @@ function featuredWorkComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        featuredWorkComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
+      animateText(featuredWorkComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25,
+        toVars: {
           stagger: (defaultStagger * 5)
-        }, 0);
-      }
+        }
+      });
       
       if (items.length > 0) {
         featuredWorkComponentTL.fromTo(items, {
@@ -4681,7 +3896,6 @@ function featuredWorkComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4697,31 +3911,16 @@ function testimonialComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let testimonialComponentTL;
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let paragraphSplits = [];
 
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (testimonialComponentTL) {
         testimonialComponentTL.kill();
       }
@@ -4734,12 +3933,12 @@ function testimonialComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          paragraphSplits.forEach(split => split.revert());
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4762,19 +3961,15 @@ function testimonialComponent() {
         }, 0);
       }
 
-      if (allParagraphLines.length > 0) {
-        testimonialComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(testimonialComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         testimonialComponentTL.fromTo(buttons, {
@@ -4791,7 +3986,6 @@ function testimonialComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4809,44 +4003,17 @@ function compassCTAComponent() {
     const shape = component.querySelector('.compass-cta_corner-block');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let compassCTAComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (compassCTAComponentTL) {
         compassCTAComponentTL.kill();
       }
@@ -4859,13 +4026,13 @@ function compassCTAComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -4874,33 +4041,23 @@ function compassCTAComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        compassCTAComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(compassCTAComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        compassCTAComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(compassCTAComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         compassCTAComponentTL.fromTo(buttons, {
@@ -4939,7 +4096,6 @@ function compassCTAComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -4956,44 +4112,17 @@ function splitPanelImageArrayComponent() {
     const graphics = component.querySelectorAll('.split-panel-image-array_images_array_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let splitPanelImageArrayTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (splitPanelImageArrayTL) {
         splitPanelImageArrayTL.kill();
       }
@@ -5006,13 +4135,13 @@ function splitPanelImageArrayComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5035,33 +4164,23 @@ function splitPanelImageArrayComponent() {
         }, 0);
       }
 
-      if (allHeadingLines.length > 0) {
-        splitPanelImageArrayTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(splitPanelImageArrayTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: ">-0.75",
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        splitPanelImageArrayTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(splitPanelImageArrayTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         splitPanelImageArrayTL.fromTo(buttons, {
@@ -5078,7 +4197,6 @@ function splitPanelImageArrayComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -5095,44 +4213,17 @@ function compassFormComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let compassFormComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (compassFormComponentTL) {
         compassFormComponentTL.kill();
       }
@@ -5145,13 +4236,13 @@ function compassFormComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5160,68 +4251,44 @@ function compassFormComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        compassFormComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(compassFormComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        compassFormComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(compassFormComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       formFields.forEach(field => {
         const fieldLabels = field.querySelectorAll('.form_main_label_text');
         const fieldInput = field.querySelector('.form_main_select_wrap');
 
-        let allFieldLabelLines = [];
-        let fieldLabelSplits = [];
+        const fieldLabelSplitData = createTextSplits(fieldLabels);
 
-        // Split field label text
-        fieldLabels.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          fieldLabelSplits.push(split);
-          allFieldLabelLines.push(...split.lines);
-        });
-
-        if (allFieldLabelLines.length > 0) {
-          compassFormComponentTL.fromTo(allFieldLabelLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger,
+        animateText(compassFormComponentTL, {
+          elements: fieldLabels,
+          lines: fieldLabelSplitData.lines,
+          shouldSplit: fieldLabelSplitData.shouldSplit,
+          position: ">-0.75",
+          duration: 1,
+          toVars: {
             onComplete: () => {
-              fieldLabelSplits.forEach(split => split.revert());
+              if (fieldLabelSplitData.shouldSplit) {
+                fieldLabelSplitData.splits.forEach(split => split.revert());
+              }
             }
-          }, ">-0.75");
-        }
+          }
+        });
 
         if (fieldInput) {
           compassFormComponentTL.fromTo(fieldInput, {
@@ -5252,7 +4319,6 @@ function compassFormComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -5278,41 +4344,12 @@ function culturalImpactComponent() {
     const noLogoParagraphs = noLogoContainer.querySelectorAll('.c-paragraph > *');
     const noLogoButtons = noLogoContainer.querySelectorAll('.button_main_wrap');
 
-    const hiddenItems = [...component.querySelectorAll('[data-gsap-hide]')];
-    if (component.hasAttribute('data-gsap-hide')) {
-      hiddenItems.push(component);
-    }
-
     // Header animation
     if (shouldSkipAnimation(headerContainer)) {
       headerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
-      let headerHeadingSplits = [];
-      let headerParagraphSplits = [];
-      let allHeaderHeadingLines = [];
-      let allHeaderParagraphLines = [];
-
-      // Split header heading text
-      headerHeadings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        headerHeadingSplits.push(split);
-        allHeaderHeadingLines.push(...split.lines);
-      });
-
-      // Split header paragraph text
-      headerParagraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        headerParagraphSplits.push(split);
-        allHeaderParagraphLines.push(...split.lines);
-      });
+      const headerHeadingSplitData = createTextSplits(headerHeadings);
+      const headerParagraphSplitData = createTextSplits(headerParagraphs);
 
       const headerTL = gsap.timeline({
         scrollTrigger: {
@@ -5324,8 +4361,10 @@ function culturalImpactComponent() {
           headerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          headerHeadingSplits.forEach(split => split.revert());
-          headerParagraphSplits.forEach(split => split.revert());
+          if (headerHeadingSplitData.shouldSplit) {
+            headerHeadingSplitData.splits.forEach(split => split.revert());
+            headerParagraphSplitData.splits.forEach(split => split.revert());
+          }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5334,65 +4373,31 @@ function culturalImpactComponent() {
         }
       });
 
-      if (allHeaderHeadingLines.length > 0) {
-        headerTL.fromTo(allHeaderHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(headerTL, {
+        elements: headerHeadings,
+        lines: headerHeadingSplitData.lines,
+        shouldSplit: headerHeadingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allHeaderParagraphLines.length > 0) {
-        headerTL.fromTo(allHeaderParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(headerTL, {
+        elements: headerParagraphs,
+        lines: headerParagraphSplitData.lines,
+        shouldSplit: headerParagraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
     }
 
     // Podcast animation
     if (shouldSkipAnimation(podcastContainer)) {
       podcastContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
-      let podcastHeadingSplits = [];
-      let podcastParagraphSplits = [];
-      let allPodcastHeadingLines = [];
-      let allPodcastParagraphLines = [];
-
-      // Split podcast heading text
-      podcastHeadings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        podcastHeadingSplits.push(split);
-        allPodcastHeadingLines.push(...split.lines);
-      });
-
-      // Split podcast paragraph text
-      podcastParagraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        podcastParagraphSplits.push(split);
-        allPodcastParagraphLines.push(...split.lines);
-      });
+      const podcastHeadingSplitData = createTextSplits(podcastHeadings);
+      const podcastParagraphSplitData = createTextSplits(podcastParagraphs);
 
       const podcastTL = gsap.timeline({
         scrollTrigger: {
@@ -5404,8 +4409,10 @@ function culturalImpactComponent() {
           podcastContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          podcastHeadingSplits.forEach(split => split.revert());
-          podcastParagraphSplits.forEach(split => split.revert());
+          if (podcastHeadingSplitData.shouldSplit) {
+            podcastHeadingSplitData.splits.forEach(split => split.revert());
+            podcastParagraphSplitData.splits.forEach(split => split.revert());
+          }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5427,33 +4434,23 @@ function culturalImpactComponent() {
         }, 0);
       }
 
-      if (allPodcastHeadingLines.length > 0) {
-        podcastTL.fromTo(allPodcastHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(podcastTL, {
+        elements: podcastHeadings,
+        lines: podcastHeadingSplitData.lines,
+        shouldSplit: podcastHeadingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allPodcastParagraphLines.length > 0) {
-        podcastTL.fromTo(allPodcastParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(podcastTL, {
+        elements: podcastParagraphs,
+        lines: podcastParagraphSplitData.lines,
+        shouldSplit: podcastParagraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (podcastButtons.length > 0) {
         podcastTL.fromTo(podcastButtons, {
@@ -5474,32 +4471,8 @@ function culturalImpactComponent() {
     if (shouldSkipAnimation(noLogoContainer)) {
       noLogoContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
-      let noLogoHeadingSplits = [];
-      let noLogoParagraphSplits = [];
-      let allNoLogoHeadingLines = [];
-      let allNoLogoParagraphLines = [];
-
-      // Split noLogo heading text
-      noLogoHeadings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        noLogoHeadingSplits.push(split);
-        allNoLogoHeadingLines.push(...split.lines);
-      });
-
-      // Split noLogo paragraph text
-      noLogoParagraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        noLogoParagraphSplits.push(split);
-        allNoLogoParagraphLines.push(...split.lines);
-      });
+      const noLogoHeadingSplitData = createTextSplits(noLogoHeadings);
+      const noLogoParagraphSplitData = createTextSplits(noLogoParagraphs);
 
       const noLogoTL = gsap.timeline({
         scrollTrigger: {
@@ -5511,8 +4484,10 @@ function culturalImpactComponent() {
           noLogoContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          noLogoHeadingSplits.forEach(split => split.revert());
-          noLogoParagraphSplits.forEach(split => split.revert());
+          if (noLogoHeadingSplitData.shouldSplit) {
+            noLogoHeadingSplitData.splits.forEach(split => split.revert());
+            noLogoParagraphSplitData.splits.forEach(split => split.revert());
+          }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5534,33 +4509,23 @@ function culturalImpactComponent() {
         }, 0);
       }
 
-      if (allNoLogoHeadingLines.length > 0) {
-        noLogoTL.fromTo(allNoLogoHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(noLogoTL, {
+        elements: noLogoHeadings,
+        lines: noLogoHeadingSplitData.lines,
+        shouldSplit: noLogoHeadingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allNoLogoParagraphLines.length > 0) {
-        noLogoTL.fromTo(allNoLogoParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(noLogoTL, {
+        elements: noLogoParagraphs,
+        lines: noLogoParagraphSplitData.lines,
+        shouldSplit: noLogoParagraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (noLogoButtons.length > 0) {
         noLogoTL.fromTo(noLogoButtons, {
@@ -5586,11 +4551,8 @@ function podcastListComponent() {
   components.forEach(component => {
     const container = component.querySelector('.podcast-list_contain');
     const headings = component.querySelectorAll('.podcast-list_list_inner > .c-heading');
-
-    // Only select episode items that haven't been initialized
     const episodeItems = component.querySelectorAll('.podcast-list_list_item:not([data-gsap-initialized]) .podcast-list_list_item_link');
 
-    // Mark parent items as initialized
     episodeItems.forEach(link => {
       link.closest('.podcast-list_list_item').setAttribute('data-gsap-initialized', 'true');
     });
@@ -5601,11 +4563,8 @@ function podcastListComponent() {
     const footerParagraphs = footerContainer.querySelectorAll('.podcast-list_list_sub_content_wrap .c-paragraph > *');
     const footerSignup = footerContainer.querySelector('.podcast-list_list_sub_form_wrap');
 
-    // Main container animation - skip if already initialized
     if (container.hasAttribute('data-gsap-initialized')) {
-      // Skip main container, but still animate new episode items if any
       if (episodeItems.length > 0) {
-        // Remove data-gsap-hide from new items
         episodeItems.forEach(item => {
           item.removeAttribute('data-gsap-hide');
         });
@@ -5626,23 +4585,10 @@ function podcastListComponent() {
     
     container.setAttribute('data-gsap-initialized', 'true');
 
-    // Main container animation
     if (shouldSkipAnimation(container)) {
       container.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
-      let headingSplits = [];
-      let allHeadingLines = [];
-
-      // Split heading text
-      headings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        headingSplits.push(split);
-        allHeadingLines.push(...split.lines);
-      });
+      const headingSplitData = createTextSplits(headings);
 
       const podcastListComponentTL = gsap.timeline({
         scrollTrigger: {
@@ -5654,7 +4600,9 @@ function podcastListComponent() {
           container.querySelectorAll(':not(.podcast-list_list_sub_wrap) [data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5663,19 +4611,13 @@ function podcastListComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        podcastListComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(podcastListComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
       if (episodeItems.length > 0) {
         podcastListComponentTL.fromTo(episodeItems, {
@@ -5706,36 +4648,11 @@ function podcastListComponent() {
       }
     }
 
-    // Footer container animation
     if (shouldSkipAnimation(footerContainer)) {
       footerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
-      let footerHeadingSplits = [];
-      let footerParagraphSplits = [];
-      let allFooterHeadingLines = [];
-      let allFooterParagraphLines = [];
-
-      // Split footer heading text
-      footerHeadings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        footerHeadingSplits.push(split);
-        allFooterHeadingLines.push(...split.lines);
-      });
-
-      // Split footer paragraph text
-      footerParagraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        footerParagraphSplits.push(split);
-        allFooterParagraphLines.push(...split.lines);
-      });
+      const footerHeadingSplitData = createTextSplits(footerHeadings);
+      const footerParagraphSplitData = createTextSplits(footerParagraphs);
 
       const footerTL = gsap.timeline({
         scrollTrigger: {
@@ -5747,8 +4664,10 @@ function podcastListComponent() {
           footerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          footerHeadingSplits.forEach(split => split.revert());
-          footerParagraphSplits.forEach(split => split.revert());
+          if (footerHeadingSplitData.shouldSplit) {
+            footerHeadingSplitData.splits.forEach(split => split.revert());
+            footerParagraphSplitData.splits.forEach(split => split.revert());
+          }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5757,33 +4676,23 @@ function podcastListComponent() {
         }
       });
 
-      if (allFooterHeadingLines.length > 0) {
-        footerTL.fromTo(allFooterHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(footerTL, {
+        elements: footerHeadings,
+        lines: footerHeadingSplitData.lines,
+        shouldSplit: footerHeadingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allFooterParagraphLines.length > 0) {
-        footerTL.fromTo(allFooterParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(footerTL, {
+        elements: footerParagraphs,
+        lines: footerParagraphSplitData.lines,
+        shouldSplit: footerParagraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (footerSignup) {
         footerTL.fromTo(footerSignup, {
@@ -5812,57 +4721,17 @@ function statGridComponent() {
     const items = component.querySelectorAll('.stat-grid_item');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let statGridComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Expose splits to window for console access
-    if (!window.statGridSplits) window.statGridSplits = [];
-    window.statGridSplits[index] = {
-      headingSplits,
-      paragraphSplits,
-      revertHeadings: () => headingSplits.forEach(s => s.revert()),
-      revertParagraphs: () => paragraphSplits.forEach(s => s.revert()),
-      revertAll: () => {
-        headingSplits.forEach(s => s.revert());
-        paragraphSplits.forEach(s => s.revert());
-      }
-    };
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (statGridComponentTL) {
         statGridComponentTL.kill();
       }
@@ -5875,13 +4744,13 @@ function statGridComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -5890,82 +4759,33 @@ function statGridComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        statGridComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(statGridComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        statGridComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(statGridComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       items.forEach(item => {
         const itemHeader = item.querySelectorAll('.stat-grid_item_header');
         const itemHeadings = item.querySelectorAll('.stat-grid_item_label');
         const itemStats = item.querySelectorAll('.stat-grid_item_value_wrap');
         const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
-  
-        // Get the actual odometer elements (children of the wraps)
-        const odometerElements = item.querySelectorAll('.stat-grid_item_value');
 
-        let allItemHeadingLines = [];
-        let allItemStatLines = [];
-        let allItemParagraphLines = [];
-        let itemHeadingSplits = [];
-        let itemStatSplits = [];
-        let itemParagraphSplits = [];
-
-        // Split heading text
-        itemHeadings.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemHeadingSplits.push(split);
-          allItemHeadingLines.push(...split.lines);
-        });
-
-        // Split stat text
-        itemStats.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemStatSplits.push(split);
-          allItemStatLines.push(...split.lines);
-        });
-
-        // Split paragraph text
-        itemParagraphs.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemParagraphSplits.push(split);
-          allItemParagraphLines.push(...split.lines);
-        });
+        const itemHeadingSplitData = createTextSplits(itemHeadings);
+        const itemStatSplitData = createTextSplits(itemStats);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs);
 
         if (itemHeader.length > 0) {
           statGridComponentTL.fromTo(itemHeader, {
@@ -5979,61 +4799,49 @@ function statGridComponent() {
           }, ">-1");
         }
 
-        if (allItemHeadingLines.length > 0) {
-          statGridComponentTL.fromTo(allItemHeadingLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger,
+        animateText(statGridComponentTL, {
+          elements: itemHeadings,
+          lines: itemHeadingSplitData.lines,
+          shouldSplit: itemHeadingSplitData.shouldSplit,
+          position: ">-1",
+          duration: 1,
+          toVars: {
             onComplete: () => {
-              itemHeadingSplits.forEach(split => split.revert());
+              if (itemHeadingSplitData.shouldSplit) {
+                itemHeadingSplitData.splits.forEach(split => split.revert());
+              }
             }
-          }, ">-1");
-        }
+          }
+        });
 
-        if (allItemStatLines.length > 0) {
-          statGridComponentTL.fromTo(allItemStatLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger,
-            onComplete: () => {
-              // Don't revert stat splits - odometer needs the DOM structure intact
-              // itemStatSplits.forEach(split => split.revert());
-            }
-          }, ">-1");
-        }
+        // Note: Don't revert stat splits as odometer needs DOM structure intact
+        animateText(statGridComponentTL, {
+          elements: itemStats,
+          lines: itemStatSplitData.lines,
+          shouldSplit: itemStatSplitData.shouldSplit,
+          position: ">-1",
+          duration: 1
+        });
   
-        if (allItemParagraphLines.length > 0) {
-          statGridComponentTL.fromTo(allItemParagraphLines, {
-            yPercent: paragraphYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger,
+        animateText(statGridComponentTL, {
+          elements: itemParagraphs,
+          lines: itemParagraphSplitData.lines,
+          shouldSplit: itemParagraphSplitData.shouldSplit,
+          yPercent: paragraphYPercent,
+          y: paragraphY,
+          position: ">-0.75",
+          duration: 1,
+          toVars: {
             onComplete: () => {
-              itemParagraphSplits.forEach(split => split.revert());
+              if (itemParagraphSplitData.shouldSplit) {
+                itemParagraphSplitData.splits.forEach(split => split.revert());
+              }
             }
-          }, ">-0.75");
-        }
+          }
+        });
       })
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6050,44 +4858,17 @@ function officesComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let officesComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (officesComponentTL) {
         officesComponentTL.kill();
       }
@@ -6100,13 +4881,13 @@ function officesComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6115,33 +4896,23 @@ function officesComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        officesComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(officesComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        officesComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(officesComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (image) {
         officesComponentTL.fromTo(image, {
@@ -6171,7 +4942,6 @@ function officesComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6188,44 +4958,17 @@ function twoImageSliderComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let twoImageSliderComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (twoImageSliderComponentTL) {
         twoImageSliderComponentTL.kill();
       }
@@ -6238,13 +4981,13 @@ function twoImageSliderComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6253,33 +4996,26 @@ function twoImageSliderComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        twoImageSliderComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
+      animateText(twoImageSliderComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25,
+        toVars: {
           stagger: 1
-        }, 0);
-      }
+        }
+      });
 
-      if (allParagraphLines.length > 0) {
-        twoImageSliderComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, "<0.75");
-      }
+      animateText(twoImageSliderComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: "<0.75",
+        duration: 1
+      });
 
       if (swiperStuff.length > 0) {
         twoImageSliderComponentTL.fromTo(swiperStuff, {
@@ -6310,7 +5046,6 @@ function twoImageSliderComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6327,44 +5062,17 @@ function accordionSectionComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let accordionSectionComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (accordionSectionComponentTL) {
         accordionSectionComponentTL.kill();
       }
@@ -6377,13 +5085,13 @@ function accordionSectionComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6392,33 +5100,23 @@ function accordionSectionComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        accordionSectionComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(accordionSectionComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        accordionSectionComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(accordionSectionComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (accordionItems.length > 0) {
         accordionSectionComponentTL.fromTo(accordionItems, {
@@ -6449,7 +5147,6 @@ function accordionSectionComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6467,57 +5164,18 @@ function splitPanelImageComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let splitPanelImageComponentTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (splitPanelImageComponentTL) {
         splitPanelImageComponentTL.kill();
       }
@@ -6530,14 +5188,14 @@ function splitPanelImageComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6546,47 +5204,33 @@ function splitPanelImageComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        splitPanelImageComponentTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(splitPanelImageComponentTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        splitPanelImageComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(splitPanelImageComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        splitPanelImageComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(splitPanelImageComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (image) {
         splitPanelImageComponentTL.fromTo(image, {
@@ -6614,7 +5258,6 @@ function splitPanelImageComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6631,44 +5274,17 @@ function careersComponent() {
     const careersBoard = component.querySelector('.careers_board_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let careersComponentTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (careersComponentTL) {
         careersComponentTL.kill();
       }
@@ -6681,13 +5297,13 @@ function careersComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6696,33 +5312,23 @@ function careersComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        careersComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(careersComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        careersComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(careersComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         careersComponentTL.fromTo(buttons, {
@@ -6753,7 +5359,6 @@ function careersComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6767,18 +5372,14 @@ function careerPostComponent() {
     const contentWrap = component.querySelector('.career-post_layout');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
     let careerPostTL;
-    let hasAnimated = false;
 
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (careerPostTL) {
         careerPostTL.kill();
       }
@@ -6791,10 +5392,8 @@ function careerPostComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6815,7 +5414,6 @@ function careerPostComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6832,44 +5430,17 @@ function contactFormComponent() {
     const formWrap = component.querySelector('.contact-section_main');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let contactFormTL;
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (contactFormTL) {
         contactFormTL.kill();
       }
@@ -6882,13 +5453,13 @@ function contactFormComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -6897,33 +5468,23 @@ function contactFormComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        contactFormTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(contactFormTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        contactFormTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(contactFormTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (buttons.length > 0) {
         contactFormTL.fromTo(buttons, {
@@ -6951,7 +5512,6 @@ function contactFormComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -6965,18 +5525,14 @@ function basicContentComponent() {
     const content = component.querySelector('.basic-content_layout .c-paragraph');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
     let basicContentTL;
-    let hasAnimated = false;
 
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (basicContentTL) {
         basicContentTL.kill();
       }
@@ -6989,10 +5545,8 @@ function basicContentComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7013,7 +5567,6 @@ function basicContentComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -7080,32 +5633,8 @@ function cmsPodcastBodyComponent() {
       bodyContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
       navContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
-      let bodyHeadingSplits = [];
-      let bodyParagraphSplits = [];
-      let allBodyHeadingLines = [];
-      let allBodyParagraphLines = [];
-
-      // Split body heading text
-      bodyHeadings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        bodyHeadingSplits.push(split);
-        allBodyHeadingLines.push(...split.lines);
-      });
-
-      // Split body paragraph text
-      bodyParagraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        bodyParagraphSplits.push(split);
-        allBodyParagraphLines.push(...split.lines);
-      });
+      const bodyHeadingSplitData = createTextSplits(bodyHeadings);
+      const bodyParagraphSplitData = createTextSplits(bodyParagraphs);
 
       const bodyTL = gsap.timeline({
         scrollTrigger: {
@@ -7118,8 +5647,10 @@ function cmsPodcastBodyComponent() {
           navContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          bodyHeadingSplits.forEach(split => split.revert());
-          bodyParagraphSplits.forEach(split => split.revert());
+          if (bodyHeadingSplitData.shouldSplit) {
+            bodyHeadingSplitData.splits.forEach(split => split.revert());
+            bodyParagraphSplitData.splits.forEach(split => split.revert());
+          }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7128,33 +5659,23 @@ function cmsPodcastBodyComponent() {
         }
       });
 
-      if (allBodyHeadingLines.length > 0) {
-        bodyTL.fromTo(allBodyHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(bodyTL, {
+        elements: bodyHeadings,
+        lines: bodyHeadingSplitData.lines,
+        shouldSplit: bodyHeadingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allBodyParagraphLines.length > 0) {
-        bodyTL.fromTo(allBodyParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(bodyTL, {
+        elements: bodyParagraphs,
+        lines: bodyParagraphSplitData.lines,
+        shouldSplit: bodyParagraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (bodyButtons.length > 0) {
         bodyTL.fromTo(bodyButtons, {
@@ -7194,48 +5715,19 @@ function cmsWorkOverviewComponent() {
     const container = component.querySelector('.work-overview_contain');
     const headings = component.querySelectorAll('.work-overview_heading_wrap .work-overview_heading');
     const pieces = component.querySelectorAll('.work-overview_desc_pt-1_wrap, .work-overview_desc_pt-2_wrap, .work-overview_info_wrap, .work-overview_stats_wrap');
-    // const paragraphs = component.querySelectorAll('.work-overview_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+
     let cmsWorkOverviewTL;
-    let allHeadingLines = [];
-    // let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    // let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    // paragraphs.forEach(text => {
-    //   const split = new SplitText(text, {
-    //     type: 'lines',
-    //     mask: "lines",
-    //     linesClass: "gsap-line"
-    //   });
-    //   paragraphSplits.push(split);
-    //   allParagraphLines.push(...split.lines);
-    // });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (cmsWorkOverviewTL) {
         cmsWorkOverviewTL.kill();
       }
@@ -7248,13 +5740,12 @@ function cmsWorkOverviewComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          // paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7263,19 +5754,13 @@ function cmsWorkOverviewComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        cmsWorkOverviewTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(cmsWorkOverviewTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
       if (pieces.length > 0) {
         pieces.forEach(piece => {
@@ -7283,32 +5768,8 @@ function cmsWorkOverviewComponent() {
           const pieceHeadings = piece.querySelectorAll('.work-overview_desc_heading, .work-overview_stats_item_value');
           const pieceParagraphs = piece.querySelectorAll('.c-paragraph > *, .work-overview_info_item_label, .work-overview_info_item_value, .work-overview_info_item_tags_list, .work-overview_stats_item_label');
 
-          const pieceHeadingLines = [];
-          const pieceParagraphLines = [];
-          const pieceHeadingSplits = [];
-          const pieceParagraphSplits = [];
-
-          // Split heading text
-          pieceHeadings.forEach(text => {
-            const split = new SplitText(text, {
-              type: 'lines',
-              mask: "lines",
-              linesClass: "gsap-line"
-            });
-            pieceHeadingSplits.push(split);
-            pieceHeadingLines.push(...split.lines);
-          });
-
-          // Split paragraph text
-          pieceParagraphs.forEach(text => {
-            const split = new SplitText(text, {
-              type: 'lines',
-              mask: "lines",
-              linesClass: "gsap-line"
-            });
-            pieceParagraphSplits.push(split);
-            pieceParagraphLines.push(...split.lines);
-          });
+          const pieceHeadingSplitData = createTextSplits(pieceHeadings);
+          const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
 
           if (pieceBoxes.length > 0) {
             cmsWorkOverviewTL.fromTo(pieceBoxes, {
@@ -7324,55 +5785,39 @@ function cmsWorkOverviewComponent() {
             }, ">-1");
           }
 
-          if (pieceHeadingLines.length > 0) {
-            cmsWorkOverviewTL.fromTo(pieceHeadingLines, {
-              yPercent: headingYPercent,
-              opacity: 0
-            },
-            {
-              yPercent: 0,
-              opacity: 1,
-              duration: 1.25,
-              ease: defaultEasingOut,
-              stagger: defaultStagger,
+          animateText(cmsWorkOverviewTL, {
+            elements: pieceHeadings,
+            lines: pieceHeadingSplitData.lines,
+            shouldSplit: pieceHeadingSplitData.shouldSplit,
+            position: ">-1",
+            duration: 1.25,
+            toVars: {
               onComplete: () => {
-                pieceHeadingSplits.forEach(split => split.revert());
+                if (pieceHeadingSplitData.shouldSplit) {
+                  pieceHeadingSplitData.splits.forEach(split => split.revert());
+                }
               }
-            }, ">-1");
-          }
+            }
+          });
 
-          if (pieceParagraphLines.length > 0) {
-            cmsWorkOverviewTL.fromTo(pieceParagraphLines, {
-              yPercent: paragraphYPercent,
-              opacity: 0
-            },
-            {
-              yPercent: 0,
-              opacity: 1,
-              duration: 1,
-              ease: defaultEasingOut,
-              stagger: defaultStagger,
+          animateText(cmsWorkOverviewTL, {
+            elements: pieceParagraphs,
+            lines: pieceParagraphSplitData.lines,
+            shouldSplit: pieceParagraphSplitData.shouldSplit,
+            yPercent: paragraphYPercent,
+            y: paragraphY,
+            position: ">-1",
+            duration: 1,
+            toVars: {
               onComplete: () => {
-                pieceParagraphSplits.forEach(split => split.revert());
+                if (pieceParagraphSplitData.shouldSplit) {
+                  pieceParagraphSplitData.splits.forEach(split => split.revert());
+                }
               }
-            }, ">-1");
-          }
+            }
+          });
         });
       }
-
-      // if (allParagraphLines.length > 0) {
-      //   cmsWorkOverviewTL.fromTo(allParagraphLines, {
-      //     yPercent: paragraphYPercent,
-      //     opacity: 0
-      //   },
-      //   {
-      //     yPercent: 0,
-      //     opacity: 1,
-      //     duration: 1,
-      //     ease: defaultEasingOut,
-      //     stagger: defaultStagger
-      //   }, ">-0.75");
-      // }
 
       if (buttons.length > 0) {
         cmsWorkOverviewTL.fromTo(buttons, {
@@ -7389,7 +5834,6 @@ function cmsWorkOverviewComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -7417,38 +5861,13 @@ function cmsWorkImageGridComponent() {
           pieceHiddenItems.push(piece);
         }
 
-        // Check if animation should be skipped
         if (shouldSkipAnimation(piece)) {
           pieceHiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          return; // Exit early, skip animation setup
+          return;
         }
 
-        let pieceHeadingLines = [];
-        let pieceParagraphLines = [];
-        let pieceHeadingSplits = [];
-        let pieceParagraphSplits = [];
-
-        // Split heading text
-        pieceHeadings.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          pieceHeadingSplits.push(split);
-          pieceHeadingLines.push(...split.lines);
-        });
-
-        // Split paragraph text
-        pieceParagraphs.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          pieceParagraphSplits.push(split);
-          pieceParagraphLines.push(...split.lines);
-        });
+        const pieceHeadingSplitData = createTextSplits(pieceHeadings);
+        const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
 
         const cmsWorkImageGridPieceTL = gsap.timeline({
           scrollTrigger: {
@@ -7460,10 +5879,11 @@ function cmsWorkImageGridComponent() {
             pieceHiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
           },
           onComplete: () => {
-            pieceHeadingSplits.forEach(split => split.revert());
-            pieceParagraphSplits.forEach(split => split.revert());
+            if (pieceHeadingSplitData.shouldSplit) {
+              pieceHeadingSplitData.splits.forEach(split => split.revert());
+              pieceParagraphSplitData.splits.forEach(split => split.revert());
+            }
 
-            // Wait for layout to fully settle after revert
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 ScrollTrigger.refresh();
@@ -7472,33 +5892,23 @@ function cmsWorkImageGridComponent() {
           }
         });
 
-        if (pieceHeadingLines.length > 0) {
-          cmsWorkImageGridPieceTL.fromTo(pieceHeadingLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, 0);
-        }
+        animateText(cmsWorkImageGridPieceTL, {
+          elements: pieceHeadings,
+          lines: pieceHeadingSplitData.lines,
+          shouldSplit: pieceHeadingSplitData.shouldSplit,
+          position: 0,
+          duration: 1.25
+        });
 
-        if (pieceParagraphLines.length > 0) {
-          cmsWorkImageGridPieceTL.fromTo(pieceParagraphLines, {
-            yPercent: paragraphYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-0.75");
-        }
+        animateText(cmsWorkImageGridPieceTL, {
+          elements: pieceParagraphs,
+          lines: pieceParagraphSplitData.lines,
+          shouldSplit: pieceParagraphSplitData.shouldSplit,
+          yPercent: paragraphYPercent,
+          y: paragraphY,
+          position: ">-0.75",
+          duration: 1.25
+        });
 
         if (pieceImages.length > 0) {
           cmsWorkImageGridPieceTL.fromTo(pieceImages, {
@@ -7541,44 +5951,16 @@ function cmsWorkSplitContentComponent() {
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+
     let cmsWorkSplitContentTL;
-    let allHeadingLines = [];
-    // let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    // let paragraphSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    // paragraphs.forEach(text => {
-    //   const split = new SplitText(text, {
-    //     type: 'lines',
-    //     mask: "lines",
-    //     linesClass: "gsap-line"
-    //   });
-    //   paragraphSplits.push(split);
-    //   allParagraphLines.push(...split.lines);
-    // });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (cmsWorkSplitContentTL) {
         cmsWorkSplitContentTL.kill();
       }
@@ -7591,13 +5973,12 @@ function cmsWorkSplitContentComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          // paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7606,34 +5987,15 @@ function cmsWorkSplitContentComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        cmsWorkSplitContentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(cmsWorkSplitContentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      // if (allParagraphLines.length > 0) {
-      //   cmsWorkSplitContentTL.fromTo(allParagraphLines, {
-      //     yPercent: paragraphYPercent,
-      //     opacity: 0
-      //   },
-      //   {
-      //     yPercent: 0,
-      //     opacity: 1,
-      //     duration: 1,
-      //     ease: defaultEasingOut,
-      //     stagger: defaultStagger
-      //   }, ">-0.75");
-      // }
-
+      // Paragraphs don't use SplitText here - animate as whole elements
       if (paragraphs.length > 0) {
         cmsWorkSplitContentTL.fromTo(paragraphs, {
           y: 40,
@@ -7663,7 +6025,6 @@ function cmsWorkSplitContentComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -7677,17 +6038,14 @@ function cmsWorkFullImageComponent() {
     const image = component.querySelector('.work-full-image_image_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
     let cmsWorkFullImageTL;
 
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (cmsWorkFullImageTL) {
         cmsWorkFullImageTL.kill();
       }
@@ -7702,7 +6060,6 @@ function cmsWorkFullImageComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7723,7 +6080,6 @@ function cmsWorkFullImageComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -7734,50 +6090,21 @@ function cmsWorkTestimonialComponent() {
 
   components.forEach(component => {
     const container = component.querySelector('.work-testimonial_contain');
-    // const headings = component.querySelectorAll('.work-testimonial_heading');
     const paragraphs = component.querySelectorAll('.work-testimonial_content_name, .work-testimonial_content_title-company, .work-testimonial_content_quote');
     const image = component.querySelector('.work-testimonial_image_wrap');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let cmsWorkTestimonialTL;
-    // let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    // let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split heading text
-    // headings.forEach(text => {
-    //   const split = new SplitText(text, {
-    //     type: 'lines',
-    //     mask: "lines",
-    //     linesClass: "gsap-line"
-    //   });
-    //   headingSplits.push(split);
-    //   allHeadingLines.push(...split.lines);
-    // });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (cmsWorkTestimonialTL) {
         cmsWorkTestimonialTL.kill();
       }
@@ -7790,13 +6117,12 @@ function cmsWorkTestimonialComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          // headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7805,33 +6131,15 @@ function cmsWorkTestimonialComponent() {
         }
       });
 
-      // if (allHeadingLines.length > 0) {
-      //   cmsWorkTestimonialTL.fromTo(allHeadingLines, {
-      //     yPercent: headingYPercent,
-      //     opacity: 0
-      //   },
-      //   {
-      //     yPercent: 0,
-      //     opacity: 1,
-      //     duration: 1.25,
-      //     ease: defaultEasingOut,
-      //     stagger: defaultStagger
-      //   }, 0);
-      // }
-
-      if (allParagraphLines.length > 0) {
-        cmsWorkTestimonialTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(cmsWorkTestimonialTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 1
+      });
 
       if (image) {
         cmsWorkTestimonialTL.fromTo(image, {
@@ -7859,7 +6167,6 @@ function cmsWorkTestimonialComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -7874,49 +6181,21 @@ function cmsWorkCreditsComponent() {
     const paragraphs = component.querySelectorAll('.work-credits_content > p');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
-    let cmsWorkTestimonialTL;
-    let allHeadingLines = [];
-    // let allParagraphLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
-    // let paragraphSplits = [];
+    const headingSplitData = createTextSplits(headings);
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
+    let cmsWorkCreditsComponentTL;
 
-    // Split paragraph text
-    // paragraphs.forEach(text => {
-    //   const split = new SplitText(text, {
-    //     type: 'lines',
-    //     mask: "lines",
-    //     linesClass: "gsap-line"
-    //   });
-    //   paragraphSplits.push(split);
-    //   allParagraphLines.push(...split.lines);
-    // });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
-      if (cmsWorkTestimonialTL) {
-        cmsWorkTestimonialTL.kill();
+      if (cmsWorkCreditsComponentTL) {
+        cmsWorkCreditsComponentTL.kill();
       }
 
-      cmsWorkTestimonialTL = gsap.timeline({
+      cmsWorkCreditsComponentTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
           start: 'top 80%',
@@ -7924,13 +6203,12 @@ function cmsWorkCreditsComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          // paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -7939,22 +6217,17 @@ function cmsWorkCreditsComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        cmsWorkTestimonialTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(cmsWorkCreditsComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
+      // Paragraphs animate as whole elements (not split)
       if (paragraphs.length > 0) {
-        cmsWorkTestimonialTL.fromTo(paragraphs, {
+        cmsWorkCreditsComponentTL.fromTo(paragraphs, {
           yPercent: paragraphYPercent,
           opacity: 0
         },
@@ -7968,7 +6241,6 @@ function cmsWorkCreditsComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -7989,32 +6261,8 @@ function expertiseStackComponent() {
       container.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
       itemsContainer.removeAttribute('data-gsap-hide');
     } else {
-      let allHeadingLines = [];
-      let allParagraphLines = [];
-      let headingSplits = [];
-      let paragraphSplits = [];
-
-      // Split heading text
-      headings.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        headingSplits.push(split);
-        allHeadingLines.push(...split.lines);
-      });
-
-      // Split paragraph text
-      paragraphs.forEach(text => {
-        const split = new SplitText(text, {
-          type: 'lines',
-          mask: "lines",
-          linesClass: "gsap-line"
-        });
-        paragraphSplits.push(split);
-        allParagraphLines.push(...split.lines);
-      });
+      const headingSplitData = createTextSplits(headings);
+      const paragraphSplitData = createTextSplits(paragraphs);
 
       const containerTL = gsap.timeline({
         scrollTrigger: {
@@ -8027,8 +6275,10 @@ function expertiseStackComponent() {
           itemsContainer.removeAttribute('data-gsap-hide');
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
   
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -8038,33 +6288,23 @@ function expertiseStackComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        containerTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(containerTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        containerTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
+      animateText(containerTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
 
       if (itemsContainer) {
         containerTL.fromTo(itemsContainer, {
@@ -8091,32 +6331,8 @@ function expertiseStackComponent() {
         const itemParagraphs = item.querySelectorAll('.expertise-stack_item_text .c-paragraph > *');
         const itemButtons = item.querySelectorAll('.button_main_wrap');
 
-        const itemHeadingLines = [];
-        const itemParagraphLines = [];
-        const itemHeadingSplits = [];
-        const itemParagraphSplits = [];
-
-        // Split heading text
-        itemHeadings.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemHeadingSplits.push(split);
-          itemHeadingLines.push(...split.lines);
-        });
-
-        // Split paragraph text
-        itemParagraphs.forEach(text => {
-          const split = new SplitText(text, {
-            type: 'lines',
-            mask: "lines",
-            linesClass: "gsap-line"
-          });
-          itemParagraphSplits.push(split);
-          itemParagraphLines.push(...split.lines);
-        });
+        const itemHeadingSplitData = createTextSplits(itemHeadings);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs);
 
         const itemTL = gsap.timeline({
           scrollTrigger: {
@@ -8128,8 +6344,10 @@ function expertiseStackComponent() {
             item.querySelectorAll('[data-gsap-hide]').forEach(el => el.removeAttribute('data-gsap-hide'));
           },
           onComplete: () => {
-            itemHeadingSplits.forEach(split => split.revert());
-            itemParagraphSplits.forEach(split => split.revert());
+            if (itemHeadingSplitData.shouldSplit) {
+              itemHeadingSplitData.splits.forEach(split => split.revert());
+              itemParagraphSplitData.splits.forEach(split => split.revert());
+            }
             
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
@@ -8150,33 +6368,23 @@ function expertiseStackComponent() {
           }, 0);
         }
 
-        if (itemHeadingLines.length > 0) {
-          itemTL.fromTo(itemHeadingLines, {
-            yPercent: headingYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-1");
-        }
+        animateText(itemTL, {
+          elements: itemHeadings,
+          lines: itemHeadingSplitData.lines,
+          shouldSplit: itemHeadingSplitData.shouldSplit,
+          position: ">-1",
+          duration: 1.25
+        });
 
-        if (itemParagraphLines.length > 0) {
-          itemTL.fromTo(itemParagraphLines, {
-            yPercent: paragraphYPercent,
-            opacity: 0
-          },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-0.75");
-        }
+        animateText(itemTL, {
+          elements: itemParagraphs,
+          lines: itemParagraphSplitData.lines,
+          shouldSplit: itemParagraphSplitData.shouldSplit,
+          yPercent: paragraphYPercent,
+          y: paragraphY,
+          position: ">-0.75",
+          duration: 1
+        });
 
         if (itemButtons.length > 0) {
           itemTL.fromTo(itemButtons, {
@@ -8209,57 +6417,18 @@ function compassTeaserComponent() {
     const buttons = component.querySelectorAll('button.ct_btn-submit');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let compassTeaserComponentTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (compassTeaserComponentTL) {
         compassTeaserComponentTL.kill();
       }
@@ -8272,14 +6441,14 @@ function compassTeaserComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -8288,47 +6457,33 @@ function compassTeaserComponent() {
         }
       });
 
-      if (allEyebrowLines.length > 0) {
-        compassTeaserComponentTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
-      }
+      animateText(compassTeaserComponentTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: 0,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        compassTeaserComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(compassTeaserComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        compassTeaserComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(compassTeaserComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (questionGroups.length > 0) {
         compassTeaserComponentTL.fromTo(questionGroups, {
@@ -8357,7 +6512,6 @@ function compassTeaserComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -8376,57 +6530,18 @@ function fitAssessmentComponent() {
     const buttons = component.querySelectorAll('button.fit_button-swipe');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const eyebrowSplitData = createTextSplits(eyebrows);
+    const headingSplitData = createTextSplits(headings);
+    const paragraphSplitData = createTextSplits(paragraphs);
+
     let fitAssessmentComponentTL;
-    let allEyebrowLines = [];
-    let allHeadingLines = [];
-    let allParagraphLines = [];
-    let hasAnimated = false;
-    let eyebrowSplits = [];
-    let headingSplits = [];
-    let paragraphSplits = [];
 
-    // Split eyebrow text
-    eyebrows.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      eyebrowSplits.push(split);
-      allEyebrowLines.push(...split.lines);
-    });
-
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Split paragraph text
-    paragraphs.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      paragraphSplits.push(split);
-      allParagraphLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (fitAssessmentComponentTL) {
         fitAssessmentComponentTL.kill();
       }
@@ -8439,14 +6554,14 @@ function fitAssessmentComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          eyebrowSplits.forEach(split => split.revert());
-          headingSplits.forEach(split => split.revert());
-          paragraphSplits.forEach(split => split.revert());
+          if (eyebrowSplitData.shouldSplit) {
+            eyebrowSplitData.splits.forEach(split => split.revert());
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
 
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -8466,47 +6581,33 @@ function fitAssessmentComponent() {
         }, 0)
       }
 
-      if (allEyebrowLines.length > 0) {
-        fitAssessmentComponentTL.fromTo(allEyebrowLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(fitAssessmentComponentTL, {
+        elements: eyebrows,
+        lines: eyebrowSplitData.lines,
+        shouldSplit: eyebrowSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 0.8
+      });
 
-      if (allHeadingLines.length > 0) {
-        fitAssessmentComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(fitAssessmentComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: defaultPosition,
+        duration: 1.25
+      });
 
-      if (allParagraphLines.length > 0) {
-        fitAssessmentComponentTL.fromTo(allParagraphLines, {
-          yPercent: paragraphYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
-      }
+      animateText(fitAssessmentComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercent,
+        y: paragraphY,
+        position: defaultPosition,
+        duration: 1
+      });
 
       if (formGroups.length > 0) {
         fitAssessmentComponentTL.fromTo(formGroups, {
@@ -8535,7 +6636,6 @@ function fitAssessmentComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
@@ -8553,31 +6653,16 @@ function footerComponent() {
     const wordmarkWrap = component.querySelector('.footer_1_wordmark_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return; // Exit early, skip animation setup
+      return;
     }
 
+    const headingSplitData = createTextSplits(headings);
+
     let footerComponentTL;
-    let allHeadingLines = [];
-    let hasAnimated = false;
-    let headingSplits = [];
 
-    // Split heading text
-    headings.forEach(text => {
-      const split = new SplitText(text, {
-        type: 'lines',
-        mask: "lines",
-        linesClass: "gsap-line"
-      });
-      headingSplits.push(split);
-      allHeadingLines.push(...split.lines);
-    });
-
-    // Function to create/recreate animation
     function createAnimation() {
-      // Kill existing timeline if it exists to prevent duplicates
       if (footerComponentTL) {
         footerComponentTL.kill();
       }
@@ -8590,12 +6675,12 @@ function footerComponent() {
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-          headingSplits.forEach(split => split.revert());
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+          }
   
-          // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
@@ -8604,19 +6689,13 @@ function footerComponent() {
         }
       });
 
-      if (allHeadingLines.length > 0) {
-        footerComponentTL.fromTo(allHeadingLines, {
-          yPercent: headingYPercent,
-          opacity: 0
-        },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">");
-      }
+      animateText(footerComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: ">",
+        duration: 1.25
+      });
 
       if (footerLinkGroups.length > 0) {
         footerComponentTL.fromTo(footerLinkGroups, {
@@ -8664,7 +6743,6 @@ function footerComponent() {
       }
     }
 
-    // Initial call to create animation
     createAnimation();
   });
 }
