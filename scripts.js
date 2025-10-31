@@ -32,6 +32,216 @@ function setupLenis() {
   requestAnimationFrame(raf);
 }
 
+// Global GSAP Variables
+let headingYPercent = 150;
+let paragraphYPercent = 150;
+let buttonsYPercent = 150;
+let headingY = 30;
+let paragraphY = 30;
+let defaultStagger = 0.1;
+let defaultPosition = ">-0.5";
+let defaultEasingIn = 'power3.in';
+let defaultEasingOut = 'power3.out';
+let defaultEasingInOut = 'power3.inOut';
+
+// =====================================================
+// TEXT ANIMATION HELPERS - iOS Compatible
+// =====================================================
+
+// iOS Detection (cached for performance)
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+/**
+ * Returns appropriate ScrollTrigger start position based on viewport
+ * Uses aspect ratio to detect tall/narrow screens (mobile portrait)
+ * 
+ * @param {String|Number} mobilePercent - Mobile start position (e.g., '60%' or 60)
+ * @param {String|Number} desktopPercent - Desktop start position (e.g., '80%' or 80)
+ * @returns {String} ScrollTrigger start position (e.g., 'top 60%')
+ */
+function getAnimationStart(mobilePercent = 60, desktopPercent = 80) {
+  // Normalize inputs - handle both '60%' and 60
+  const mobile = typeof mobilePercent === 'string' 
+    ? mobilePercent 
+    : `${mobilePercent}%`;
+  const desktop = typeof desktopPercent === 'string' 
+    ? desktopPercent 
+    : `${desktopPercent}%`;
+  
+  // Check if viewport is portrait (taller than wide) or narrow
+  const isPortraitOrNarrow = window.innerHeight > window.innerWidth || window.innerWidth < 768;
+  
+  return isPortraitOrNarrow ? `top ${mobile}` : `top ${desktop}`;
+}
+
+/**
+ * Creates text splits for animation, skipping on iOS devices.
+ * Returns an object with split instances and lines arrays.
+ * 
+ * Modern Technique: Uses object destructuring in return for clean API
+ * 
+ * @param {NodeList|Array} elements - Elements to split
+ * @param {Object} options - SplitText configuration
+ * @returns {Object} { splits: Array, lines: Array, shouldSplit: Boolean }
+ */
+function createTextSplits(elements, options = {}) {
+  const splits = [];
+  const lines = [];
+  const shouldSplit = !isIOS;
+
+  if (!shouldSplit || !elements || elements.length === 0) {
+    return { splits, lines, shouldSplit };
+  }
+
+  const defaultOptions = {
+    type: 'lines',
+    mask: 'lines',
+    linesClass: 'gsap-line',
+    ...options // Spread operator merges user options with defaults
+  };
+
+  elements.forEach(element => {
+    const split = new SplitText(element, defaultOptions);
+    splits.push(split);
+    lines.push(...split.lines); // Spread operator flattens arrays
+  });
+
+  return { splits, lines, shouldSplit };
+}
+
+/**
+ * Animates text elements with appropriate method based on device.
+ * Uses line-by-line animation on desktop, whole-element animation on iOS.
+ * 
+ * Modern Technique: Single function handles both animation modes
+ * 
+ * @param {gsap.core.Timeline} timeline - GSAP timeline to add animation to
+ * @param {Object} config - Animation configuration
+ * @param {NodeList|Array} config.elements - Elements to animate
+ * @param {Array} config.lines - Split lines (from createTextSplits)
+ * @param {Boolean} config.shouldSplit - Whether splitting occurred
+ * @param {Number} config.yPercent - Line animation yPercent (default: headingYPercent)
+ * @param {Number} config.y - Whole element y offset for iOS (default: headingY)
+ * @param {String} config.position - Timeline position (default: ">")
+ * @param {Number} config.duration - Animation duration
+ * @param {Object} config.fromVars - Additional from vars
+ * @param {Object} config.toVars - Additional to vars
+ */
+function animateText(timeline, config) {
+  const {
+    elements,
+    lines,
+    shouldSplit,
+    yPercent = headingYPercent,
+    y = headingY,
+    position = ">",
+    duration = 1.25,
+    fromVars = {},
+    toVars = {}
+  } = config; // Object destructuring with default values
+
+  // iOS: Animate whole elements
+  if (!shouldSplit && elements && elements.length > 0) {
+    timeline.fromTo(elements, {
+      y,
+      opacity: 0,
+      ...fromVars // Spread allows custom properties
+    }, {
+      y: 0,
+      opacity: 1,
+      duration,
+      ease: defaultEasingOut,
+      stagger: defaultStagger,
+      ...toVars
+    }, position);
+  }
+  // Desktop: Animate split lines
+  else if (shouldSplit && lines && lines.length > 0) {
+    timeline.fromTo(lines, {
+      yPercent,
+      opacity: 0,
+      ...fromVars
+    }, {
+      yPercent: 0,
+      opacity: 1,
+      duration,
+      ease: defaultEasingOut,
+      stagger: defaultStagger,
+      ...toVars
+    }, position);
+  }
+}
+
+function scheduleScrollTriggerRefresh(layoutChanged = false) {
+  if (!layoutChanged) return;
+
+  clearTimeout(refreshTimeout);
+  refreshTimeout = setTimeout(() => {
+    lenis?.resize();
+    ScrollTrigger.refresh();
+  }, 100);
+}
+
+//-----------------//
+/* GSAP Animations */
+//-----------------//
+function initGsapAnimations() {
+  workScrollLock();
+  compassScrollLock();
+  splitScrollLock();
+  document.fonts.ready.then(() => {
+    navComponent();
+    homepageHeroComponent();
+    innerHeroBasicComponent();
+    innerHeroStyledComponent();
+    innerHeroImageGridComponent();
+    cmsHeroPodcastComponent();
+    cmsHeroWorkComponent();
+    headingWithImagesComponent();
+    workScrollLockComponent();
+    showreelComponent();
+    ourExpertiseComponent();
+    logoCarouselComponent();
+    consciousCompassComponent();
+    podcastEpisodesSliderComponent();
+    aboveFooterCTAComponent();
+    workGridComponent();
+    splitScrollLockComponent();
+    iconGridComponent();
+    featuredWorkComponent();
+    testimonialComponent();
+    compassCTAComponent();
+    splitPanelImageArrayComponent();
+    compassFormComponent();
+    culturalImpactComponent();
+    podcastListComponent();
+    statGridComponent();
+    officesComponent();
+    twoImageSliderComponent();
+    accordionSectionComponent();
+    splitPanelImageComponent();
+    careersComponent();
+    careerPostComponent();
+    cmsPodcastBodyComponent();
+    cmsWorkOverviewComponent();
+    cmsWorkImageGridComponent();
+    cmsWorkSplitContentComponent();
+    cmsWorkFullImageComponent();
+    cmsWorkTestimonialComponent();
+    cmsWorkCreditsComponent();
+    contactFormComponent();
+    basicContentComponent();
+    expertiseStackComponent();
+    footerComponent();
+    setTimeout(compassTeaserComponent, 200);
+    setTimeout(fitAssessmentComponent, 200);
+  });
+
+  // Refresh after all animations registered
+  ScrollTrigger.refresh();
+};
+
 // Swipers
 function swipers() {
 	// Podcast Slider
@@ -517,17 +727,17 @@ function accordionSection(){
       // Animate height
       timeline.to(textElement, {
         height: targetHeight,
-        duration: 0.4,
-        ease: 'power2.inOut'
+        duration: 0.5,
+        ease: 'power3.inOut'
       }, position);
       
       // Fade in content (no y movement)
       if (paragraph) {
         timeline.from(paragraph, {
           opacity: 0,
-          duration: 0.3,
-          ease: 'power2.out'
-        }, position + 0.1); // Slight delay for better effect
+          duration: 0.4,
+          ease: 'power3.out'
+        }, position + 0.2); // Slight delay for better effect
       }
     }
     
@@ -541,8 +751,8 @@ function accordionSection(){
       // Animate to closed
       timeline.to(textElement, {
         height: 0,
-        duration: 0.4,
-        ease: 'power2.inOut'
+        duration: 0.5,
+        ease: 'power3.inOut'
       }, position);
     }
   }
@@ -624,9 +834,8 @@ function odometers() {
               ease: "none",
               scrollTrigger: {
                 trigger: statVal,
-                start: "top 90%",
+                start: getAnimationStart(70, 90),
                 invalidateOnRefresh: !0,
-                scrub: 0,
                 onEnter: function onEnter() {
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
@@ -1229,216 +1438,6 @@ function finsweetStuff() {
     }
   ]);
 }
-
-// Global GSAP Variables
-let headingYPercent = 150;
-let paragraphYPercent = 150;
-let buttonsYPercent = 150;
-let headingY = 40;
-let paragraphY = 40;
-let defaultStagger = 0.1;
-let defaultPosition = ">-0.5";
-let defaultEasingIn = 'power3.in';
-let defaultEasingOut = 'power3.out';
-let defaultEasingInOut = 'power3.inOut';
-
-// =====================================================
-// TEXT ANIMATION HELPERS - iOS Compatible
-// =====================================================
-
-// iOS Detection (cached for performance)
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-/**
- * Returns appropriate ScrollTrigger start position based on viewport
- * Uses aspect ratio to detect tall/narrow screens (mobile portrait)
- * 
- * @param {String|Number} mobilePercent - Mobile start position (e.g., '60%' or 60)
- * @param {String|Number} desktopPercent - Desktop start position (e.g., '80%' or 80)
- * @returns {String} ScrollTrigger start position (e.g., 'top 60%')
- */
-function getAnimationStart(mobilePercent = 60, desktopPercent = 80) {
-  // Normalize inputs - handle both '60%' and 60
-  const mobile = typeof mobilePercent === 'string' 
-    ? mobilePercent 
-    : `${mobilePercent}%`;
-  const desktop = typeof desktopPercent === 'string' 
-    ? desktopPercent 
-    : `${desktopPercent}%`;
-  
-  // Check if viewport is portrait (taller than wide) or narrow
-  const isPortraitOrNarrow = window.innerHeight > window.innerWidth || window.innerWidth < 768;
-  
-  return isPortraitOrNarrow ? `top ${mobile}` : `top ${desktop}`;
-}
-
-/**
- * Creates text splits for animation, skipping on iOS devices.
- * Returns an object with split instances and lines arrays.
- * 
- * Modern Technique: Uses object destructuring in return for clean API
- * 
- * @param {NodeList|Array} elements - Elements to split
- * @param {Object} options - SplitText configuration
- * @returns {Object} { splits: Array, lines: Array, shouldSplit: Boolean }
- */
-function createTextSplits(elements, options = {}) {
-  const splits = [];
-  const lines = [];
-  const shouldSplit = !isIOS;
-
-  if (!shouldSplit || !elements || elements.length === 0) {
-    return { splits, lines, shouldSplit };
-  }
-
-  const defaultOptions = {
-    type: 'lines',
-    mask: 'lines',
-    linesClass: 'gsap-line',
-    ...options // Spread operator merges user options with defaults
-  };
-
-  elements.forEach(element => {
-    const split = new SplitText(element, defaultOptions);
-    splits.push(split);
-    lines.push(...split.lines); // Spread operator flattens arrays
-  });
-
-  return { splits, lines, shouldSplit };
-}
-
-/**
- * Animates text elements with appropriate method based on device.
- * Uses line-by-line animation on desktop, whole-element animation on iOS.
- * 
- * Modern Technique: Single function handles both animation modes
- * 
- * @param {gsap.core.Timeline} timeline - GSAP timeline to add animation to
- * @param {Object} config - Animation configuration
- * @param {NodeList|Array} config.elements - Elements to animate
- * @param {Array} config.lines - Split lines (from createTextSplits)
- * @param {Boolean} config.shouldSplit - Whether splitting occurred
- * @param {Number} config.yPercent - Line animation yPercent (default: headingYPercent)
- * @param {Number} config.y - Whole element y offset for iOS (default: headingY)
- * @param {String} config.position - Timeline position (default: ">")
- * @param {Number} config.duration - Animation duration
- * @param {Object} config.fromVars - Additional from vars
- * @param {Object} config.toVars - Additional to vars
- */
-function animateText(timeline, config) {
-  const {
-    elements,
-    lines,
-    shouldSplit,
-    yPercent = headingYPercent,
-    y = headingY,
-    position = ">",
-    duration = 1.25,
-    fromVars = {},
-    toVars = {}
-  } = config; // Object destructuring with default values
-
-  // iOS: Animate whole elements
-  if (!shouldSplit && elements && elements.length > 0) {
-    timeline.fromTo(elements, {
-      y,
-      opacity: 0,
-      ...fromVars // Spread allows custom properties
-    }, {
-      y: 0,
-      opacity: 1,
-      duration,
-      ease: defaultEasingOut,
-      stagger: defaultStagger,
-      ...toVars
-    }, position);
-  }
-  // Desktop: Animate split lines
-  else if (shouldSplit && lines && lines.length > 0) {
-    timeline.fromTo(lines, {
-      yPercent,
-      opacity: 0,
-      ...fromVars
-    }, {
-      yPercent: 0,
-      opacity: 1,
-      duration,
-      ease: defaultEasingOut,
-      stagger: defaultStagger,
-      ...toVars
-    }, position);
-  }
-}
-
-function scheduleScrollTriggerRefresh(layoutChanged = false) {
-  if (!layoutChanged) return;
-
-  clearTimeout(refreshTimeout);
-  refreshTimeout = setTimeout(() => {
-    lenis?.resize();
-    ScrollTrigger.refresh();
-  }, 100);
-}
-
-//-----------------//
-/* GSAP Animations */
-//-----------------//
-function initGsapAnimations() {
-  workScrollLock();
-  compassScrollLock();
-  splitScrollLock();
-  document.fonts.ready.then(() => {
-    navComponent();
-    homepageHeroComponent();
-    innerHeroBasicComponent();
-    innerHeroStyledComponent();
-    innerHeroImageGridComponent();
-    cmsHeroPodcastComponent();
-    cmsHeroWorkComponent();
-    headingWithImagesComponent();
-    workScrollLockComponent();
-    showreelComponent();
-    ourExpertiseComponent();
-    logoCarouselComponent();
-    consciousCompassComponent();
-    podcastEpisodesSliderComponent();
-    aboveFooterCTAComponent();
-    workGridComponent();
-    splitScrollLockComponent();
-    iconGridComponent();
-    featuredWorkComponent();
-    testimonialComponent();
-    compassCTAComponent();
-    splitPanelImageArrayComponent();
-    compassFormComponent();
-    culturalImpactComponent();
-    podcastListComponent();
-    statGridComponent();
-    officesComponent();
-    twoImageSliderComponent();
-    accordionSectionComponent();
-    splitPanelImageComponent();
-    careersComponent();
-    careerPostComponent();
-    cmsPodcastBodyComponent();
-    cmsWorkOverviewComponent();
-    cmsWorkImageGridComponent();
-    cmsWorkSplitContentComponent();
-    cmsWorkFullImageComponent();
-    cmsWorkTestimonialComponent();
-    cmsWorkCreditsComponent();
-    contactFormComponent();
-    basicContentComponent();
-    expertiseStackComponent();
-    footerComponent();
-    setTimeout(compassTeaserComponent, 200);
-    setTimeout(fitAssessmentComponent, 200);
-  });
-
-  // Refresh after all animations registered
-  ScrollTrigger.refresh();
-};
 
 // Helper function
 function shouldSkipAnimation(container, startPosition = 'bottom 20%') {
@@ -4581,14 +4580,28 @@ function statGridComponent() {
           }
         });
 
+        if (itemStats.length > 0) {
+          statGridComponentTL.fromTo(itemStats, {
+            yPercent: headingYPercent,
+            opacity: 0
+          },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
+        }
+
         // Note: Don't revert stat splits as odometer needs DOM structure intact
-        animateText(statGridComponentTL, {
-          elements: itemStats,
-          lines: itemStatSplitData.lines,
-          shouldSplit: itemStatSplitData.shouldSplit,
-          position: ">-1",
-          duration: 1
-        });
+        // animateText(statGridComponentTL, {
+        //   elements: itemStats,
+        //   lines: itemStatSplitData.lines,
+        //   shouldSplit: itemStatSplitData.shouldSplit,
+        //   position: ">-1",
+        //   duration: 1
+        // });
   
         animateText(statGridComponentTL, {
           elements: itemParagraphs,
