@@ -58,12 +58,12 @@ const isPortrait = window.innerHeight > window.innerWidth || window.innerWidth <
  * Returns appropriate ScrollTrigger start position based on viewport
  * Uses aspect ratio to detect tall/narrow screens (mobile portrait)
  * 
- * @param {String|Number} mobilePercent - Mobile start position (e.g., '60%' or 60)
+ * @param {String|Number} mobilePercent - Mobile start position (e.g., '70%' or 70)
  * @param {String|Number} desktopPercent - Desktop start position (e.g., '80%' or 80)
- * @returns {String} ScrollTrigger start position (e.g., 'top 60%')
+ * @returns {String} ScrollTrigger start position (e.g., 'top 70%')
  */
-function getAnimationStart(mobilePercent = 60, desktopPercent = 80) {
-  // Normalize inputs - handle both '60%' and 60
+function getAnimationStart(mobilePercent = 70, desktopPercent = 80) {
+  // Normalize inputs - handle both '70%' and 70
   const mobile = typeof mobilePercent === 'string' 
     ? mobilePercent 
     : `${mobilePercent}%`;
@@ -810,8 +810,6 @@ function odometers() {
     statSections.forEach((section) => {
       const statValues = section.querySelectorAll(".stat-grid_item_value");
       const statInit = function (statValues) {
-        let maxDelay = 0;
-
         statValues.forEach(function (statVal, index) {
           const originalValue = statVal.innerHTML.trim();
           if (originalValue !== "") {
@@ -834,8 +832,6 @@ function odometers() {
               duration: 3000,
             });
             var delay = index * 0.15;
-            maxDelay = Math.max(maxDelay, delay);
-
             gsap.to(statVal, {
               ease: "none",
               scrollTrigger: {
@@ -852,12 +848,6 @@ function odometers() {
               },
             });
           }
-        });
-  
-        // Refresh layout after ALL odometers in this section complete
-        const totalDuration = maxDelay + 3.2;
-        gsap.delayedCall(totalDuration, function() {
-          ScrollTrigger.refresh();
         });
       };
       statInit(statValues);
@@ -6467,7 +6457,9 @@ const init = () => {
   workGridMasonry();
   accordionSection();
   timelineAccordion();
-  odometers();
+  if (!isIOS) {
+    odometers();
+  }
   marquees();
   formStuff();
   expertiseStackNav();
