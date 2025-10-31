@@ -836,7 +836,7 @@ function odometers() {
               ease: "none",
               scrollTrigger: {
                 trigger: statVal,
-                start: "top 90%",
+                start: "top 102%",
                 invalidateOnRefresh: !0,
                 onEnter: function onEnter() {
                   // odometersAnimating = true;
@@ -2516,6 +2516,31 @@ function headingWithImagesComponent() {
 
     const headingSplitData = createTextSplits(headingText);
     const paragraphSplitData = createTextSplits(paragraphs);
+
+    // Expose splits to window for console access
+    if (!window.headingWithImagesSplits) window.headingWithImagesSplits = [];
+    window.headingWithImagesSplits[index] = {
+      headingSplits: headingSplitData.splits,
+      paragraphSplits: paragraphSplitData.splits,
+      revertHeadings: () => {
+        if (headingSplitData.shouldSplit) {
+          headingSplitData.splits.forEach(s => s.revert());
+        }
+      },
+      revertParagraphs: () => {
+        if (paragraphSplitData.shouldSplit) {
+          paragraphSplitData.splits.forEach(s => s.revert());
+        }
+      },
+      revertAll: () => {
+        if (headingSplitData.shouldSplit) {
+          headingSplitData.splits.forEach(s => s.revert());
+        }
+        if (paragraphSplitData.shouldSplit) {
+          paragraphSplitData.splits.forEach(s => s.revert());
+        }
+      }
+    };
 
     let headingWithImagesTL;
 
@@ -6497,7 +6522,7 @@ const init = () => {
   });
 
   // Observe only components that cause layout shifts
-  document.querySelectorAll('.accordion-section_wrap, .load-more, .about_wrap').forEach(el => {
+  document.querySelectorAll('.accordion-section_wrap, .load-more, .about_wrap, .stat-grid_wrap').forEach(el => {
     resizeObserver.observe(el);
   });
 
