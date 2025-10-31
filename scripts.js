@@ -1388,6 +1388,8 @@ function finsweetStuff() {
 let headingYPercent = 150;
 let paragraphYPercent = 150;
 let buttonsYPercent = 150;
+let headingY = 40;
+let paragraphY = 40;
 let defaultStagger = 0.1;
 let defaultPosition = ">-0.25";
 let defaultEasingIn = 'power3.in';
@@ -2124,11 +2126,11 @@ function homepageHeroComponent() {
       if (isIOS) {
         if (headings.length > 0) {
           homepageHeroTL.fromTo(headings, {
-            yPercent: headingYPercent,
+            y: headingY,
             opacity: 0
           },
           {
-            yPercent: 0,
+            y: 0,
             opacity: 1,
             duration: 1.25,
             ease: defaultEasingOut,
@@ -2138,11 +2140,11 @@ function homepageHeroComponent() {
 
         if (paragraphs.length > 0) {
           homepageHeroTL.fromTo(paragraphs, {
-            yPercent: paragraphYPercent,
+            y: paragraphY,
             opacity: 0
           },
           {
-            yPercent: 0,
+            y: 0,
             opacity: 1,
             duration: 1,
             ease: defaultEasingOut,
