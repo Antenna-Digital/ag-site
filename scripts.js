@@ -839,15 +839,18 @@ function odometers() {
                 start: "top 90%",
                 invalidateOnRefresh: !0,
                 onEnter: function onEnter() {
-                  odometersAnimating = true;
+                  // odometersAnimating = true;
 
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
-
-                    // Clear the flag after longest possible animation
-                    const maxDuration = (statValues.length - 1) * 0.15 + 3;
-                    gsap.delayedCall(maxDuration + 0.5, function() {
-                      odometersAnimating = false;
+  
+                    // Force scroll recalculation after odometer completes
+                    gsap.delayedCall(3.2, function() {
+                      const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                      window.scrollTo(0, currentScroll - 1);
+                      requestAnimationFrame(() => {
+                        window.scrollTo(0, currentScroll);
+                      });
                     });
                   });
                 },
