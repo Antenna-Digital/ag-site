@@ -843,7 +843,7 @@ function odometers() {
                 start: "top 90%",
                 invalidateOnRefresh: !0,
                 onEnter: function onEnter() {
-                  odometersAnimating = true;
+                  // odometersAnimating = true;
 
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
