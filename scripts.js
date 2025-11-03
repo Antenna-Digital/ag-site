@@ -90,7 +90,8 @@ function getAnimationStart(mobilePercent = 70, desktopPercent = 80) {
 function createTextSplits(elements, options = {}) {
   const splits = [];
   const lines = [];
-  const shouldSplit = !isPortrait;
+  // const shouldSplit = !isPortrait;
+  const shouldSplit = true;
 
   if (!shouldSplit || !elements || elements.length === 0) {
     return { splits, lines, shouldSplit };
