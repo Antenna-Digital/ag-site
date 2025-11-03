@@ -6492,9 +6492,9 @@ const init = () => {
   workGridMasonry();
   accordionSection();
   timelineAccordion();
-  if (!isIOS) {
+  // if (!isIOS) {
     odometers();
-  }
+  // }
   marquees();
   formStuff();
   expertiseStackNav();
