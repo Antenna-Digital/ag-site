@@ -844,13 +844,16 @@ function odometers() {
 
                   gsap.delayedCall(delay, function () {
                     od.update(originalValue);
-      
-                    // iOS fix: Force layout recalculation after animation
+  
+                    // iOS fix: Force complete layout recalculation after animation
                     if (isIOS) {
-                      gsap.delayedCall(3.2, function() { // Slightly after 3s duration
-                        statVal.style.display = 'inline-block';
-                        void statVal.offsetWidth; // Force reflow
-                        statVal.classList.add('force-block');
+                      gsap.delayedCall(3.1, function() { // After animation completes
+                        // Force the parent container to recalculate
+                        const parent = statVal.parentElement;
+                        const display = window.getComputedStyle(parent).display;
+                        parent.style.display = 'none';
+                        void parent.offsetHeight; // Force reflow
+                        parent.style.display = display;
                       });
                     }
                   });
