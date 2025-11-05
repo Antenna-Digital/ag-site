@@ -40,6 +40,8 @@ let buttonsYPercent = 150;
 let headingY = 30;
 let paragraphY = 30;
 let defaultStagger = 0.1;
+let imageMaskedSwipeStart = "polygon(0 0, 0 0, 0 100%, 0 100%)";
+let imageMaskedSwipeEnd = "polygon(0 0, 100% 0, 100% 100%, 0 100%)";
 let defaultPosition = ">-0.5";
 let defaultEasingIn = 'power3.in';
 let defaultEasingOut = 'power3.out';
@@ -127,6 +129,7 @@ function createTextSplits(elements, options = {}) {
  * @param {Number} config.y - Whole element y offset for iOS (default: headingY)
  * @param {String} config.position - Timeline position (default: ">")
  * @param {Number} config.duration - Animation duration
+ * @param {Number|Object} config.stagger - Stagger value (default: defaultStagger)
  * @param {Object} config.fromVars - Additional from vars
  * @param {Object} config.toVars - Additional to vars
  */
@@ -139,6 +142,7 @@ function animateText(timeline, config) {
     y = headingY,
     position = ">",
     duration = 1.25,
+    stagger = defaultStagger,
     fromVars = {},
     toVars = {}
   } = config; // Object destructuring with default values
@@ -154,7 +158,7 @@ function animateText(timeline, config) {
       opacity: 1,
       duration,
       ease: defaultEasingOut,
-      stagger: defaultStagger,
+      stagger,
       ...toVars
     }, position);
   }
@@ -169,7 +173,7 @@ function animateText(timeline, config) {
       opacity: 1,
       duration,
       ease: defaultEasingOut,
-      stagger: defaultStagger,
+      stagger,
       ...toVars
     }, position);
   }
@@ -178,7 +182,7 @@ function animateText(timeline, config) {
 function scheduleScrollTriggerRefresh(layoutChanged = false) {
   if (!layoutChanged || odometersAnimating) return;
 
-  clearTimeout(refreshTimeout);
+  if (refreshTimeout) clearTimeout(refreshTimeout);
   refreshTimeout = setTimeout(() => {
     lenis?.resize();
     ScrollTrigger.refresh();
@@ -2464,7 +2468,7 @@ function cmsHeroWorkComponent() {
         elements: headings,
         lines: headingSplitData.lines,
         shouldSplit: headingSplitData.shouldSplit,
-        position: defaultPosition,
+        position: 0,
         duration: 1.25
       });
 
@@ -2627,15 +2631,21 @@ function workScrollLockComponent() {
     const headings = headerContainer.querySelectorAll('.work-sl_heading_wrap .c-heading');
     const paragraphs = headerContainer.querySelectorAll('.work-sl_content_wrap .c-paragraph > *');
     const carousel = component.querySelector('.work-sl_layout.is-carousel-layout');
+    const itemTitles = component.querySelectorAll('.work-sl_collection_item_content_title');
+    const imageWraps = component.querySelectorAll('.work-sl_collection_item_image_wrap');
+    const images = component.querySelectorAll('.work-sl_collection_item_image');
+    const accentImages = component.querySelectorAll('.work-sl_collection_item_image_accent_wrap');
+    const hoverStuff = component.querySelectorAll('.work-sl_collection_item_content_info_wrap > *, .work-sl_collection_item_content_title_icon_wrap > *');
     const buttons = footerContainer.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
-    if (shouldSkipAnimation(headerContainer)) {
+    if (shouldSkipAnimation(footerContainer)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
       return;
     }
 
     const headingSplitData = createTextSplits(headings);
+    const itemTitlesSplitData = createTextSplits(itemTitles);
     const paragraphSplitData = createTextSplits(paragraphs);
 
     let workScrollLockComponentTL;
@@ -2658,6 +2668,7 @@ function workScrollLockComponent() {
           if (headingSplitData.shouldSplit) {
             headingSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
+            itemTitlesSplitData.splits.forEach(split => split.revert());
           }
   
           scheduleScrollTriggerRefresh(true);
@@ -2690,7 +2701,63 @@ function workScrollLockComponent() {
           opacity: 1,
           duration: 1,
           ease: defaultEasingOut,
-        })
+        }, defaultPosition)
+      }
+
+      if (images.length > 0) {
+        workScrollLockComponentTL.fromTo(images, {
+          clipPath: imageMaskedSwipeStart
+        },
+        {
+          clipPath: imageMaskedSwipeEnd,
+          duration: 1.75,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 3)
+        }, defaultPosition);
+      }
+
+      if (imageWraps.length > 0) {
+        workScrollLockComponentTL.fromTo(imageWraps, {
+          backgroundColor: 'transparent'
+        },
+        {
+          backgroundColor: 'var(--swatch--dark-900)',
+          duration: 0.5,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 3)
+        }, "<1.25");
+      }
+
+      if (accentImages.length > 0) {
+        workScrollLockComponentTL.fromTo(accentImages, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.5,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 3)
+        }, "<0.25");
+      }
+
+      animateText(workScrollLockComponentTL, {
+        elements: itemTitles,
+        lines: itemTitlesSplitData.lines,
+        shouldSplit: itemTitlesSplitData.shouldSplit,
+        position: "<-1",
+        duration: 1.25,
+        stagger: (defaultStagger * 3)
+      });
+
+      if (hoverStuff.length > 0) {
+        workScrollLockComponentTL.fromTo(hoverStuff, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -2863,10 +2930,10 @@ function ourExpertiseComponent() {
 
       if (images.length > 0) {
         ourExpertiseComponentTL.fromTo(images, {
-          opacity: 0,
+          clipPath: imageMaskedSwipeStart
         },
         {
-          opacity: 1,
+          clipPath: imageMaskedSwipeEnd,
           duration: 1,
           ease: defaultEasingOut,
           stagger: (defaultStagger * 2.5)
@@ -3122,6 +3189,8 @@ function podcastEpisodesSliderComponent() {
     const headings = component.querySelectorAll('.podcast-eps_content_wrap .c-heading');
     const paragraphs = component.querySelectorAll('.podcast-eps_content_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
+    const slidersContainer = component.querySelector('.podcast-eps_slider_wrap');
+    const sliderWrappers = component.querySelectorAll('.podcast-eps_slider_main-swiper_wrap, .podcast-eps_slider_thumb-swiper-1_wrap, .podcast-eps_slider_thumb-swiper-2_wrap');
     const featuredPodcastSlider = component.querySelector('.podcast-eps_slider_featured-col');
     const thumbsPodcastSliders = component.querySelectorAll('.podcast-eps_slider_thumbs_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
@@ -3204,29 +3273,52 @@ function podcastEpisodesSliderComponent() {
         }, defaultPosition);
       }
 
-      if (featuredPodcastSlider) {
-        podcastEpisodesSliderTL.fromTo(featuredPodcastSlider, {
+      if (slidersContainer) {
+        podcastEpisodesSliderTL.fromTo(slidersContainer, {
           opacity: 0
         },
         {
           opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
-      }
-
-      if (thumbsPodcastSliders.length > 0) {
-        podcastEpisodesSliderTL.fromTo(thumbsPodcastSliders, {
-          opacity: 0
-        },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
+          duration: 1.25,
+          ease: defaultEasingOut
         }, defaultPosition);
       }
+
+      if (sliderWrappers.length > 0) {
+        podcastEpisodesSliderTL.fromTo(sliderWrappers, {
+          clipPath: imageMaskedSwipeStart
+        },
+        {
+          clipPath: imageMaskedSwipeEnd,
+          duration: 1.75,
+          ease: defaultEasingOut,
+          stagger: 0.75
+        }, defaultPosition);
+      }
+
+      // if (featuredPodcastSlider) {
+      //   podcastEpisodesSliderTL.fromTo(featuredPodcastSlider, {
+      //     opacity: 0
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 1,
+      //     ease: defaultEasingOut,
+      //     stagger: defaultStagger
+      //   }, ">-0.75");
+      // }
+
+      // if (thumbsPodcastSliders.length > 0) {
+      //   podcastEpisodesSliderTL.fromTo(thumbsPodcastSliders, {
+      //     opacity: 0
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 1,
+      //     ease: defaultEasingOut,
+      //     stagger: defaultStagger
+      //   }, defaultPosition);
+      // }
     }
 
     createAnimation();
@@ -3296,16 +3388,28 @@ function aboveFooterCTAComponent() {
         duration: 1.25
       });
 
+      // if (images.length > 0) {
+      //   aboveFooterCTAComponentTL.fromTo(images, {
+      //     opacity: 0
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 0.8,
+      //     ease: defaultEasingOut,
+      //     stagger: defaultStagger
+      //   }, defaultPosition);
+      // }
+
       if (images.length > 0) {
         aboveFooterCTAComponentTL.fromTo(images, {
-          opacity: 0
+          clipPath: imageMaskedSwipeStart
         },
         {
-          opacity: 1,
-          duration: 0.8,
+          clipPath: imageMaskedSwipeEnd,
+          duration: 1,
           ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          stagger: (defaultStagger * 2.5)
+        }, 1.25);
       }
     }
 
@@ -3320,6 +3424,11 @@ function workGridComponent() {
   components.forEach(component => {
     const container = component.querySelector('.work-grid_contain');
     const items = component.querySelectorAll('.work-grid_collection_item_link');
+    const itemTitles = component.querySelectorAll('.work-grid_collection_item_content_title');
+    const imageWraps = component.querySelectorAll('.work-grid_collection_item_image_wrap');
+    const images = component.querySelectorAll('.work-grid_collection_item_image');
+    const accentImages = component.querySelectorAll('.work-grid_collection_item_image_accent_wrap');
+    const hoverStuff = component.querySelectorAll('.work-grid_collection_item_content_info_wrap > *, .work-grid_collection_item_content_title_icon_wrap > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -3327,6 +3436,8 @@ function workGridComponent() {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
       return;
     }
+
+    const itemTitlesSplitData = createTextSplits(itemTitles);
 
     let workGridComponentTL;
 
@@ -3345,20 +3456,77 @@ function workGridComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
+          itemTitlesSplitData.splits.forEach(split => split.revert());
           scheduleScrollTriggerRefresh(true);
         }
       });
       
-      if (items.length > 0) {
-        workGridComponentTL.fromTo(items, {
+      // if (items.length > 0) {
+      //   workGridComponentTL.fromTo(items, {
+      //     opacity: 0
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 1,
+      //     ease: defaultEasingOut,
+      //     stagger: (defaultStagger * 2)
+      //   }, 0);
+      // }
+
+      if (images.length > 0) {
+        workGridComponentTL.fromTo(images, {
+          clipPath: imageMaskedSwipeStart
+        },
+        {
+          clipPath: imageMaskedSwipeEnd,
+          duration: 1.75,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 3)
+        }, 0);
+      }
+
+      if (imageWraps.length > 0) {
+        workGridComponentTL.fromTo(imageWraps, {
+          backgroundColor: 'transparent'
+        },
+        {
+          backgroundColor: 'var(--swatch--dark-900)',
+          duration: 0.5,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 3)
+        }, "<1.25");
+      }
+
+      if (accentImages.length > 0) {
+        workGridComponentTL.fromTo(accentImages, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 0.5,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 3)
+        }, "<0.25");
+      }
+
+      animateText(workGridComponentTL, {
+        elements: itemTitles,
+        lines: itemTitlesSplitData.lines,
+        shouldSplit: itemTitlesSplitData.shouldSplit,
+        position: "<-1",
+        duration: 1.25,
+        stagger: (defaultStagger * 3)
+      });
+
+      if (hoverStuff.length > 0) {
+        workGridComponentTL.fromTo(hoverStuff, {
           opacity: 0
         },
         {
           opacity: 1,
           duration: 1,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2)
-        }, 0);
+          ease: defaultEasingOut
+        }, ">-1");
       }
 
       if (buttons.length > 0) {
