@@ -572,7 +572,10 @@ function workGridMasonry(){
           margin: macyMargin,
           waitForImages: true,
         });
-        
+
+        // Expose instance globally for Finsweet integration
+        window.macyInstance = macyInstance;
+
         macyInstance.runOnImageLoad(() => {
           macyInstance.recalculate(true);
           // Restore animation states after Macy is done
@@ -580,6 +583,8 @@ function workGridMasonry(){
         }, true);
       }, 10);
     } else {
+      // Clear global instance when in single column
+      window.macyInstance = null;
       setTimeout(() => {
         cleanupMacyStyles();
         // Restore animation states after cleanup
@@ -1421,15 +1426,31 @@ function finsweetStuff() {
     (listInstances) => {
       listInstances.forEach((list)=>{
         list.addHook("afterRender", (items) => {
-          ScrollTrigger.refresh();
-          lenis.resize();
-          // initGsapAnimations();
+          // 1. Animate new items first
           podcastListComponent();
           workGridComponent();
-          window.scrollBy(0, 1);
-          setTimeout(() => {
-            window.scrollBy(0, -1);
-          }, 0);
+
+          // 2. Recalculate masonry layout (if Macy instance exists)
+          if (window.macyInstance) {
+            window.macyInstance.recalculate(true);
+          }
+
+          // 3. Force layout recalculation
+          document.body.offsetHeight;
+
+          // 4. Refresh ScrollTrigger and Lenis after layout settles
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+              lenis.resize();
+
+              // 5. Trigger scroll recalculation
+              window.scrollBy(0, 1);
+              setTimeout(() => {
+                window.scrollBy(0, -1);
+              }, 0);
+            });
+          });
         })
       });
 
@@ -1465,6 +1486,7 @@ function finsweetStuff() {
 function shouldSkipAnimation(container, startPosition = 'bottom 20%') {
   const scrollY = window.scrollY || window.pageYOffset;
   const viewportHeight = window.innerHeight;
+  if (!container) return;
   const rect = container.getBoundingClientRect();
   
   const [edge, percentString] = startPosition.split(' ');
@@ -5417,6 +5439,7 @@ function splitPanelImageComponent() {
         shouldSplit: eyebrowSplitData.shouldSplit,
         yPercent: paragraphYPercent,
         y: paragraphY,
+        position: 0.75,
         duration: 0.8
       });
 
@@ -5424,6 +5447,7 @@ function splitPanelImageComponent() {
         elements: headings,
         lines: headingSplitData.lines,
         shouldSplit: headingSplitData.shouldSplit,
+        position: 1,
         duration: 1.25
       });
 
@@ -6026,8 +6050,8 @@ function cmsWorkImageGridComponent() {
       const pieces = container.querySelectorAll('.work-image-grid-1_layout > *, .work-image-grid-2_layout > *');
 
       pieces.forEach(piece => {
-        const pieceImages = [...piece.querySelectorAll('.work-image-grid_image_wrap')];
-        if (piece.classList.contains('work-image-grid_image_wrap')) {
+        const pieceImages = [...piece.querySelectorAll('[class*="work-image-grid"][class*="image_wrap"]')];
+        if (piece.className.includes('work-image-grid') && piece.className.includes('image_wrap')) {
           pieceImages.push(piece);
         }
         const pieceHeadings = piece.querySelectorAll('.work-image-grid_content-image_heading');
