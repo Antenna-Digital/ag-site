@@ -36,6 +36,7 @@ function setupLenis() {
 // Global GSAP Variables
 let headingYPercent = 150;
 let paragraphYPercent = 150;
+let paragraphYPercentNoMask = 100;
 let buttonsYPercent = 150;
 let headingY = 30;
 let paragraphY = 30;
@@ -93,13 +94,14 @@ function getAnimationStart(mobilePercent = 70, desktopPercent = 80) {
 }
 
 /**
- * Creates text splits for animation, skipping on iOS devices.
+ * Creates text splits for animation, skipping on mobile devices.
  * Returns an object with split instances and lines arrays.
  * 
  * Modern Technique: Uses object destructuring in return for clean API
  * 
  * @param {NodeList|Array} elements - Elements to split
  * @param {Object} options - SplitText configuration
+ * @param {Boolean} options.mask - Enable/disable masking (default: true)
  * @returns {Object} { splits: Array, lines: Array, shouldSplit: Boolean }
  */
 function createTextSplits(elements, options = {}) {
@@ -111,11 +113,14 @@ function createTextSplits(elements, options = {}) {
     return { splits, lines, shouldSplit };
   }
 
+  // Extract mask option with default true
+  const { mask = true, ...restOptions } = options;
+
   const defaultOptions = {
     type: 'lines',
-    mask: 'lines',
     linesClass: 'gsap-line',
-    ...options // Spread operator merges user options with defaults
+    ...(mask && { mask: 'lines' }), // Conditionally add mask property
+    ...restOptions // Merge remaining user options
   };
 
   elements.forEach(element => {
@@ -217,6 +222,7 @@ function initGsapAnimations() {
     innerHeroImageGridComponent();
     cmsHeroPodcastComponent();
     cmsHeroWorkComponent();
+    innerHero404Component();
     headingWithImagesComponent();
     workScrollLockComponent();
     showreelComponent();
@@ -2584,6 +2590,72 @@ function cmsHeroWorkComponent() {
   });
 }
 
+// Inner Hero - 404 Component - GSAP Reveals
+function innerHero404Component() {
+  const components = document.querySelectorAll('.hero-404_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.hero-404_contain');
+    const buttons = component.querySelectorAll('.button_main_wrap');
+    const carousel = component.querySelector('._404_carousel_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return;
+    }
+
+    let innerHero404TL;
+
+    function createAnimation() {
+      if (innerHero404TL) {
+        innerHero404TL.kill();
+      }
+
+      innerHero404TL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: getAnimationStart(),
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          scheduleScrollTriggerRefresh();
+        }
+      });
+
+      if (carousel) {
+        innerHero404TL.fromTo(carousel, {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut
+        }, 0);
+      }
+
+      if (buttons.length > 0) {
+        innerHero404TL.fromTo(buttons, {
+          yPercent: buttonsYPercent,
+          opacity: 0,
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0.75);
+      }
+    }
+
+    createAnimation();
+  });
+}
+
 // Heading with Images Component - GSAP Reveals
 function headingWithImagesComponent() {
   const components = document.querySelectorAll('.about_wrap');
@@ -2602,7 +2674,7 @@ function headingWithImagesComponent() {
     }
 
     const headingSplitData = createTextSplits(headingText);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     // Expose splits to window for console access
     if (!window.headingWithImagesSplits) window.headingWithImagesSplits = [];
@@ -2679,7 +2751,7 @@ function headingWithImagesComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: defaultPosition,
         duration: 1
@@ -3160,7 +3232,7 @@ function consciousCompassComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let consciousCompassTL;
 
@@ -3223,7 +3295,7 @@ function consciousCompassComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-1",
         duration: 1
@@ -3285,7 +3357,7 @@ function podcastEpisodesSliderComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let podcastEpisodesSliderTL;
 
@@ -3336,7 +3408,7 @@ function podcastEpisodesSliderComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -6123,29 +6195,29 @@ function cmsWorkImageGridComponent() {
           duration: 1.25
         });
 
-        // if (pieceImages.length > 0) {
-        //   cmsWorkImageGridPieceTL.fromTo(pieceImages, {
-        //     opacity: 0
-        //   },
-        //   {
-        //     opacity: 1,
-        //     duration: 1.25,
-        //     ease: defaultEasingOut,
-        //     stagger: defaultStagger
-        //   }, 0.5);
-        // }
-
         if (pieceImages.length > 0) {
           cmsWorkImageGridPieceTL.fromTo(pieceImages, {
-            clipPath: imageMaskedSwipeStart
+            opacity: 0
           },
           {
-            clipPath: imageMaskedSwipeEnd,
-            duration: 2,
+            opacity: 1,
+            duration: 1.25,
             ease: defaultEasingOut,
-            stagger: (defaultStagger * 5)
-          }, getPosition(cmsWorkImageGridPieceTL, "<0.5"));
+            stagger: defaultStagger
+          }, 0.5);
         }
+
+        // if (pieceImages.length > 0) {
+        //   cmsWorkImageGridPieceTL.fromTo(pieceImages, {
+        //     clipPath: imageMaskedSwipeStart
+        //   },
+        //   {
+        //     clipPath: imageMaskedSwipeEnd,
+        //     duration: 2,
+        //     ease: defaultEasingOut,
+        //     stagger: (defaultStagger * 5)
+        //   }, getPosition(cmsWorkImageGridPieceTL, "<0.5"));
+        // }
 
         if (pieceButtons.length > 0) {
           cmsWorkImageGridPieceTL.fromTo(pieceButtons, {
@@ -6285,27 +6357,27 @@ function cmsWorkFullImageComponent() {
         }
       });
 
-      // if (image) {
-      //   cmsWorkFullImageTL.fromTo(image, {
-      //     opacity: 0
-      //   },
-      //   {
-      //     opacity: 1,
-      //     duration: 1.25,
-      //     ease: defaultEasingOut
-      //   }, 0);
-      // }
-
       if (image) {
         cmsWorkFullImageTL.fromTo(image, {
-          clipPath: imageMaskedSwipeStart
+          opacity: 0
         },
         {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 2,
+          opacity: 1,
+          duration: 1.25,
           ease: defaultEasingOut
         }, 0);
       }
+
+      // if (image) {
+      //   cmsWorkFullImageTL.fromTo(image, {
+      //     clipPath: imageMaskedSwipeStart
+      //   },
+      //   {
+      //     clipPath: imageMaskedSwipeEnd,
+      //     duration: 2,
+      //     ease: defaultEasingOut
+      //   }, 0);
+      // }
     }
 
     createAnimation();
