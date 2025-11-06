@@ -2464,15 +2464,26 @@ function cmsHeroPodcastComponent() {
         }, defaultPosition);
       }
 
+      // if (image) {
+      //   cmsHeroPodcastTL.fromTo(image, {
+      //     opacity: 0,
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 1,
+      //     ease: defaultEasingOut
+      //   }, ">-1");
+      // }
+
       if (image) {
         cmsHeroPodcastTL.fromTo(image, {
-          opacity: 0,
+          clipPath: imageMaskedSwipeStart
         },
         {
-          opacity: 1,
-          duration: 1,
+          clipPath: imageMaskedSwipeEnd,
+          duration: 1.75,
           ease: defaultEasingOut
-        }, ">-1");
+        }, getPosition(cmsHeroPodcastTL, ">-1"));
       }
     }
 
@@ -6049,9 +6060,9 @@ function cmsWorkImageGridComponent() {
     containers.forEach(container => {
       const pieces = container.querySelectorAll('.work-image-grid-1_layout > *, .work-image-grid-2_layout > *');
 
-      pieces.forEach(piece => {
-        const pieceImages = [...piece.querySelectorAll('[class*="work-image-grid"][class*="image_wrap"]')];
-        if (piece.className.includes('work-image-grid') && piece.className.includes('image_wrap')) {
+      pieces.forEach((piece, index) => {
+        const pieceImages = [...piece.querySelectorAll('.work-image-grid_content-image_image_wrap, .work-image-grid_image_wrap')];
+        if (piece.className.includes('work-image-grid_image_wrap')) {
           pieceImages.push(piece);
         }
         const pieceHeadings = piece.querySelectorAll('.work-image-grid_content-image_heading');
@@ -6070,12 +6081,18 @@ function cmsWorkImageGridComponent() {
         const pieceHeadingSplitData = createTextSplits(pieceHeadings);
         const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
 
+        // Calculate delay based on grid position (2 columns on desktop only)
+        const isTwoColumn = window.innerWidth > 868;
+        const columnIndex = isTwoColumn ? index % 2 : 0;
+        const staggerDelay = columnIndex * defaultStagger * 5;
+
         const cmsWorkImageGridPieceTL = gsap.timeline({
           scrollTrigger: {
             trigger: piece,
             start: getAnimationStart(),
             once: true
           },
+          delay: staggerDelay,
           onStart: () => {
             pieceHiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
           },
@@ -6093,7 +6110,6 @@ function cmsWorkImageGridComponent() {
           elements: pieceHeadings,
           lines: pieceHeadingSplitData.lines,
           shouldSplit: pieceHeadingSplitData.shouldSplit,
-          position: 0,
           duration: 1.25
         });
 
@@ -6107,16 +6123,28 @@ function cmsWorkImageGridComponent() {
           duration: 1.25
         });
 
+        // if (pieceImages.length > 0) {
+        //   cmsWorkImageGridPieceTL.fromTo(pieceImages, {
+        //     opacity: 0
+        //   },
+        //   {
+        //     opacity: 1,
+        //     duration: 1.25,
+        //     ease: defaultEasingOut,
+        //     stagger: defaultStagger
+        //   }, 0.5);
+        // }
+
         if (pieceImages.length > 0) {
           cmsWorkImageGridPieceTL.fromTo(pieceImages, {
-            opacity: 0
+            clipPath: imageMaskedSwipeStart
           },
           {
-            opacity: 1,
-            duration: 1.25,
+            clipPath: imageMaskedSwipeEnd,
+            duration: 2,
             ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, 0.5);
+            stagger: (defaultStagger * 5)
+          }, getPosition(cmsWorkImageGridPieceTL, "<0.5"));
         }
 
         if (pieceButtons.length > 0) {
@@ -6257,13 +6285,24 @@ function cmsWorkFullImageComponent() {
         }
       });
 
+      // if (image) {
+      //   cmsWorkFullImageTL.fromTo(image, {
+      //     opacity: 0
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 1.25,
+      //     ease: defaultEasingOut
+      //   }, 0);
+      // }
+
       if (image) {
         cmsWorkFullImageTL.fromTo(image, {
-          opacity: 0
+          clipPath: imageMaskedSwipeStart
         },
         {
-          opacity: 1,
-          duration: 1.25,
+          clipPath: imageMaskedSwipeEnd,
+          duration: 2,
           ease: defaultEasingOut
         }, 0);
       }
@@ -6280,7 +6319,7 @@ function cmsWorkTestimonialComponent() {
   components.forEach(component => {
     const container = component.querySelector('.work-testimonial_contain');
     const paragraphs = component.querySelectorAll('.work-testimonial_content_name, .work-testimonial_content_title-company, .work-testimonial_content_quote');
-    const image = component.querySelector('.work-testimonial_image_wrap');
+    const image = component.querySelector('.work-testimonial_image_wrap > *');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
@@ -6326,13 +6365,24 @@ function cmsWorkTestimonialComponent() {
         duration: 1
       });
 
+      // if (image) {
+      //   cmsWorkTestimonialTL.fromTo(image, {
+      //     opacity: 0
+      //   },
+      //   {
+      //     opacity: 1,
+      //     duration: 1.25,
+      //     ease: defaultEasingOut
+      //   }, 0.5);
+      // }
+
       if (image) {
         cmsWorkTestimonialTL.fromTo(image, {
-          opacity: 0
+          clipPath: imageMaskedSwipeStart
         },
         {
-          opacity: 1,
-          duration: 1.25,
+          clipPath: imageMaskedSwipeEnd,
+          duration: 1.75,
           ease: defaultEasingOut
         }, 0.5);
       }
