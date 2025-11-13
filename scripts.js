@@ -2003,7 +2003,8 @@ function homepageHeroComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let homepageHeroTL;
 
@@ -2043,9 +2044,9 @@ function homepageHeroComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
-        position: ">-0.75",
+        position: ">-0.5",
         duration: 1
       });
 
@@ -2097,7 +2098,8 @@ function innerHeroBasicComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let innerHeroBasicTL;
 
@@ -2137,7 +2139,7 @@ function innerHeroBasicComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: defaultPosition,
         duration: 1
@@ -2204,7 +2206,8 @@ function innerHeroStyledComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let innerHeroStyledTL;
 
@@ -2244,7 +2247,7 @@ function innerHeroStyledComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: defaultPosition,
         duration: 1
@@ -2311,7 +2314,8 @@ function innerHeroImageGridComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let innerHeroImageGridTL;
 
@@ -2351,9 +2355,9 @@ function innerHeroImageGridComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
-        position: ">-0.75",
+        position: ">-0.5",
         duration: 1
       });
 
@@ -2516,7 +2520,8 @@ function cmsHeroWorkComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let cmsHeroWorkTL;
 
@@ -2565,9 +2570,9 @@ function cmsHeroWorkComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
-        position: ">-0.75",
+        position: ">-0.5",
         duration: 1
       });
 
@@ -2674,6 +2679,7 @@ function headingWithImagesComponent() {
     }
 
     const headingSplitData = createTextSplits(headingText);
+    // const paragraphSplitData = createTextSplits(paragraphs);
     const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     // Expose splits to window for console access
@@ -2801,7 +2807,8 @@ function workScrollLockComponent() {
 
     const headingSplitData = createTextSplits(headings);
     const itemTitlesSplitData = createTextSplits(itemTitles);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let workScrollLockComponentTL;
 
@@ -2842,7 +2849,7 @@ function workScrollLockComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.65",
         duration: 1
@@ -3023,7 +3030,8 @@ function ourExpertiseComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let ourExpertiseComponentTL;
 
@@ -3063,7 +3071,7 @@ function ourExpertiseComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.65",
         duration: 1
@@ -3147,7 +3155,8 @@ function logoCarouselComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let logoCarouselTL;
 
@@ -3187,7 +3196,7 @@ function logoCarouselComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.65",
         duration: 1
@@ -3232,6 +3241,7 @@ function consciousCompassComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
+    // const paragraphSplitData = createTextSplits(paragraphs);
     const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let consciousCompassTL;
@@ -3357,6 +3367,7 @@ function podcastEpisodesSliderComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
+    // const paragraphSplitData = createTextSplits(paragraphs);
     const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let podcastEpisodesSliderTL;
@@ -3736,8 +3747,10 @@ function splitScrollLockComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const headerParagraphSplitData = createTextSplits(headerParagraphs);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const headerParagraphSplitData = createTextSplits(headerParagraphs);
+    const headerParagraphSplitData = createTextSplits(headerParagraphs, { mask: false });
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let splitScrollLockTL;
 
@@ -3793,7 +3806,7 @@ function splitScrollLockComponent() {
         elements: headerParagraphs,
         lines: headerParagraphSplitData.lines,
         shouldSplit: headerParagraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: defaultPosition,
         duration: 1
@@ -3825,7 +3838,7 @@ function splitScrollLockComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-1.5",
         duration: 1
@@ -3881,7 +3894,8 @@ function iconGridComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let iconGridComponentTL;
 
@@ -3921,7 +3935,7 @@ function iconGridComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -3934,7 +3948,8 @@ function iconGridComponent() {
         const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
 
         const itemHeadingSplitData = createTextSplits(itemHeadings);
-        const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        // const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs, { mask: false });
 
         if (itemHeader.length > 0) {
           iconGridComponentTL.fromTo(itemHeader, {
@@ -3979,7 +3994,7 @@ function iconGridComponent() {
           elements: itemParagraphs,
           lines: itemParagraphSplitData.lines,
           shouldSplit: itemParagraphSplitData.shouldSplit,
-          yPercent: paragraphYPercent,
+          yPercent: paragraphYPercentNoMask,
           y: paragraphY,
           position: ">-0.75",
           duration: 1,
@@ -4182,7 +4197,8 @@ function testimonialComponent() {
       return;
     }
 
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let testimonialComponentTL;
 
@@ -4239,7 +4255,7 @@ function testimonialComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: "<0.75",
         duration: 1
@@ -4283,7 +4299,8 @@ function compassCTAComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let compassCTAComponentTL;
 
@@ -4323,7 +4340,7 @@ function compassCTAComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -4399,7 +4416,8 @@ function splitPanelImageArrayComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let splitPanelImageArrayTL;
 
@@ -4465,7 +4483,7 @@ function splitPanelImageArrayComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -4508,7 +4526,8 @@ function compassFormComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let compassFormComponentTL;
 
@@ -4548,7 +4567,7 @@ function compassFormComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -4634,7 +4653,8 @@ function culturalImpactComponent() {
       headerContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
       const headerHeadingSplitData = createTextSplits(headerHeadings);
-      const headerParagraphSplitData = createTextSplits(headerParagraphs);
+      // const headerParagraphSplitData = createTextSplits(headerParagraphs);
+      const headerParagraphSplitData = createTextSplits(headerParagraphs, { mask: false });
 
       const headerTL = gsap.timeline({
         scrollTrigger: {
@@ -4666,7 +4686,7 @@ function culturalImpactComponent() {
         elements: headerParagraphs,
         lines: headerParagraphSplitData.lines,
         shouldSplit: headerParagraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -4678,7 +4698,8 @@ function culturalImpactComponent() {
       podcastContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
       const podcastHeadingSplitData = createTextSplits(podcastHeadings);
-      const podcastParagraphSplitData = createTextSplits(podcastParagraphs);
+      // const podcastParagraphSplitData = createTextSplits(podcastParagraphs);
+      const podcastParagraphSplitData = createTextSplits(podcastParagraphs, { mask: false });
 
       const podcastTL = gsap.timeline({
         scrollTrigger: {
@@ -4734,7 +4755,7 @@ function culturalImpactComponent() {
         elements: podcastParagraphs,
         lines: podcastParagraphSplitData.lines,
         shouldSplit: podcastParagraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -4760,7 +4781,8 @@ function culturalImpactComponent() {
       noLogoContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
       const noLogoHeadingSplitData = createTextSplits(noLogoHeadings);
-      const noLogoParagraphSplitData = createTextSplits(noLogoParagraphs);
+      // const noLogoParagraphSplitData = createTextSplits(noLogoParagraphs);
+      const noLogoParagraphSplitData = createTextSplits(noLogoParagraphs, { mask: false });
 
       const noLogoTL = gsap.timeline({
         scrollTrigger: {
@@ -4816,7 +4838,7 @@ function culturalImpactComponent() {
         elements: noLogoParagraphs,
         lines: noLogoParagraphSplitData.lines,
         shouldSplit: noLogoParagraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -4939,7 +4961,8 @@ function podcastListComponent() {
     const footerSignup = footerContainer.querySelector('.podcast-list_list_sub_form_wrap');
 
     const footerHeadingSplitData = createTextSplits(footerHeadings);
-    const footerParagraphSplitData = createTextSplits(footerParagraphs);
+    // const footerParagraphSplitData = createTextSplits(footerParagraphs);
+    const footerParagraphSplitData = createTextSplits(footerParagraphs, { mask: false });
 
     const footerTL = gsap.timeline({
       scrollTrigger: {
@@ -4971,7 +4994,7 @@ function podcastListComponent() {
       elements: footerParagraphs,
       lines: footerParagraphSplitData.lines,
       shouldSplit: footerParagraphSplitData.shouldSplit,
-      yPercent: paragraphYPercent,
+      yPercent: paragraphYPercentNoMask,
       y: paragraphY,
       position: ">-0.75",
       duration: 1
@@ -5009,7 +5032,8 @@ function statGridComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let statGridComponentTL;
 
@@ -5049,7 +5073,7 @@ function statGridComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -5063,7 +5087,8 @@ function statGridComponent() {
 
         const itemHeadingSplitData = createTextSplits(itemHeadings);
         // const itemStatSplitData = createTextSplits(itemStats);
-        const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        // const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs, { mask: false });
 
         if (itemHeader.length > 0) {
           statGridComponentTL.fromTo(itemHeader, {
@@ -5119,7 +5144,7 @@ function statGridComponent() {
           elements: itemParagraphs,
           lines: itemParagraphSplitData.lines,
           shouldSplit: itemParagraphSplitData.shouldSplit,
-          yPercent: paragraphYPercent,
+          yPercent: paragraphYPercentNoMask,
           y: paragraphY,
           position: ">-0.75",
           duration: 1,
@@ -5156,7 +5181,8 @@ function officesComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let officesComponentTL;
 
@@ -5196,7 +5222,7 @@ function officesComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -5265,7 +5291,8 @@ function twoImageSliderComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let twoImageSliderComponentTL;
 
@@ -5308,7 +5335,7 @@ function twoImageSliderComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: "<0.75",
         duration: 1
@@ -5377,7 +5404,8 @@ function accordionSectionComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let accordionSectionComponentTL;
 
@@ -5417,7 +5445,7 @@ function accordionSectionComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -5476,7 +5504,8 @@ function splitPanelImageComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let splitPanelImageComponentTL;
 
@@ -5538,7 +5567,7 @@ function splitPanelImageComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -5592,7 +5621,8 @@ function careersComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let careersComponentTL;
 
@@ -5632,7 +5662,7 @@ function careersComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -5740,7 +5770,8 @@ function contactFormComponent() {
     }
 
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let contactFormTL;
 
@@ -5780,7 +5811,7 @@ function contactFormComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -5926,7 +5957,8 @@ function cmsPodcastBodyComponent() {
       navContainer.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     } else {
       const bodyHeadingSplitData = createTextSplits(bodyHeadings);
-      const bodyParagraphSplitData = createTextSplits(bodyParagraphs);
+      // const bodyParagraphSplitData = createTextSplits(bodyParagraphs);
+      const bodyParagraphSplitData = createTextSplits(bodyParagraphs, { mask: false });
 
       const bodyTL = gsap.timeline({
         scrollTrigger: {
@@ -5959,7 +5991,7 @@ function cmsPodcastBodyComponent() {
         elements: bodyParagraphs,
         lines: bodyParagraphSplitData.lines,
         shouldSplit: bodyParagraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -6053,7 +6085,8 @@ function cmsWorkOverviewComponent() {
           const pieceParagraphs = piece.querySelectorAll('.c-paragraph > *, .work-overview_info_item_label, .work-overview_info_item_value, .work-overview_info_item_tags_list, .work-overview_stats_item_label');
 
           const pieceHeadingSplitData = createTextSplits(pieceHeadings);
-          const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
+          // const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
+          const pieceParagraphSplitData = createTextSplits(pieceParagraphs, { mask: false });
 
           if (pieceBoxes.length > 0) {
             cmsWorkOverviewTL.fromTo(pieceBoxes, {
@@ -6088,7 +6121,7 @@ function cmsWorkOverviewComponent() {
             elements: pieceParagraphs,
             lines: pieceParagraphSplitData.lines,
             shouldSplit: pieceParagraphSplitData.shouldSplit,
-            yPercent: paragraphYPercent,
+            yPercent: paragraphYPercentNoMask,
             y: paragraphY,
             position: ">-1",
             duration: 1,
@@ -6151,7 +6184,8 @@ function cmsWorkImageGridComponent() {
         }
 
         const pieceHeadingSplitData = createTextSplits(pieceHeadings);
-        const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
+        // const pieceParagraphSplitData = createTextSplits(pieceParagraphs);
+        const pieceParagraphSplitData = createTextSplits(pieceParagraphs, { mask: false });
 
         // Calculate delay based on grid position (2 columns on desktop only)
         const isTwoColumn = window.innerWidth > 868;
@@ -6189,7 +6223,7 @@ function cmsWorkImageGridComponent() {
           elements: pieceParagraphs,
           lines: pieceParagraphSplitData.lines,
           shouldSplit: pieceParagraphSplitData.shouldSplit,
-          yPercent: paragraphYPercent,
+          yPercent: paragraphYPercentNoMask,
           y: paragraphY,
           position: ">-0.75",
           duration: 1.25
@@ -6400,7 +6434,8 @@ function cmsWorkTestimonialComponent() {
       return;
     }
 
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let cmsWorkTestimonialTL;
 
@@ -6431,7 +6466,7 @@ function cmsWorkTestimonialComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: 0,
         duration: 1
@@ -6565,7 +6600,8 @@ function expertiseStackComponent() {
       itemsContainer.removeAttribute('data-gsap-hide');
     } else {
       const headingSplitData = createTextSplits(headings);
-      const paragraphSplitData = createTextSplits(paragraphs);
+      // const paragraphSplitData = createTextSplits(paragraphs);
+      const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
       const containerTL = gsap.timeline({
         scrollTrigger: {
@@ -6599,7 +6635,7 @@ function expertiseStackComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: ">-0.75",
         duration: 1
@@ -6631,7 +6667,8 @@ function expertiseStackComponent() {
         const itemButtons = item.querySelectorAll('.button_main_wrap');
 
         const itemHeadingSplitData = createTextSplits(itemHeadings);
-        const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        // const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs, { mask: false });
 
         const itemTL = gsap.timeline({
           scrollTrigger: {
@@ -6687,7 +6724,7 @@ function expertiseStackComponent() {
           elements: itemParagraphs,
           lines: itemParagraphSplitData.lines,
           shouldSplit: itemParagraphSplitData.shouldSplit,
-          yPercent: paragraphYPercent,
+          yPercent: paragraphYPercentNoMask,
           y: paragraphY,
           position: ">-0.75",
           duration: 1
@@ -6731,7 +6768,8 @@ function compassTeaserComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let compassTeaserComponentTL;
 
@@ -6782,7 +6820,7 @@ function compassTeaserComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: defaultPosition,
         duration: 1
@@ -6840,7 +6878,8 @@ function fitAssessmentComponent() {
 
     const eyebrowSplitData = createTextSplits(eyebrows);
     const headingSplitData = createTextSplits(headings);
-    const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
 
     let fitAssessmentComponentTL;
 
@@ -6902,7 +6941,7 @@ function fitAssessmentComponent() {
         elements: paragraphs,
         lines: paragraphSplitData.lines,
         shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercent,
+        yPercent: paragraphYPercentNoMask,
         y: paragraphY,
         position: defaultPosition,
         duration: 1
