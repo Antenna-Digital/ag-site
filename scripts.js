@@ -2199,6 +2199,7 @@ function innerHeroStyledComponent() {
     const buttons = component.querySelectorAll('.hero-inner-styled_text_wrap .button_main_wrap');
     const graphics = component.querySelectorAll('.hero-inner-styled_graphics_1 > * > *, .hero-inner-styled_graphics_2 > * > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+    const textShadowItems = component.querySelectorAll('.u-text-shadow');
 
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
@@ -2230,6 +2231,9 @@ function innerHeroStyledComponent() {
             headingSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
           }
+          textShadowItems.forEach(item => {
+            item.classList.add('is-darker-shadow');
+          });
   
           scheduleScrollTriggerRefresh();
         }
@@ -2307,6 +2311,7 @@ function innerHeroImageGridComponent() {
     const buttons = component.querySelectorAll('.hero-inner-image-grid_text_wrap .button_main_wrap');
     const graphics = component.querySelectorAll('.m-image-grid_wrap > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+    const textShadowItems = component.querySelectorAll('.u-text-shadow');
 
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
@@ -2338,6 +2343,9 @@ function innerHeroImageGridComponent() {
             headingSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
           }
+          textShadowItems.forEach(item => {
+            item.classList.add('is-darker-shadow');
+          });
   
           scheduleScrollTriggerRefresh(true);
         }
