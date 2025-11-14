@@ -3812,27 +3812,27 @@ function splitScrollLockComponent() {
         duration: 1
       });
 
-      // if (imageContainer) {
-      //   splitScrollLockTL.fromTo(imageContainer, {
-      //     opacity: 0
-      //   },
-      //   {
-      //     opacity: 1,
-      //     duration: 0.8,
-      //     ease: defaultEasingOut
-      //   }, defaultPosition);
-      // }
-
       if (imageContainer) {
         splitScrollLockTL.fromTo(imageContainer, {
-          clipPath: imageMaskedSwipeStart
+          opacity: 0
         },
         {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 2,
-          ease: defaultEasingInOut,
-        }, defaultPosition);
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut
+        }, ">-0.75");
       }
+
+      // if (imageContainer) {
+      //   splitScrollLockTL.fromTo(imageContainer, {
+      //     clipPath: imageMaskedSwipeStart
+      //   },
+      //   {
+      //     clipPath: imageMaskedSwipeEnd,
+      //     duration: 2,
+      //     ease: defaultEasingInOut,
+      //   }, defaultPosition);
+      // }
 
       animateText(splitScrollLockTL, {
         elements: paragraphs,
@@ -3840,7 +3840,7 @@ function splitScrollLockComponent() {
         shouldSplit: paragraphSplitData.shouldSplit,
         yPercent: paragraphYPercentNoMask,
         y: paragraphY,
-        position: ">-1.5",
+        position: "<0.5",
         duration: 1
       });
 
