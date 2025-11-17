@@ -258,6 +258,8 @@ function initGsapAnimations() {
     contactFormComponent();
     basicContentComponent();
     expertiseStackComponent();
+    iconCardsComponent();
+    attributesGridComponent();
     footerComponent();
     setTimeout(compassTeaserComponent, 200);
     setTimeout(fitAssessmentComponent, 200);
@@ -2197,7 +2199,7 @@ function innerHeroStyledComponent() {
     const headings = component.querySelectorAll('.hero-inner-styled_heading_wrap .c-heading');
     const paragraphs = component.querySelectorAll('.hero-inner-styled_text_wrap .c-paragraph > *');
     const buttons = component.querySelectorAll('.hero-inner-styled_text_wrap .button_main_wrap');
-    const graphics = component.querySelectorAll('.hero-inner-styled_graphics_1 > * > *, .hero-inner-styled_graphics_2 > * > *');
+    const graphics = component.querySelectorAll('[class*="hero-inner-styled_graphics_"] > * > *');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
     const textShadowItems = component.querySelectorAll('.u-text-shadow');
 
@@ -6753,6 +6755,228 @@ function expertiseStackComponent() {
         }
       });
     }
+  });
+}
+
+// Icon Cards Component - GSAP Reveals
+function iconCardsComponent() {
+  const components = document.querySelectorAll('.icon-cards_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.icon-cards_contain');
+    const headings = component.querySelectorAll('.icon-cards_heading_wrap .c-heading');
+    const paragraphs = component.querySelectorAll('.icon-cards_content_wrap .c-paragraph > *');
+    const items = component.querySelectorAll('.icon-cards_card_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return;
+    }
+
+    const headingSplitData = createTextSplits(headings);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
+
+    let iconCardsComponentTL;
+
+    function createAnimation() {
+      if (iconCardsComponentTL) {
+        iconCardsComponentTL.kill();
+      }
+
+      iconCardsComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: getAnimationStart(),
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            paragraphSplitData.splits.forEach(split => split.revert());
+          }
+
+          scheduleScrollTriggerRefresh();
+        }
+      });
+
+      animateText(iconCardsComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
+
+      animateText(iconCardsComponentTL, {
+        elements: paragraphs,
+        lines: paragraphSplitData.lines,
+        shouldSplit: paragraphSplitData.shouldSplit,
+        yPercent: paragraphYPercentNoMask,
+        y: paragraphY,
+        position: ">-0.75",
+        duration: 1
+      });
+
+      if (items.length > 0) {
+        iconCardsComponentTL.fromTo(items, {
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger * 2
+        }, defaultPosition);
+      }
+
+    }
+
+    createAnimation();
+  });
+}
+
+// Attributes Grid Component - GSAP Reveals
+function attributesGridComponent() {
+  const components = document.querySelectorAll('.attributes_wrap');
+
+  components.forEach(component => {
+    const container = component.querySelector('.attributes_contain');
+    const headings = component.querySelectorAll('.attributes_heading_wrap .c-heading');
+    // const paragraphs = component.querySelectorAll('.attributes_heading_wrap .c-paragraph > *');
+    const items = component.querySelectorAll('.attributes_grid_item_wrap');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return;
+    }
+
+    const headingSplitData = createTextSplits(headings);
+    // const paragraphSplitData = createTextSplits(paragraphs);
+    // const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
+
+    let attributesGridComponentTL;
+
+    function createAnimation() {
+      if (attributesGridComponentTL) {
+        attributesGridComponentTL.kill();
+      }
+
+      attributesGridComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: getAnimationStart(),
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(split => split.revert());
+            // paragraphSplitData.splits.forEach(split => split.revert());
+          }
+
+          scheduleScrollTriggerRefresh();
+        }
+      });
+
+      animateText(attributesGridComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
+
+      // animateText(attributesGridComponentTL, {
+      //   elements: paragraphs,
+      //   lines: paragraphSplitData.lines,
+      //   shouldSplit: paragraphSplitData.shouldSplit,
+      //   yPercent: paragraphYPercentNoMask,
+      //   y: paragraphY,
+      //   position: ">-0.75",
+      //   duration: 1
+      // });
+
+      items.forEach(item => {
+        const itemIcon = item.querySelectorAll('.attributes_grid_item_icon_wrap');
+        const itemEyebrow = item.querySelectorAll('.eyebrow_text *');
+        const itemHeading = item.querySelectorAll('.c-heading');
+        const itemParagraphs = item.querySelectorAll('.c-paragraph > *');
+
+        const itemEyebrowSplitData = createTextSplits(itemEyebrow);
+        const itemHeadingSplitData = createTextSplits(itemHeading);
+        // const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs, { mask: false });
+
+        if (itemIcon.length > 0) {
+          attributesGridComponentTL.fromTo(itemIcon, {
+            opacity: 0
+          },
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
+        }
+
+        animateText(attributesGridComponentTL, {
+          elements: itemEyebrow,
+          lines: itemEyebrowSplitData.lines,
+          shouldSplit: itemEyebrowSplitData.shouldSplit,
+          position: ">-1",
+          duration: 1,
+          toVars: {
+            onComplete: () => {
+              if (itemEyebrowSplitData.shouldSplit) {
+                itemEyebrowSplitData.splits.forEach(split => split.revert());
+              }
+            }
+          }
+        });
+
+        animateText(attributesGridComponentTL, {
+          elements: itemHeading,
+          lines: itemHeadingSplitData.lines,
+          shouldSplit: itemHeadingSplitData.shouldSplit,
+          position: ">-1",
+          duration: 1,
+          toVars: {
+            onComplete: () => {
+              if (itemHeadingSplitData.shouldSplit) {
+                itemHeadingSplitData.splits.forEach(split => split.revert());
+              }
+            }
+          }
+        });
+  
+        animateText(attributesGridComponentTL, {
+          elements: itemParagraphs,
+          lines: itemParagraphSplitData.lines,
+          shouldSplit: itemParagraphSplitData.shouldSplit,
+          yPercent: paragraphYPercentNoMask,
+          y: paragraphY,
+          position: ">-0.75",
+          duration: 1,
+          toVars: {
+            onComplete: () => {
+              if (itemParagraphSplitData.shouldSplit) {
+                itemParagraphSplitData.splits.forEach(split => split.revert());
+              }
+            }
+          }
+        });
+      })
+    }
+
+    createAnimation();
   });
 }
 
