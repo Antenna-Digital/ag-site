@@ -262,6 +262,7 @@ function initGsapAnimations() {
     iconCardsComponent();
     attributesGridComponent();
     attributeCalloutComponent();
+    teamGridComponent();
     footerComponent();
     setTimeout(compassTeaserComponent, 200);
     setTimeout(fitAssessmentComponent, 200);
@@ -7160,6 +7161,114 @@ function attributeCalloutComponent() {
         position: ">-1",
         duration: 1
       });
+    }
+
+    createAnimation();
+  });
+}
+
+// Team Grid Component - GSAP Reveals
+function teamGridComponent() {
+  const components = document.querySelectorAll('.team-grid_wrap');
+
+  components.forEach((component, index) => {
+    const container = component.querySelector('.team-grid_contain');
+    const headings = component.querySelectorAll('.c-heading');
+    const items = component.querySelectorAll('.team-grid_collection_item');
+    const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
+
+    if (shouldSkipAnimation(container)) {
+      hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+      return;
+    }
+
+    const headingSplitData = createTextSplits(headings);
+
+    let teamGridComponentTL;
+
+    function createAnimation() {
+      if (teamGridComponentTL) {
+        teamGridComponentTL.kill();
+      }
+
+      teamGridComponentTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: container,
+          start: getAnimationStart(),
+          once: true
+        },
+        onStart: () => {
+          hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+        },
+        onComplete: () => {
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+
+          scheduleScrollTriggerRefresh(true);
+        }
+      });
+
+      animateText(teamGridComponentTL, {
+        elements: headings,
+        lines: headingSplitData.lines,
+        shouldSplit: headingSplitData.shouldSplit,
+        position: 0,
+        duration: 1.25
+      });
+
+      items.forEach((item, index) => {
+        const itemImage = item.querySelector('.team-grid_collection_item_image');
+        const itemHeadings = item.querySelectorAll('.team-grid_collection_item_name');
+        const itemParagraphs = item.querySelectorAll('.team-grid_collection_item_title');
+
+        const itemHeadingSplitData = createTextSplits(itemHeadings);
+        // const itemParagraphSplitData = createTextSplits(itemParagraphs);
+        const itemParagraphSplitData = createTextSplits(itemParagraphs, { mask: false });
+
+        if (itemImage) {
+          teamGridComponentTL.fromTo(itemImage, {
+            clipPath: imageMaskedSwipeStart
+          },
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, ((index + 1) * 0.5));
+        }
+
+        animateText(teamGridComponentTL, {
+          elements: itemHeadings,
+          lines: itemHeadingSplitData.lines,
+          shouldSplit: itemHeadingSplitData.shouldSplit,
+          position: "<0.25",
+          duration: 1,
+          toVars: {
+            onComplete: () => {
+              if (itemHeadingSplitData.shouldSplit) {
+                itemHeadingSplitData.splits.forEach(split => split.revert());
+              }
+            }
+          }
+        });
+
+        animateText(teamGridComponentTL, {
+          elements: itemParagraphs,
+          lines: itemParagraphSplitData.lines,
+          shouldSplit: itemParagraphSplitData.shouldSplit,
+          yPercent: paragraphYPercentNoMask,
+          y: paragraphY,
+          position: ">-0.75",
+          duration: 1,
+          toVars: {
+            onComplete: () => {
+              if (itemParagraphSplitData.shouldSplit) {
+                itemParagraphSplitData.splits.forEach(split => split.revert());
+              }
+            }
+          }
+        });
+      })
     }
 
     createAnimation();
