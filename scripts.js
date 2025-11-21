@@ -6180,14 +6180,14 @@ function cmsWorkOverviewComponent() {
               duration: 1.25,
               ease: defaultEasingOut,
               stagger: defaultStagger
-            }, ">-1");
+            }, "<0.5");
           }
 
           animateText(cmsWorkOverviewTL, {
             elements: pieceHeadings,
             lines: pieceHeadingSplitData.lines,
             shouldSplit: pieceHeadingSplitData.shouldSplit,
-            position: ">-1",
+            position: "<0.5",
             duration: 1.25,
             toVars: {
               onComplete: () => {
