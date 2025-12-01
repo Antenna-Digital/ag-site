@@ -1196,11 +1196,22 @@ function formStuff() {
     // HubSpot forms post messages from their iframe
     if (event.data.type === 'hsFormCallback' && event.data.eventName === 'onFormSubmitted') {
       // console.log('HubSpot form submitted:', event.data);
+      const id = event.data.id;
+      // console.log(id);
       
       // Delay refresh slightly to ensure DOM updates are complete
       setTimeout(() => {
         ScrollTrigger.refresh();
         // console.log('ScrollTrigger refreshed after form submission');
+        const anchor = document.querySelector(`section:has([class*="${id}"])`);
+        // console.log(anchor);
+        if (anchor) {
+          // anchor.scrollIntoView({ behavior: 'smooth' });
+          lenis.scrollTo(anchor, {
+            offset: 0,
+            duration: 1
+          })
+        }
       }, 100);
     }
   });
@@ -1208,6 +1219,7 @@ function formStuff() {
   // Alternative: If using HubSpot's embed code directly (not iframe)
   window.HubSpotConversations?.on?.('conversationStarted', function() {
     ScrollTrigger.refresh();
+    // console.log('ScrollTrigger refreshed after form submission (not iframe)');
   });
 
 
