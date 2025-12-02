@@ -6126,7 +6126,7 @@ function cmsWorkOverviewComponent() {
 
   components.forEach(component => {
     const container = component.querySelector('.work-overview_contain');
-    const headings = component.querySelectorAll('.work-overview_heading_wrap .work-overview_heading');
+    const headings = component.querySelectorAll('.work-overview_heading_wrap *');
     const pieces = component.querySelectorAll('.work-overview_desc_pt-1_wrap, .work-overview_desc_pt-2_wrap, .work-overview_info_wrap, .work-overview_stats_wrap');
     const buttons = component.querySelectorAll('.button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
