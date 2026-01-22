@@ -1,4 +1,4 @@
-console.debug("%cScripts.js loaded", "color: lightgreen;");
+console.debug("%cScripts.js loadeds", "color: lightgreen;");
 
 // Preserve scroll position on refresh
 if ('scrollRestoration' in history) {
@@ -2693,7 +2693,6 @@ function innerHero404Component() {
     createAnimation();
   });
 }
-
 // Heading with Images Component - GSAP Reveals
 function headingWithImagesComponent() {
   const components = document.querySelectorAll('.about_wrap');
@@ -2706,43 +2705,74 @@ function headingWithImagesComponent() {
     const buttons = component.querySelectorAll('.about_text_wrap .button_main_wrap');
     const hiddenItems = component.querySelectorAll('[data-gsap-hide]');
 
+    // Check if animation should be skipped
     if (shouldSkipAnimation(container)) {
       hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
-      return;
+      return; // Exit early, skip animation setup
     }
 
-    const headingSplitData = createTextSplits(headingText);
-    // const paragraphSplitData = createTextSplits(paragraphs);
-    const paragraphSplitData = createTextSplits(paragraphs, { mask: false });
+    let headingWithImagesTL;
+    let allHeadingLines = [];
+    let allParagraphLines = [];
+    let hasAnimated = false;
+    let headingSplits = [];
+    let paragraphSplits = [];
+
+    // IMPORTANT: Ensure images are at full width before SplitText calculates line breaks
+    // This ensures SplitText sees the correct layout with images inline
+    headingImages.forEach(img => {
+      gsap.set(img, { width: 'auto', clearProps: 'width' });
+    });
+
+    // Split heading text WITHOUT mask (images need to stay inline)
+    headingText.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        linesClass: "gsap-line"
+        // NO mask - this prevents overflow:hidden wrappers that break inline images
+      });
+      headingSplits.push(split);
+      allHeadingLines.push(...split.lines);
+    });
+
+    // Set images to be invisible but maintain their width (so layout stays at 3 lines)
+    headingImages.forEach(img => {
+      gsap.set(img, {
+        opacity: 0,
+        scaleX: 0,
+        transformOrigin: 'left center',
+        display: 'inline-block',
+        verticalAlign: 'middle'
+      });
+    });
+
+    // Split paragraph text
+    paragraphs.forEach(text => {
+      const split = new SplitText(text, {
+        type: 'lines',
+        mask: "lines",
+        linesClass: "gsap-line"
+      });
+      paragraphSplits.push(split);
+      allParagraphLines.push(...split.lines);
+    });
 
     // Expose splits to window for console access
     if (!window.headingWithImagesSplits) window.headingWithImagesSplits = [];
     window.headingWithImagesSplits[index] = {
-      headingSplits: headingSplitData.splits,
-      paragraphSplits: paragraphSplitData.splits,
-      revertHeadings: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-      },
-      revertParagraphs: () => {
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-      },
+      headingSplits,
+      paragraphSplits,
+      revertHeadings: () => headingSplits.forEach(s => s.revert()),
+      revertParagraphs: () => paragraphSplits.forEach(s => s.revert()),
       revertAll: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+        headingSplits.forEach(s => s.revert());
+        paragraphSplits.forEach(s => s.revert());
       }
     };
 
-    let headingWithImagesTL;
-
+    // Function to create/recreate animation
     function createAnimation() {
+      // Kill existing timeline if it exists to prevent duplicates
       if (headingWithImagesTL) {
         headingWithImagesTL.kill();
       }
@@ -2750,53 +2780,63 @@ function headingWithImagesComponent() {
       headingWithImagesTL = gsap.timeline({
         scrollTrigger: {
           trigger: container,
-          start: getAnimationStart(),
+          start: 'top 80%',
           once: true
         },
         onStart: () => {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
+          hasAnimated = true; // Mark as animated
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          headingSplits.forEach(split => split.revert());
+          paragraphSplits.forEach(split => split.revert());
   
-          scheduleScrollTriggerRefresh(true);
+          // Wait for layout to fully settle after revert
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          });
         }
       });
 
-      animateText(headingWithImagesTL, {
-        elements: headingText,
-        lines: headingSplitData.lines,
-        shouldSplit: headingSplitData.shouldSplit,
-        position: 0,
-        duration: 1.25
-      });
-
-      if (headingImages.length > 0) {
-        headingWithImagesTL.fromTo(headingImages, {
-          width: 0
+      if (allHeadingLines.length > 0) {
+        headingWithImagesTL.fromTo(allHeadingLines, {
+          yPercent: headingYPercent,
+          opacity: 0
         },
         {
-          width: 'auto',
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.25,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
+      }
+
+      if (headingImages.length > 0) {
+        headingWithImagesTL.to(headingImages, {
+          scaleX: 1,
+          opacity: 1,
           duration: 1.5,
           ease: defaultEasingInOut,
           stagger: defaultStagger
         }, defaultPosition);
       }
 
-      animateText(headingWithImagesTL, {
-        elements: paragraphs,
-        lines: paragraphSplitData.lines,
-        shouldSplit: paragraphSplitData.shouldSplit,
-        yPercent: paragraphYPercentNoMask,
-        y: paragraphY,
-        position: defaultPosition,
-        duration: 1
-      });
+      if (allParagraphLines.length > 0) {
+        headingWithImagesTL.fromTo(allParagraphLines, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, defaultPosition);
+      }
 
       if (buttons.length > 0) {
         headingWithImagesTL.fromTo(buttons, {
@@ -2813,6 +2853,7 @@ function headingWithImagesComponent() {
       }
     }
 
+    // Initial call to create animation
     createAnimation();
   });
 }
