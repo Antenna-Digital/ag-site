@@ -1281,7 +1281,7 @@ function expertiseStackNav() {
   
   // Function to check and update active state based on scroll position
   const updateActiveState = () => {
-    const threshold = window.innerHeight * 0.05; // 5% of viewport
+    const threshold = window.innerHeight * 0.15; // 15% of viewport (increased from 5% to activate sooner)
     let activeIndex = -1;
     
     // Find the last item that has its top at or above the threshold
