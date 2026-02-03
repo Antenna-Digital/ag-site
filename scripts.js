@@ -24,7 +24,7 @@ function setupLenis() {
   ScrollTrigger.addEventListener("refresh", () => {
     lenis.resize();
   });
-  
+
   // Standard RAF without GSAP ticker to avoid conflicts
   function raf(time) {
     lenis.raf(time);
@@ -66,8 +66,8 @@ function getPosition(timeline, position = defaultPosition) {
 // =====================================================
 
 // iOS Detection (cached for performance)
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isPortrait = window.innerHeight > window.innerWidth || window.innerWidth < 768;
 
 /**
@@ -80,16 +80,16 @@ const isPortrait = window.innerHeight > window.innerWidth || window.innerWidth <
  */
 function getAnimationStart(mobilePercent = 70, desktopPercent = 80) {
   // Normalize inputs - handle both '70%' and 70
-  const mobile = typeof mobilePercent === 'string' 
-    ? mobilePercent 
+  const mobile = typeof mobilePercent === 'string'
+    ? mobilePercent
     : `${mobilePercent}%`;
-  const desktop = typeof desktopPercent === 'string' 
-    ? desktopPercent 
+  const desktop = typeof desktopPercent === 'string'
+    ? desktopPercent
     : `${desktopPercent}%`;
-  
+
   // Check if viewport is portrait (taller than wide) or narrow
   const isPortraitOrNarrow = window.innerHeight > window.innerWidth || window.innerWidth < 768;
-  
+
   return isPortraitOrNarrow ? `top ${mobile}` : `top ${desktop}`;
 }
 
@@ -274,7 +274,7 @@ function initGsapAnimations() {
 
 // Swipers
 function swipers() {
-	// Podcast Slider
+  // Podcast Slider
   if (document.querySelector(".swiper.podcast-eps_slider_main-swiper")) {
     // console.log("podcast swiper(s) exists");
     const podcastSwiperWraps = document.querySelectorAll(".podcast-eps_wrap");
@@ -312,6 +312,8 @@ function swipers() {
         // effect: "fade",
         // virtualTranslate: true,
         allowTouchMove: false,
+        preventClicks: false,
+        preventClicksPropagation: false,
         // navigation: {
         //   prevEl: prevBtn,
         //   nextEl: nextBtn,
@@ -332,6 +334,8 @@ function swipers() {
         // effect: "fade",
         // virtualTranslate: true,
         allowTouchMove: false,
+        preventClicks: false,
+        preventClicksPropagation: false,
         // navigation: {
         //   prevEl: prevBtn,
         //   nextEl: nextBtn,
@@ -349,6 +353,8 @@ function swipers() {
         // effect: "fade",
         // virtualTranslate: true,
         allowTouchMove: false,
+        preventClicks: false,
+        preventClicksPropagation: false,
         // navigation: {
         //   prevEl: prevBtn,
         //   nextEl: nextBtn,
@@ -477,7 +483,7 @@ function swipers() {
 };
 
 // Work Grid Masonry
-function workGridMasonry(){
+function workGridMasonry() {
   if (typeof Macy === 'undefined') {
     console.error('Macy.js not loaded');
     return;
@@ -488,14 +494,14 @@ function workGridMasonry(){
 
   let macyInstance;
   let currentColumns = 0;
-  
+
   const getBrowserFontSize = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
-  
+
   // Store animation states before cleanup
   const preserveAnimationStates = () => {
     const items = document.querySelectorAll('.work-grid_collection_item');
     const states = new Map();
-    
+
     items.forEach(item => {
       const animEl = item.querySelector('[data-anim]') || item;
       if (animEl) {
@@ -509,14 +515,14 @@ function workGridMasonry(){
         }
       }
     });
-    
+
     return states;
   };
-  
+
   // Restore animation states after cleanup
   const restoreAnimationStates = (states) => {
     if (!states || states.size === 0) return;
-    
+
     states.forEach((style, el) => {
       if (el && document.contains(el)) {
         gsap.set(el, {
@@ -528,20 +534,20 @@ function workGridMasonry(){
       }
     });
   };
-  
+
   const cleanupMacyStyles = () => {
     const listElement = document.querySelector('.work-grid_collection_list');
     const items = document.querySelectorAll('.work-grid_collection_item');
-    
+
     listElement?.removeAttribute('style');
     items.forEach(item => item.removeAttribute('style'));
   };
-  
+
   const handleMacy = () => {
     const listElement = document.querySelector('.work-grid_collection_list');
     const container = listElement?.parentElement;
     const browserFontSize = getBrowserFontSize();
-    
+
     // Check container query state via CSS custom property
     const computedStyle = getComputedStyle(listElement);
     const columns = computedStyle.getPropertyValue('--columns') === '2' ? 2 : 1;
@@ -552,7 +558,7 @@ function workGridMasonry(){
         const minGap = 2.5 * browserFontSize;
         const listWidth = listElement.offsetWidth;
         const macyMargin = Math.max(minGap, listWidth - (maxItemWidth * 2));
-        
+
         macyInstance.options.margin = macyMargin;
         macyInstance.recalculate(true);
       }
@@ -613,7 +619,7 @@ function workGridMasonry(){
       const minGap = 2.5 * browserFontSize;
       const listWidth = listElement.offsetWidth;
       const macyMargin = Math.max(minGap, listWidth - (maxItemWidth * 2));
-      
+
       macyInstance.options.margin = macyMargin;
       macyInstance.recalculate(true);
     }
@@ -649,7 +655,7 @@ function workGridMasonry(){
     // Quick recalc every 50ms during resize
     clearTimeout(quickTimer);
     quickTimer = setTimeout(quickRecalc, 50);
-    
+
     // Full check after resize stops
     clearTimeout(fullTimer);
     fullTimer = setTimeout(handleMacy, 250);
@@ -657,7 +663,7 @@ function workGridMasonry(){
 };
 
 // Accordion Section
-function accordionSection(){
+function accordionSection() {
   const accordionComponents = document.querySelectorAll('.accordion-section_wrap');
   if (!accordionComponents.length) return;
 
@@ -669,23 +675,23 @@ function accordionSection(){
       this.animating = false;
       this.init();
     }
-  
+
     init() {
       this.items.forEach((item, index) => {
         const inner = item.querySelector('.accordion-section_accordion_item_inner');
         const textElement = item.querySelector('.accordion-section_accordion_item_text');
         const paragraph = textElement ? textElement.querySelector('.c-paragraph') : null;
-        
+
         if (!inner || !textElement) {
           console.error('Missing required elements in accordion item', index);
           return;
         }
-        
+
         // Store references
         item.accordionInner = inner;
         item.accordionContent = textElement;
         item.accordionParagraph = paragraph;
-        
+
         // Set initial state
         if (index === 0) {
           // First item is open
@@ -702,7 +708,7 @@ function accordionSection(){
           item.naturalHeight = textElement.offsetHeight;
           gsap.set(textElement, { height: 0 });
         }
-        
+
         // Add click handler
         inner.style.cursor = 'pointer';
         inner.addEventListener('click', (e) => {
@@ -713,11 +719,11 @@ function accordionSection(){
         });
       });
     }
-  
+
     toggleItem(clickedItem) {
       if (this.animating) return;
       this.animating = true;
-      
+
       // Create a timeline for simultaneous animations
       const tl = gsap.timeline({
         onComplete: () => {
@@ -728,7 +734,7 @@ function accordionSection(){
           }
         }
       });
-      
+
       if (this.activeItem === clickedItem) {
         // Just close the current item
         this.addCloseAnimation(tl, clickedItem, 0);
@@ -740,32 +746,32 @@ function accordionSection(){
           this.addCloseAnimation(tl, this.activeItem, 0);
           this.activeItem.classList.remove('is-active');
         }
-        
+
         // Open the clicked item at the same time
         this.addOpenAnimation(tl, clickedItem, 0);
         clickedItem.classList.add('is-active');
         this.activeItem = clickedItem;
       }
-      
+
       tl.play();
     }
-    
+
     addOpenAnimation(timeline, item, position) {
       const textElement = item.accordionContent;
       const paragraph = item.accordionParagraph;
-      
+
       // Get fresh height measurement
       gsap.set(textElement, { height: 'auto' });
       const targetHeight = textElement.offsetHeight;
       gsap.set(textElement, { height: 0 });
-      
+
       // Animate height
       timeline.to(textElement, {
         height: targetHeight,
         duration: 0.5,
         ease: 'power3.inOut'
       }, position);
-      
+
       // Fade in content (no y movement)
       if (paragraph) {
         timeline.from(paragraph, {
@@ -775,14 +781,14 @@ function accordionSection(){
         }, position + 0.2); // Slight delay for better effect
       }
     }
-    
+
     addCloseAnimation(timeline, item, position) {
       const textElement = item.accordionContent;
-      
+
       // Get current height before animating
       const currentHeight = textElement.offsetHeight;
       gsap.set(textElement, { height: currentHeight });
-      
+
       // Animate to closed
       timeline.to(textElement, {
         height: 0,
@@ -803,15 +809,15 @@ function timelineAccordion() {
   document.querySelectorAll('.timeline-accordion_accordion_item').forEach(item => {
     const header = item.querySelector('.timeline-accordion_accordion_header');
     const body = item.querySelector('.timeline-accordion_accordion_body');
-    
+
     // Set initial state
     gsap.set(body, { height: 0, paddingBottom: 0, overflow: 'hidden' });
     item.dataset.isOpen = 'false';
-    
+
     // Add click listener to header
     header?.addEventListener('click', () => {
       const isOpen = item.dataset.isOpen === 'true';
-      
+
       if (!isOpen) {
         gsap.fromTo(body, {
           height: 0,
@@ -896,7 +902,7 @@ function marquees() {
   class MarqueeController {
     constructor(element, options = {}) {
       this.element = element;
-      
+
       // Read configuration from data attributes or options
       this.options = {
         pixelsPerSecond: this.getConfig('speed', 50),
@@ -906,21 +912,21 @@ function marquees() {
         observeResize: true,
         ...options
       };
-      
+
       this.isPaused = false;
       this.isReversed = false;
       this.resizeObserver = null;
       this.mutationObserver = null;
-      
+
       this.init();
     }
-    
+
     getConfig(attr, defaultValue) {
       // Check multiple sources for configuration
       // 1. Data attribute (e.g., data-marquee-speed)
       const attrName = `marquee${attr.charAt(0).toUpperCase() + attr.slice(1)}`;
       const dataAttr = this.element.dataset[attrName];
-      
+
       if (dataAttr !== undefined) {
         // Handle boolean values
         if (dataAttr === 'true') return true;
@@ -928,7 +934,7 @@ function marquees() {
         // Return other values as-is
         return dataAttr;
       }
-      
+
       // 2. CSS variable (e.g., --marquee-pixels-per-second)
       if (attr === 'speed') {
         const cssVar = getComputedStyle(this.element).getPropertyValue('--marquee-pixels-per-second');
@@ -936,20 +942,20 @@ function marquees() {
           return parseFloat(cssVar);
         }
       }
-      
+
       // 3. Inline style variable
       const inlineStyle = this.element.style.getPropertyValue(`--marquee-${attr}`);
       if (inlineStyle) {
         return inlineStyle;
       }
-      
+
       return defaultValue;
     }
-    
+
     init() {
       // Add loading state
       this.element.dataset.marqueeLoading = 'true';
-      
+
       // Wait for content to load
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => this.setup());
@@ -957,57 +963,57 @@ function marquees() {
         this.setup();
       }
     }
-    
+
     setup() {
       // Get elements using data attributes
       this.wrapper = this.element.querySelector('[data-marquee-inner]');
       this.contents = this.element.querySelectorAll('[data-marquee-content]');
-      
+
       if (!this.wrapper || !this.contents.length) {
         console.warn('Marquee: Required elements not found');
         return;
       }
-      
+
       // Calculate and set optimal animation duration
       this.calculateDuration();
-      
+
       // Apply enhancements
       this.element.dataset.marqueeEnhanced = 'true';
-      
+
       // Set initial data attributes based on options using setAttribute
       this.element.setAttribute('data-marquee-pause-on-hover', this.options.pauseOnHover ? 'true' : 'false');
       this.element.setAttribute('data-marquee-fade', this.options.fadeEdges ? 'true' : 'false');
       this.element.setAttribute('data-marquee-smooth', this.options.smooth ? 'true' : 'false');
-      
+
       // Set up observers
       if (this.options.observeResize) {
         this.observeSize();
       }
-      
+
       // Watch for content changes
       this.observeContent();
-      
+
       // Remove loading state
       delete this.element.dataset.marqueeLoading;
       this.element.dataset.marqueeLoaded = 'true';
-      
+
       // Ensure smooth start
       this.syncAnimations();
     }
-    
+
     calculateDuration() {
       const firstContent = this.contents[0];
       if (!firstContent) return;
-      
+
       // Force a layout recalculation to get accurate measurements
       firstContent.style.display = 'none';
       firstContent.offsetHeight; // Trigger reflow
       firstContent.style.display = '';
-      
+
       // Get computed styles for accurate gap calculation
       const computedStyle = window.getComputedStyle(this.element);
       const gapValue = computedStyle.getPropertyValue('--marquee-gap').trim();
-      
+
       // Parse the gap value properly (handles clamp, rem, px, etc.)
       let gap = 0;
       const tempEl = document.createElement('div');
@@ -1017,29 +1023,29 @@ function marquees() {
       document.body.appendChild(tempEl);
       gap = tempEl.getBoundingClientRect().width;
       document.body.removeChild(tempEl);
-      
+
       // Get the inner content wrapper for accurate width
       const innerContent = firstContent.querySelector('[data-marquee-items]');
       if (!innerContent) return;
-      
+
       // Calculate the actual content width
       const contentWidth = innerContent.scrollWidth;
       const totalWidth = contentWidth + gap;
-      
+
       // Get the current pixels per second value (may have been updated)
       const currentSpeed = parseFloat(this.getConfig('speed', this.options.pixelsPerSecond));
-      
+
       // Calculate duration based on desired speed
       const duration = totalWidth / currentSpeed;
-      
+
       // Set CSS variable for animation duration
       this.element.style.setProperty('--marquee-duration', `${duration}s`);
-      
+
       // Store for later use
       this.duration = duration;
       this.contentWidth = totalWidth;
     }
-    
+
     syncAnimations() {
       // Ensure all duplicate content animations are synchronized
       this.contents.forEach((content) => {
@@ -1048,26 +1054,26 @@ function marquees() {
         // Remove any inline animation-play-state that might interfere
         content.style.animationPlayState = '';
         content.offsetHeight; // Trigger reflow
-        
+
         // Start all animations at the same time
         const animationName = 'marqueeScroll';
         const duration = `var(--marquee-duration, ${this.duration}s)`;
         const timing = 'linear';
         const iterations = 'infinite';
         const direction = this.isReversed ? 'reverse' : 'normal';
-        
+
         content.style.animation = `${animationName} ${duration} ${timing} ${iterations} ${direction}`;
-        
+
         // Only apply inline play state if explicitly paused
         if (this.isPaused) {
           content.style.animationPlayState = 'paused';
         }
       });
     }
-    
+
     updateOptions(newOptions) {
       Object.assign(this.options, newOptions);
-      
+
       // Update CSS variables and data attributes
       if (newOptions.pixelsPerSecond !== undefined) {
         this.element.dataset.marqueeSpeed = newOptions.pixelsPerSecond;
@@ -1075,7 +1081,7 @@ function marquees() {
         this.calculateDuration();
         this.syncAnimations();
       }
-      
+
       // Update pause on hover - use setAttribute for reliability
       if (newOptions.pauseOnHover !== undefined) {
         const value = newOptions.pauseOnHover ? 'true' : 'false';
@@ -1083,18 +1089,18 @@ function marquees() {
         // Also update the options to keep in sync
         this.options.pauseOnHover = newOptions.pauseOnHover;
       }
-      
+
       // Update fade edges - use setAttribute for reliability
       if (newOptions.fadeEdges !== undefined) {
         this.element.setAttribute('data-marquee-fade', newOptions.fadeEdges ? 'true' : 'false');
       }
-      
+
       // Update smooth transitions
       if (newOptions.smooth !== undefined) {
         this.element.setAttribute('data-marquee-smooth', newOptions.smooth ? 'true' : 'false');
       }
     }
-    
+
     play() {
       this.isPaused = false;
       this.element.dataset.marqueePaused = 'false';
@@ -1103,7 +1109,7 @@ function marquees() {
         content.style.animationPlayState = '';
       });
     }
-    
+
     pause() {
       this.isPaused = true;
       this.element.dataset.marqueePaused = 'true';
@@ -1111,13 +1117,13 @@ function marquees() {
         content.style.animationPlayState = 'paused';
       });
     }
-    
+
     reverse() {
       this.isReversed = !this.isReversed;
       this.element.dataset.marqueeDirection = this.isReversed ? 'reverse' : 'normal';
       this.syncAnimations();
     }
-    
+
     reset() {
       this.isReversed = false;
       this.isPaused = false;
@@ -1126,31 +1132,31 @@ function marquees() {
       this.calculateDuration();
       this.syncAnimations();
     }
-    
+
     observeSize() {
       // Recalculate on resize
       this.resizeObserver = new ResizeObserver(() => {
         this.calculateDuration();
         this.syncAnimations();
       });
-      
+
       this.resizeObserver.observe(this.element);
       this.resizeObserver.observe(this.contents[0]);
     }
-    
+
     observeContent() {
       // Watch for content changes
       this.mutationObserver = new MutationObserver(() => {
         this.calculateDuration();
         this.syncAnimations();
       });
-      
+
       this.mutationObserver.observe(this.contents[0], {
         childList: true,
         subtree: true
       });
     }
-    
+
     destroy() {
       if (this.resizeObserver) {
         this.resizeObserver.disconnect();
@@ -1163,11 +1169,11 @@ function marquees() {
       this.element.style.removeProperty('--marquee-duration');
     }
   }
-  
+
   // Auto-initialize all marquees
   const marquees = document.querySelectorAll('[data-marquee]');
   const controllers = [];
-  
+
   marquees.forEach(element => {
     // The controller will read configuration from data attributes and CSS variables
     const controller = new MarqueeController(element);
@@ -1192,13 +1198,13 @@ function formStuff() {
   });
 
   // HubSpot forms fire global events we can hook into
-  window.addEventListener('message', function(event) {
+  window.addEventListener('message', function (event) {
     // HubSpot forms post messages from their iframe
     if (event.data.type === 'hsFormCallback' && event.data.eventName === 'onFormSubmitted') {
       // console.log('HubSpot form submitted:', event.data);
       const id = event.data.id;
       // console.log(id);
-      
+
       // Delay refresh slightly to ensure DOM updates are complete
       setTimeout(() => {
         ScrollTrigger.refresh();
@@ -1215,9 +1221,9 @@ function formStuff() {
       }, 100);
     }
   });
-  
+
   // Alternative: If using HubSpot's embed code directly (not iframe)
-  window.HubSpotConversations?.on?.('conversationStarted', function() {
+  window.HubSpotConversations?.on?.('conversationStarted', function () {
     ScrollTrigger.refresh();
     // console.log('ScrollTrigger refreshed after form submission (not iframe)');
   });
@@ -1225,24 +1231,24 @@ function formStuff() {
 
   // Compass Form
   const form = document.getElementById('assessment-form');
-  
+
   if (form) {
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-      
+
       // Get all select elements within the form
       const selects = form.querySelectorAll('select');
-      
+
       // Check if all selects have "yes" as their value
       let allYes = true;
-      
+
       for (let select of selects) {
         if (select.value.toLowerCase() !== 'yes') {
           allYes = false;
           break;
         }
       }
-      
+
       // Redirect based on the result
       if (allYes) {
         window.open('https://fullyconscious.com/self-assessment', '_blank');
@@ -1257,33 +1263,33 @@ function formStuff() {
 function expertiseStackNav() {
   const stackItems = document.querySelectorAll('.expertise-stack_item');
   const navContainer = document.querySelector('.expertise-stack_nav');
-  
+
   if (!stackItems.length || !navContainer) return;
-  
+
   // Store ScrollTrigger instances
   const triggers = [];
-  
+
   // Generate nav items dynamically
   stackItems.forEach((item, index) => {
     item.id = `expertise-item-${index}`;
-    
+
     // Use button instead of anchor to avoid URL hash
     const navItem = document.createElement('button');
     navItem.className = 'expertise-stack_nav_item';
     navItem.setAttribute('data-index', index);
     navItem.setAttribute('aria-label', `Go to section ${index + 1}`);
     navItem.innerHTML = '<span></span>';
-    
+
     navContainer.appendChild(navItem);
   });
-  
+
   const navItems = document.querySelectorAll('.expertise-stack_nav_item');
-  
+
   // Function to check and update active state based on scroll position
   const updateActiveState = () => {
     const threshold = window.innerHeight * 0.05; // 5% of viewport
     let activeIndex = -1;
-    
+
     // Find the last item that has its top at or above the threshold
     stackItems.forEach((item, index) => {
       const rect = item.getBoundingClientRect();
@@ -1292,13 +1298,13 @@ function expertiseStackNav() {
         activeIndex = index;
       }
     });
-    
+
     // Update all nav items - only one should be active
     navItems.forEach((nav, index) => {
       nav.classList.toggle('is-active', index === activeIndex);
     });
   };
-  
+
   // Create ScrollTriggers (keep for reference positions)
   stackItems.forEach((item, index) => {
     const trigger = ScrollTrigger.create({
@@ -1307,24 +1313,24 @@ function expertiseStackNav() {
       end: "bottom top",
       pin: false
     });
-    
+
     triggers.push(trigger);
   });
-  
+
   // Click navigation
   navItems.forEach((navItem, clickIndex) => {
     navItem.addEventListener('click', (e) => {
       e.preventDefault();
-      
+
       if (window.lenis) {
         window.lenis.stop();
       }
-      
+
       const trigger = triggers[clickIndex];
       if (!trigger) return;
-      
+
       const targetPosition = trigger.start + 1;
-      
+
       if (window.lenis) {
         window.lenis.scrollTo(targetPosition, {
           duration: 1.2,
@@ -1340,13 +1346,13 @@ function expertiseStackNav() {
       }
     });
   });
-  
+
   // Listen to scroll events to update active state
   window.addEventListener('scroll', updateActiveState, { passive: true });
-  
+
   // Initial check
   updateActiveState();
-  
+
   // Refresh ScrollTrigger positions on resize
   window.addEventListener('resize', () => {
     ScrollTrigger.refresh();
@@ -1377,21 +1383,21 @@ function heroVantaBG() {
       zoom: 0.6
     }
   };
-  
+
   // Change this to select your desired theme
   const SELECTED_THEME = 'blue-white'; // or 'red-orange'
-  
+
   let vantaEffect = null;
-  
+
   // Initialize Vanta effect
   function initVanta() {
     const container = document.getElementById('vanta-bg');
-    
+
     if (!container) {
       console.warn('Vanta container not found');
       return;
     }
-    
+
     try {
       vantaEffect = VANTA.FOG({
         el: container,
@@ -1404,29 +1410,29 @@ function heroVantaBG() {
         scaleMobile: 1.00,
         ...VANTA_THEMES[SELECTED_THEME]
       });
-      
+
     } catch (error) {
       console.error('Failed to initialize Vanta:', error);
     }
   }
-  
+
   // Handle window resize
   function handleResize() {
     if (vantaEffect) {
       vantaEffect.resize();
     }
   }
-  
+
   // Initialize effect
   initVanta();
-  
+
   // Add resize listener with debouncing
   let resizeTimeout;
-  window.addEventListener('resize', function() {
+  window.addEventListener('resize', function () {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(handleResize, 250);
   });
-  
+
   // Cleanup on page unload
   // window.addEventListener('beforeunload', function() {
   //   if (vantaEffect) {
@@ -1447,7 +1453,7 @@ function finsweetStuff() {
   window.FinsweetAttributes.push([
     'list',
     (listInstances) => {
-      listInstances.forEach((list)=>{
+      listInstances.forEach((list) => {
         list.addHook("afterRender", (items) => {
           // 1. Animate new items first
           podcastListComponent();
@@ -1511,12 +1517,12 @@ function shouldSkipAnimation(container, startPosition = 'bottom 20%') {
   const viewportHeight = window.innerHeight;
   if (!container) return;
   const rect = container.getBoundingClientRect();
-  
+
   const [edge, percentString] = startPosition.split(' ');
   const percent = parseFloat(percentString) / 100;
-  
+
   let triggerY;
-  
+
   if (edge === 'top') {
     triggerY = rect.top + scrollY;
   } else if (edge === 'bottom') {
@@ -1524,14 +1530,14 @@ function shouldSkipAnimation(container, startPosition = 'bottom 20%') {
   } else {
     triggerY = rect.top + scrollY;
   }
-  
+
   const triggerActivationY = scrollY + (viewportHeight * percent);
-  
+
   return triggerY < triggerActivationY;
 }
 
 // Work Scroll Lock Component
-function workScrollLock(){
+function workScrollLock() {
   document.querySelectorAll('.work-sl_contain').forEach((container, containerIndex) => {
     const carouselLayout = container.querySelector('.work-sl_layout.is-carousel-layout');
     const collectionWrap = container.querySelector('.work-sl_collection_wrap');
@@ -1546,7 +1552,7 @@ function workScrollLock(){
       const totalPadding = paddingLeft + paddingRight;
       return collectionWrap.scrollWidth - window.innerWidth + totalPadding;
     };
-    
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: carouselLayout,
@@ -1567,7 +1573,7 @@ function workScrollLock(){
         }
       }
     });
-    
+
     tl.to({}, { duration: 0.1 });
     tl.to(collectionList, {
       x: () => -getScrollDistance(),
@@ -1604,7 +1610,7 @@ function compassScrollLock() {
   const compassWrap = document.querySelector('.compass_wrap');
   const listItems = gsap.utils.toArray('.compass_content_list_item');
   const itemCount = listItems.length;
-  
+
   if (!compassWrap || itemCount === 0) return;
 
   let chartContainer = document.querySelector('.compass_graphic_wrap');
@@ -1669,10 +1675,10 @@ function compassScrollLock() {
     const actualRadius = isCardinal ? 235 : radius;
     const x = chartConfig.centerX + actualRadius * Math.cos(angle);
     const y = chartConfig.centerY + actualRadius * Math.sin(angle);
-    
+
     let textAnchor = "middle";
     let dy = "0";
-    
+
     if (!isCardinal) {
       if (Math.cos(angle) < 0) {
         textAnchor = "end";
@@ -1683,7 +1689,7 @@ function compassScrollLock() {
         return { x: x - 10, y, textAnchor, dy };
       }
     }
-    
+
     if (Math.abs(Math.cos(angle)) > 0.85) {
       textAnchor = Math.cos(angle) > 0 ? "start" : "end";
     }
@@ -1698,7 +1704,7 @@ function compassScrollLock() {
     const angle = (index * 2 * Math.PI / chartConfig.labels.length) - Math.PI / 2;
     const endX = chartConfig.centerX + chartConfig.maxRadius * Math.cos(angle);
     const endY = chartConfig.centerY + chartConfig.maxRadius * Math.sin(angle);
-    
+
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', chartConfig.centerX);
     line.setAttribute('y1', chartConfig.centerY);
@@ -1712,7 +1718,7 @@ function compassScrollLock() {
 
   chartConfig.labels.forEach((label, index) => {
     const pos = calculateLabelPosition(index, chartConfig.labels.length, 260);
-    
+
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     text.setAttribute('x', pos.x);
     text.setAttribute('y', pos.y);
@@ -1728,18 +1734,18 @@ function compassScrollLock() {
   function updateChart(data, progress = 1) {
     const points = calculateDataPoints(data);
     const pointsString = points.map(p => `${p.x},${p.y}`).join(' ');
-    
+
     gsap.to(dataShape, {
       attr: { points: pointsString },
       duration: 0.5,
       ease: 'ease'
     });
-    
+
     const existingPoints = dataPointsGroup.querySelectorAll('circle');
-    
+
     points.forEach((point, index) => {
       let circle = existingPoints[index];
-      
+
       if (!circle) {
         circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('r', '4');
@@ -1748,7 +1754,7 @@ function compassScrollLock() {
         circle.setAttribute('stroke-width', '1');
         dataPointsGroup.appendChild(circle);
       }
-      
+
       gsap.to(circle, {
         attr: { cx: point.x, cy: point.y },
         duration: 0.5,
@@ -1763,7 +1769,7 @@ function compassScrollLock() {
 
   let currentSection = 0;
   updateChart(chartStates[0]);
-  
+
   const compassTrigger = ScrollTrigger.create({
     trigger: compassWrap,
     start: 'center center-=3%',
@@ -1777,9 +1783,9 @@ function compassScrollLock() {
       const progress = self.progress;
       const activeIndex = Math.floor(progress * itemCount);
       const itemProgress = (progress * itemCount) % 1;
-  
+
       const textElements = gsap.utils.toArray('.compass_content_text');
-      
+
       listItems.forEach((item, index) => {
         if (index < activeIndex) {
           item.classList.add('is-active');
@@ -1792,7 +1798,7 @@ function compassScrollLock() {
           gsap.set(item, { '--progress-width': '0%' });
         }
       });
-  
+
       textElements.forEach((text, index) => {
         if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
           text.classList.add('is-active');
@@ -1800,12 +1806,12 @@ function compassScrollLock() {
           text.classList.remove('is-active');
         }
       });
-      
+
       const sectionIndex = Math.min(activeIndex, chartStates.length - 1);
-      
+
       if (sectionIndex !== currentSection || (itemProgress > 0 && sectionIndex < chartStates.length - 1)) {
         let dataToShow;
-        
+
         if (itemProgress > 0 && sectionIndex < chartStates.length - 1) {
           dataToShow = interpolateData(
             chartStates[sectionIndex],
@@ -1815,16 +1821,16 @@ function compassScrollLock() {
         } else {
           dataToShow = chartStates[sectionIndex];
         }
-        
+
         updateChart(dataToShow, itemProgress);
-        
+
         if (sectionIndex !== currentSection) {
           currentSection = sectionIndex;
         }
       }
     }
   });
-  
+
   return compassTrigger;
 }
 
@@ -1837,29 +1843,29 @@ function splitScrollLock() {
   const outerImages = gsap.utils.toArray('.split-scroll-lock_graphic_outer_image');
   const innerImages = gsap.utils.toArray('.split-scroll-lock_graphic_inner_image');
   const itemCount = listItems.length;
-  
+
   if (!scrollWrap || itemCount === 0) return;
 
   function updateTextWrapHeight() {
     if (!textWrap || textElements.length === 0) return;
-    
+
     textWrap.style.minHeight = 'auto';
-    
+
     let maxHeight = 0;
     textElements.forEach(element => {
       const height = element.getBoundingClientRect().height;
       maxHeight = Math.max(maxHeight, height);
     });
-    
+
     textWrap.style.minHeight = `${maxHeight}px`;
   }
 
   updateTextWrapHeight();
-  
+
   const resizeObserver = new ResizeObserver(() => {
     updateTextWrapHeight();
   });
-  
+
   if (textWrap) {
     resizeObserver.observe(textWrap);
   }
@@ -1874,13 +1880,13 @@ function splitScrollLock() {
 
   function updateActiveImages(stateIndex) {
     if (stateIndex === currentImageState) return;
-    
+
     outerImages.forEach(img => img.classList.remove('is-active'));
     innerImages.forEach(img => img.classList.remove('is-active'));
-    
+
     if (stateIndex >= 0 && stateIndex < imageStates.length) {
       const state = imageStates[stateIndex];
-      
+
       if (outerImages[state.outer]) {
         outerImages[state.outer].classList.add('is-active');
       }
@@ -1888,12 +1894,12 @@ function splitScrollLock() {
         innerImages[state.inner].classList.add('is-active');
       }
     }
-    
+
     currentImageState = stateIndex;
   }
 
   updateActiveImages(0);
-  
+
   const splitScrollTrigger = ScrollTrigger.create({
     trigger: scrollWrap,
     start: 'center center',
@@ -1906,7 +1912,7 @@ function splitScrollLock() {
       const progress = self.progress;
       const activeIndex = Math.floor(progress * itemCount);
       const itemProgress = (progress * itemCount) % 1;
-  
+
       listItems.forEach((item, index) => {
         if (index < activeIndex) {
           item.classList.add('is-active');
@@ -1919,21 +1925,21 @@ function splitScrollLock() {
             gsap.fromTo(innerImages[index], {
               clipPath: imageMaskedSwipeStart
             },
-            {
-              clipPath: imageMaskedSwipeEnd,
-              duration: 1.5,
-              ease: defaultEasingInOut,
-              onStart: () => {
-                innerImages[index].classList.add('is-animated');
-              }
-            });
+              {
+                clipPath: imageMaskedSwipeEnd,
+                duration: 1.5,
+                ease: defaultEasingInOut,
+                onStart: () => {
+                  innerImages[index].classList.add('is-animated');
+                }
+              });
           }
         } else {
           item.classList.remove('is-active');
           gsap.set(item, { '--progress-width': '0%' });
         }
       });
-  
+
       textElements.forEach((text, index) => {
         if (index === activeIndex || (progress >= 1 && index === textElements.length - 1)) {
           text.classList.add('is-active');
@@ -1941,18 +1947,18 @@ function splitScrollLock() {
           text.classList.remove('is-active');
         }
       });
-      
+
       const sectionIndex = Math.min(activeIndex, imageStates.length - 1);
       updateActiveImages(sectionIndex);
     }
   });
-  
+
   window.addEventListener('resize', () => {
     ScrollTrigger.refresh();
   });
-  
+
   splitScrollTrigger.resizeObserver = resizeObserver;
-  
+
   return splitScrollTrigger;
 }
 
@@ -1990,11 +1996,11 @@ function navComponent() {
         navTL.fromTo(container, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, 1);
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, 1);
       }
     }
 
@@ -2040,13 +2046,13 @@ function homepageHeroComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-  
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -2074,24 +2080,24 @@ function homepageHeroComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (graphic) {
         homepageHeroTL.fromTo(graphic, {
           opacity: 0,
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
     }
 
@@ -2137,13 +2143,13 @@ function innerHeroBasicComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-          
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -2171,25 +2177,25 @@ function innerHeroBasicComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (graphics.length > 0) {
         innerHeroBasicTL.fromTo(graphics, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, ">-1");
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, ">-1");
       }
 
       // if (graphics.length > 0) {
@@ -2248,16 +2254,16 @@ function innerHeroStyledComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
           textShadowItems.forEach(item => {
             item.classList.add('is-darker-shadow');
           });
-  
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -2285,25 +2291,25 @@ function innerHeroStyledComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (graphics.length > 0) {
         innerHeroStyledTL.fromTo(graphics, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, ">-1");
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, ">-1");
       }
 
       // if (graphics.length > 0) {
@@ -2362,16 +2368,16 @@ function innerHeroImageGridComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
           textShadowItems.forEach(item => {
             item.classList.add('is-darker-shadow');
           });
-  
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -2399,13 +2405,13 @@ function innerHeroImageGridComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (graphics.length > 0) {
@@ -2413,13 +2419,13 @@ function innerHeroImageGridComponent() {
           yPercent: 50,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, ">-1");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, ">-1");
       }
     }
 
@@ -2466,7 +2472,7 @@ function cmsHeroPodcastComponent() {
           if (headingSplitData.shouldSplit) {
             headingSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -2480,10 +2486,10 @@ function cmsHeroPodcastComponent() {
       });
 
       if (paragraphs) {
-          cmsHeroPodcastTL.fromTo(paragraphs, {
-            yPercent: paragraphYPercent,
-            opacity: 0
-          },
+        cmsHeroPodcastTL.fromTo(paragraphs, {
+          yPercent: paragraphYPercent,
+          opacity: 0
+        },
           {
             yPercent: 0,
             opacity: 1,
@@ -2498,13 +2504,13 @@ function cmsHeroPodcastComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       // if (image) {
@@ -2522,11 +2528,11 @@ function cmsHeroPodcastComponent() {
         cmsHeroPodcastTL.fromTo(image, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, getPosition(cmsHeroPodcastTL, ">-1"));
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, getPosition(cmsHeroPodcastTL, ">-1"));
       }
     }
 
@@ -2578,7 +2584,7 @@ function cmsHeroWorkComponent() {
             headingSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -2614,13 +2620,13 @@ function cmsHeroWorkComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -2668,11 +2674,11 @@ function innerHero404Component() {
         innerHero404TL.fromTo(carousel, {
           opacity: 0,
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, 0);
       }
 
       if (buttons.length > 0) {
@@ -2680,13 +2686,13 @@ function innerHero404Component() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0.75);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, 0.75);
       }
     }
 
@@ -2790,7 +2796,7 @@ function headingWithImagesComponent() {
         onComplete: () => {
           headingSplits.forEach(split => split.revert());
           paragraphSplits.forEach(split => split.revert());
-  
+
           // Wait for layout to fully settle after revert
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -2805,13 +2811,13 @@ function headingWithImagesComponent() {
           yPercent: headingYPercent,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, 0);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, 0);
       }
 
       if (headingImages.length > 0) {
@@ -2829,13 +2835,13 @@ function headingWithImagesComponent() {
           yPercent: paragraphYPercent,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -2843,13 +2849,13 @@ function headingWithImagesComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -2908,7 +2914,7 @@ function workScrollLockComponent() {
             paragraphSplitData.splits.forEach(split => split.revert());
             itemTitlesSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -2935,47 +2941,47 @@ function workScrollLockComponent() {
         workScrollLockComponentTL.fromTo(carousel, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-        }, defaultPosition)
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+          }, defaultPosition)
       }
 
       if (images.length > 0) {
         workScrollLockComponentTL.fromTo(images, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 3)
-        }, defaultPosition);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 3)
+          }, defaultPosition);
       }
 
       if (imageWraps.length > 0) {
         workScrollLockComponentTL.fromTo(imageWraps, {
           backgroundColor: 'transparent'
         },
-        {
-          backgroundColor: 'var(--swatch--dark-900)',
-          duration: 0.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 3)
-        }, "<1.25");
+          {
+            backgroundColor: 'var(--swatch--dark-900)',
+            duration: 0.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 3)
+          }, "<1.25");
       }
 
       if (accentImages.length > 0) {
         workScrollLockComponentTL.fromTo(accentImages, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 0.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 3)
-        }, "<0.25");
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 3)
+          }, "<0.25");
       }
 
       animateText(workScrollLockComponentTL, {
@@ -2991,11 +2997,11 @@ function workScrollLockComponent() {
         workScrollLockComponentTL.fromTo(hoverStuff, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, ">-1");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -3003,13 +3009,13 @@ function workScrollLockComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -3054,7 +3060,7 @@ function showreelComponent() {
           if (headingSplitData.shouldSplit) {
             headingSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -3072,12 +3078,12 @@ function showreelComponent() {
           yPercent: 15,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
     }
 
@@ -3126,13 +3132,13 @@ function ourExpertiseComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-  
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -3160,25 +3166,25 @@ function ourExpertiseComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (images.length > 0) {
         ourExpertiseComponentTL.fromTo(images, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, 1.25);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, 1.25);
       }
     }
 
@@ -3205,13 +3211,13 @@ function ourExpertiseComponent() {
         yPercent: 100,
         opacity: 0,
       },
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        ease: defaultEasingOut,
-        stagger: (defaultStagger * 2)
-      }, defaultPosition);
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: (defaultStagger * 2)
+        }, defaultPosition);
     }
   });
 }
@@ -3253,13 +3259,13 @@ function logoCarouselComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-  
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -3286,12 +3292,12 @@ function logoCarouselComponent() {
         logoCarouselTL.fromTo(carouselWrap, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 0.8,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -3346,7 +3352,7 @@ function consciousCompassComponent() {
             headingSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -3373,12 +3379,12 @@ function consciousCompassComponent() {
         consciousCompassTL.fromTo(compassGraphic, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 0.8,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       animateText(consciousCompassTL, {
@@ -3396,13 +3402,13 @@ function consciousCompassComponent() {
           yPercent: 100,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-1");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -3410,13 +3416,13 @@ function consciousCompassComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -3472,7 +3478,7 @@ function podcastEpisodesSliderComponent() {
             headingSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -3510,36 +3516,36 @@ function podcastEpisodesSliderComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (slidersContainer) {
         podcastEpisodesSliderTL.fromTo(slidersContainer, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
 
       if (sliderWrappers.length > 0) {
         podcastEpisodesSliderTL.fromTo(sliderWrappers, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut,
-          stagger: 0.75
-        }, defaultPosition);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut,
+            stagger: 0.75
+          }, defaultPosition);
       }
 
       // if (featuredPodcastSlider) {
@@ -3611,7 +3617,7 @@ function aboveFooterCTAComponent() {
             eyebrowSplitData.splits.forEach(split => split.revert());
             headingSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -3650,12 +3656,12 @@ function aboveFooterCTAComponent() {
         aboveFooterCTAComponentTL.fromTo(images, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, 1.25);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, 1.25);
       }
     }
 
@@ -3720,33 +3726,33 @@ function workGridComponent() {
         itemTL.fromTo(image, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, 0);
       }
 
       if (imageWrap) {
         itemTL.fromTo(imageWrap, {
           backgroundColor: 'transparent'
         },
-        {
-          backgroundColor: 'var(--swatch--dark-900)',
-          duration: 0.5,
-          ease: defaultEasingOut
-        }, "<1.25");
+          {
+            backgroundColor: 'var(--swatch--dark-900)',
+            duration: 0.5,
+            ease: defaultEasingOut
+          }, "<1.25");
       }
 
       if (accentImage) {
         itemTL.fromTo(accentImage, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 0.5,
-          ease: defaultEasingOut
-        }, "<0.25");
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: defaultEasingOut
+          }, "<0.25");
       }
 
       if (itemTitle) {
@@ -3763,11 +3769,11 @@ function workGridComponent() {
         itemTL.fromTo(hoverStuff, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, ">-0.5");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, ">-0.5");
       }
     });
 
@@ -3793,13 +3799,13 @@ function workGridComponent() {
         yPercent: buttonsYPercent,
         opacity: 0,
       },
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        ease: defaultEasingOut,
-        stagger: defaultStagger
-      }, 0);
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
     }
   });
 }
@@ -3859,7 +3865,7 @@ function splitScrollLockComponent() {
             headerParagraphSplitData.splits.forEach(split => split.revert());
             paragraphSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -3896,11 +3902,11 @@ function splitScrollLockComponent() {
         splitScrollLockTL.fromTo(imageContainer, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, ">-0.75");
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, ">-0.75");
       }
 
       // if (imageContainer) {
@@ -3929,13 +3935,13 @@ function splitScrollLockComponent() {
           yPercent: 100,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-1");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -3943,13 +3949,13 @@ function splitScrollLockComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -3994,12 +4000,12 @@ function iconGridComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh();
         }
@@ -4037,12 +4043,12 @@ function iconGridComponent() {
           iconGridComponentTL.fromTo(itemHeader, {
             opacity: 0
           },
-          {
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-1");
+            {
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, ">-1");
         }
 
         animateText(iconGridComponentTL, {
@@ -4064,14 +4070,14 @@ function iconGridComponent() {
           iconGridComponentTL.fromTo(itemIcons, {
             opacity: 0
           },
-          {
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-1");
+            {
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, ">-1");
         }
-  
+
         animateText(iconGridComponentTL, {
           elements: itemParagraphs,
           lines: itemParagraphSplitData.lines,
@@ -4181,33 +4187,33 @@ function featuredWorkComponent() {
         itemTL.fromTo(image, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, 0);
       }
 
       if (imageWrap) {
         itemTL.fromTo(imageWrap, {
           backgroundColor: 'transparent'
         },
-        {
-          backgroundColor: 'var(--swatch--dark-900)',
-          duration: 0.5,
-          ease: defaultEasingOut
-        }, "<1.25");
+          {
+            backgroundColor: 'var(--swatch--dark-900)',
+            duration: 0.5,
+            ease: defaultEasingOut
+          }, "<1.25");
       }
 
       if (accentImage) {
         itemTL.fromTo(accentImage, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 0.5,
-          ease: defaultEasingOut
-        }, "<0.25");
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: defaultEasingOut
+          }, "<0.25");
       }
 
       if (itemTitle) {
@@ -4224,11 +4230,11 @@ function featuredWorkComponent() {
         itemTL.fromTo(hoverStuff, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, ">-1");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, ">-1");
       }
     });
 
@@ -4252,13 +4258,13 @@ function featuredWorkComponent() {
         yPercent: buttonsYPercent,
         opacity: 0,
       },
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        ease: defaultEasingOut,
-        stagger: defaultStagger
-      }, 0);
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, 0);
     }
   });
 }
@@ -4325,12 +4331,12 @@ function testimonialComponent() {
         testimonialComponentTL.fromTo(graphics, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, 0);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, 0);
       }
 
       animateText(testimonialComponentTL, {
@@ -4348,13 +4354,13 @@ function testimonialComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -4401,12 +4407,12 @@ function compassCTAComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh();
         }
@@ -4435,24 +4441,24 @@ function compassCTAComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (image) {
         compassCTAComponentTL.fromTo(image, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, 0.5);
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, 0.5);
       }
 
       // if (shape) {
@@ -4470,11 +4476,11 @@ function compassCTAComponent() {
         compassCTAComponentTL.fromTo(shape, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
     }
 
@@ -4520,13 +4526,13 @@ function splitPanelImageArrayComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-  
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -4549,12 +4555,12 @@ function splitPanelImageArrayComponent() {
         splitPanelImageArrayTL.fromTo(graphics, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.5,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 2.5)
-        }, 0);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.5,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 2.5)
+          }, 0);
       }
 
       animateText(splitPanelImageArrayTL, {
@@ -4580,13 +4586,13 @@ function splitPanelImageArrayComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -4632,12 +4638,12 @@ function compassFormComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh(true);
         }
@@ -4687,12 +4693,12 @@ function compassFormComponent() {
             yPercent: 50,
             opacity: 0
           },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut
-          }, ">-0.6");
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut
+            }, ">-0.6");
         }
       });
 
@@ -4701,13 +4707,13 @@ function compassFormComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.6");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.6");
       }
     }
 
@@ -4824,11 +4830,11 @@ function culturalImpactComponent() {
         podcastTL.fromTo(podcastImage, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, 0);
       }
 
       animateText(podcastTL, {
@@ -4854,13 +4860,13 @@ function culturalImpactComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
       }
     }
 
@@ -4907,11 +4913,11 @@ function culturalImpactComponent() {
         noLogoTL.fromTo(noLogoImage, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, 0);
       }
 
       animateText(noLogoTL, {
@@ -4937,13 +4943,13 @@ function culturalImpactComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
       }
     }
   });
@@ -4998,20 +5004,20 @@ function podcastListComponent() {
             yPercent: buttonsYPercent,
             opacity: 0,
           },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, defaultPosition);
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, defaultPosition);
         }
       }
     }
 
     // Animate NEW episode items (runs on initial load AND after load more)
     const episodeItems = component.querySelectorAll('.podcast-list_list_item:not([data-gsap-initialized]) .podcast-list_list_item_link');
-    
+
     if (episodeItems.length > 0) {
       // Mark parent items as initialized
       episodeItems.forEach(link => {
@@ -5019,24 +5025,24 @@ function podcastListComponent() {
         listItem.setAttribute('data-gsap-initialized', 'true');
         link.removeAttribute('data-gsap-hide');
       });
-      
+
       // Animate new items
       gsap.fromTo(episodeItems, {
         yPercent: 50,
         opacity: 0
       },
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        ease: defaultEasingOut,
-        stagger: defaultStagger
-      });
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        });
     }
 
     // Animate footer (only on first load)
     if (footerContainer.hasAttribute('data-gsap-initialized')) return;
-    
+
     footerContainer.setAttribute('data-gsap-initialized', 'true');
 
     if (shouldSkipAnimation(footerContainer)) {
@@ -5093,12 +5099,12 @@ function podcastListComponent() {
         yPercent: 50,
         opacity: 0,
       },
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        ease: defaultEasingOut,
-      }, defaultPosition);
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+        }, defaultPosition);
     }
   });
 }
@@ -5140,12 +5146,12 @@ function statGridComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh(true);
         }
@@ -5184,12 +5190,12 @@ function statGridComponent() {
           statGridComponentTL.fromTo(itemHeader, {
             opacity: 0
           },
-          {
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-1");
+            {
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, ">-1");
         }
 
         animateText(statGridComponentTL, {
@@ -5212,13 +5218,13 @@ function statGridComponent() {
             yPercent: headingYPercent,
             opacity: 0
           },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-1");
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, ">-1");
         }
 
         // Note: Don't revert stat splits as odometer needs DOM structure intact
@@ -5229,7 +5235,7 @@ function statGridComponent() {
         //   position: ">-1",
         //   duration: 1
         // });
-  
+
         animateText(statGridComponentTL, {
           elements: itemParagraphs,
           lines: itemParagraphSplitData.lines,
@@ -5291,12 +5297,12 @@ function officesComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh();
         }
@@ -5337,11 +5343,11 @@ function officesComponent() {
         officesComponentTL.fromTo(image, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 3,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 3,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -5349,13 +5355,13 @@ function officesComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.6");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.6");
       }
     }
 
@@ -5403,12 +5409,12 @@ function twoImageSliderComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh(true);
         }
@@ -5439,12 +5445,12 @@ function twoImageSliderComponent() {
         twoImageSliderComponentTL.fromTo(swipers, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut,
-          stagger: defaultStagger * 5
-        }, 1);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut,
+            stagger: defaultStagger * 5
+          }, 1);
       }
 
       if (swiperNav.length > 0) {
@@ -5452,13 +5458,13 @@ function twoImageSliderComponent() {
           yPercent: 100,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, "<0.5");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, "<0.5");
       }
 
       if (buttons.length > 0) {
@@ -5466,13 +5472,13 @@ function twoImageSliderComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.6");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.6");
       }
     }
 
@@ -5518,12 +5524,12 @@ function accordionSectionComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh(true);
         }
@@ -5552,13 +5558,13 @@ function accordionSectionComponent() {
           yPercent: 40,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger * 3
-        }, ">-1");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger * 3
+          }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -5566,13 +5572,13 @@ function accordionSectionComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.6");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.6");
       }
     }
 
@@ -5634,11 +5640,11 @@ function splitPanelImageComponent() {
         splitPanelImageComponentTL.fromTo(image, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, getPosition(splitPanelImageComponentTL));
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, getPosition(splitPanelImageComponentTL));
       }
 
       animateText(splitPanelImageComponentTL, {
@@ -5685,13 +5691,13 @@ function splitPanelImageComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.6");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.6");
       }
     }
 
@@ -5737,12 +5743,12 @@ function careersComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh();
         }
@@ -5771,13 +5777,13 @@ function careersComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.6");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.6");
       }
 
       if (careersBoard) {
@@ -5785,13 +5791,13 @@ function careersComponent() {
           yPercent: 15,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-1");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-1");
       }
     }
 
@@ -5838,11 +5844,11 @@ function careerPostComponent() {
         careerPostTL.fromTo(contentWrap, {
           opacity: 0,
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, 1);
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, 1);
       }
     }
 
@@ -5888,13 +5894,13 @@ function contactFormComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-  
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -5922,24 +5928,24 @@ function contactFormComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (formWrap) {
         contactFormTL.fromTo(formWrap, {
           opacity: 0,
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
     }
 
@@ -6019,11 +6025,11 @@ function basicContentComponent() {
           basicContentTL.fromTo(content, {
             opacity: 0
           },
-          {
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut
-          }, 0);
+            {
+              opacity: 1,
+              duration: 1.25,
+              ease: defaultEasingOut
+            }, 0);
         }
       }
     }
@@ -6076,12 +6082,12 @@ function cmsPodcastBodyComponent() {
           yPercent: 25,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, 0);
       }
     }
 
@@ -6136,13 +6142,13 @@ function cmsPodcastBodyComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
       }
 
       if (bodyNavButtons) {
@@ -6150,12 +6156,12 @@ function cmsPodcastBodyComponent() {
           yPercent: 100,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
     }
   });
@@ -6199,7 +6205,7 @@ function cmsWorkOverviewComponent() {
           if (headingSplitData.shouldSplit) {
             headingSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh(true);
         }
       });
@@ -6227,13 +6233,13 @@ function cmsWorkOverviewComponent() {
               yPercent: 50,
               opacity: 0
             },
-            {
-              yPercent: 0,
-              opacity: 1,
-              duration: 1.25,
-              ease: defaultEasingOut,
-              stagger: defaultStagger
-            }, "<0.5");
+              {
+                yPercent: 0,
+                opacity: 1,
+                duration: 1.25,
+                ease: defaultEasingOut,
+                stagger: defaultStagger
+              }, "<0.5");
           }
 
           animateText(cmsWorkOverviewTL, {
@@ -6275,13 +6281,13 @@ function cmsWorkOverviewComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -6367,12 +6373,12 @@ function cmsWorkImageGridComponent() {
           cmsWorkImageGridPieceTL.fromTo(pieceImages, {
             opacity: 0
           },
-          {
-            opacity: 1,
-            duration: 1.25,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, 0.5);
+            {
+              opacity: 1,
+              duration: 1.25,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, 0.5);
         }
 
         // if (pieceImages.length > 0) {
@@ -6392,13 +6398,13 @@ function cmsWorkImageGridComponent() {
             yPercent: buttonsYPercent,
             opacity: 0,
           },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, defaultPosition);
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, defaultPosition);
         }
       });
     });
@@ -6462,13 +6468,13 @@ function cmsWorkSplitContentComponent() {
           y: 40,
           opacity: 0
         },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
       }
 
       if (buttons.length > 0) {
@@ -6476,13 +6482,13 @@ function cmsWorkSplitContentComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -6529,11 +6535,11 @@ function cmsWorkFullImageComponent() {
         cmsWorkFullImageTL.fromTo(image, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, 0);
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, 0);
       }
 
       // if (image) {
@@ -6621,11 +6627,11 @@ function cmsWorkTestimonialComponent() {
         cmsWorkTestimonialTL.fromTo(image, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.75,
-          ease: defaultEasingOut
-        }, 0.5);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.75,
+            ease: defaultEasingOut
+          }, 0.5);
       }
 
       if (buttons.length > 0) {
@@ -6633,13 +6639,13 @@ function cmsWorkTestimonialComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -6703,13 +6709,13 @@ function cmsWorkCreditsComponent() {
           yPercent: paragraphYPercent,
           opacity: 0
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.75");
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.75");
       }
     }
 
@@ -6748,13 +6754,13 @@ function expertiseStackComponent() {
           itemsContainer.removeAttribute('data-gsap-hide');
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
-  
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -6781,11 +6787,11 @@ function expertiseStackComponent() {
         containerTL.fromTo(itemsContainer, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, ">-0.75");
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, ">-0.75");
       }
     }
 
@@ -6832,12 +6838,12 @@ function expertiseStackComponent() {
             webkitMaskImage: 'linear-gradient(to right, black 0%, black 0%, transparent 0%, transparent 100%)',
             maskImage: 'linear-gradient(to right, black 0%, black 0%, transparent 0%, transparent 100%)'
           },
-          {
-            webkitMaskImage: 'linear-gradient(to right, black 0%, black 100%, transparent 100%, transparent 100%)',
-            maskImage: 'linear-gradient(to right, black 0%, black 100%, transparent 100%, transparent 100%)',
-            duration: 1.5,
-            ease: defaultEasingOut
-          }, 0);
+            {
+              webkitMaskImage: 'linear-gradient(to right, black 0%, black 100%, transparent 100%, transparent 100%)',
+              maskImage: 'linear-gradient(to right, black 0%, black 100%, transparent 100%, transparent 100%)',
+              duration: 1.5,
+              ease: defaultEasingOut
+            }, 0);
         }
 
         // if (itemImage) {
@@ -6874,13 +6880,13 @@ function expertiseStackComponent() {
             yPercent: buttonsYPercent,
             opacity: 0,
           },
-          {
-            yPercent: 0,
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-0.75");
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, ">-0.75");
         }
       });
     }
@@ -6924,12 +6930,12 @@ function iconCardsComponent() {
           hiddenItems.forEach(item => item.removeAttribute('data-gsap-hide'));
         },
         onComplete: () => {
-        if (headingSplitData.shouldSplit) {
-          headingSplitData.splits.forEach(s => s.revert());
-        }
-        if (paragraphSplitData.shouldSplit) {
-          paragraphSplitData.splits.forEach(s => s.revert());
-        }
+          if (headingSplitData.shouldSplit) {
+            headingSplitData.splits.forEach(s => s.revert());
+          }
+          if (paragraphSplitData.shouldSplit) {
+            paragraphSplitData.splits.forEach(s => s.revert());
+          }
 
           scheduleScrollTriggerRefresh();
         }
@@ -6957,12 +6963,12 @@ function iconCardsComponent() {
         iconCardsComponentTL.fromTo(items, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger * 2
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger * 2
+          }, defaultPosition);
       }
 
     }
@@ -7050,12 +7056,12 @@ function attributesGridComponent() {
           attributesGridComponentTL.fromTo(itemIcon, {
             opacity: 0
           },
-          {
-            opacity: 1,
-            duration: 1,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, ">-1");
+            {
+              opacity: 1,
+              duration: 1,
+              ease: defaultEasingOut,
+              stagger: defaultStagger
+            }, ">-1");
         }
 
         animateText(attributesGridComponentTL, {
@@ -7087,7 +7093,7 @@ function attributesGridComponent() {
             }
           }
         });
-  
+
         animateText(attributesGridComponentTL, {
           elements: itemParagraphs,
           lines: itemParagraphSplitData.lines,
@@ -7169,22 +7175,22 @@ function attributeCalloutComponent() {
         attributeCalloutTL.fromTo(bgImage, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1.25,
-          ease: defaultEasingOut
-        }, getPosition(attributeCalloutTL));
+          {
+            opacity: 1,
+            duration: 1.25,
+            ease: defaultEasingOut
+          }, getPosition(attributeCalloutTL));
       }
 
       if (innerImage) {
         attributeCalloutTL.fromTo(innerImage, {
           clipPath: imageMaskedSwipeStart
         },
-        {
-          clipPath: imageMaskedSwipeEnd,
-          duration: 1.5,
-          ease: defaultEasingOut
-        }, defaultPosition);
+          {
+            clipPath: imageMaskedSwipeEnd,
+            duration: 1.5,
+            ease: defaultEasingOut
+          }, defaultPosition);
       }
 
       animateText(attributeCalloutTL, {
@@ -7283,11 +7289,11 @@ function teamGridComponent() {
           teamGridComponentTL.fromTo(itemImage, {
             clipPath: imageMaskedSwipeStart
           },
-          {
-            clipPath: imageMaskedSwipeEnd,
-            duration: 1.25,
-            ease: defaultEasingOut
-          }, ((index + 1) * 0.5));
+            {
+              clipPath: imageMaskedSwipeEnd,
+              duration: 1.25,
+              ease: defaultEasingOut
+            }, ((index + 1) * 0.5));
         }
 
         animateText(teamGridComponentTL, {
@@ -7410,12 +7416,12 @@ function compassTeaserComponent() {
         compassTeaserComponentTL.fromTo(questionGroups, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: (defaultStagger * 1.5)
-        }, ">-1");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: (defaultStagger * 1.5)
+          }, ">-1");
       }
 
       if (buttons.length > 0) {
@@ -7423,13 +7429,13 @@ function compassTeaserComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -7492,11 +7498,11 @@ function fitAssessmentComponent() {
         fitAssessmentComponentTL.fromTo(innerContainer, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, 0)
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, 0)
       }
 
       animateText(fitAssessmentComponentTL, {
@@ -7531,12 +7537,12 @@ function fitAssessmentComponent() {
         fitAssessmentComponentTL.fromTo(formGroups, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 0.8,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            opacity: 1,
+            duration: 0.8,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
 
       if (buttons.length > 0) {
@@ -7544,13 +7550,13 @@ function fitAssessmentComponent() {
           yPercent: buttonsYPercent,
           opacity: 0,
         },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, defaultPosition);
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, defaultPosition);
       }
     }
 
@@ -7598,7 +7604,7 @@ function footerComponent() {
           if (headingSplitData.shouldSplit) {
             headingSplitData.splits.forEach(split => split.revert());
           }
-  
+
           scheduleScrollTriggerRefresh();
         }
       });
@@ -7615,45 +7621,45 @@ function footerComponent() {
         footerComponentTL.fromTo(footerLinkGroups, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut,
-          stagger: defaultStagger
-        }, ">-0.5");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, ">-0.5");
       }
 
       if (newsletterWrap) {
         footerComponentTL.fromTo(newsletterWrap, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, 1);
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, 1);
       }
 
       if (copyrightWrap) {
         footerComponentTL.fromTo(copyrightWrap, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, ">-0.5");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, ">-0.5");
       }
 
       if (wordmarkWrap) {
         footerComponentTL.fromTo(wordmarkWrap, {
           opacity: 0
         },
-        {
-          opacity: 1,
-          duration: 1,
-          ease: defaultEasingOut
-        }, ">-1");
+          {
+            opacity: 1,
+            duration: 1,
+            ease: defaultEasingOut
+          }, ">-1");
       }
     }
 
