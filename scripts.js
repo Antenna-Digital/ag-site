@@ -174,6 +174,7 @@ function animateText(timeline, config) {
     }, {
       y: 0,
       opacity: 1,
+      visibility: 'visible',
       duration,
       ease: defaultEasingOut,
       stagger,
@@ -182,6 +183,9 @@ function animateText(timeline, config) {
   }
   // Desktop: Animate split lines
   else if (shouldSplit && lines && lines.length > 0) {
+    // Override CSS hiding for parent to keep split lines visible
+    gsap.set(elements, { opacity: 1, visibility: 'visible' });
+
     timeline.fromTo(lines, {
       yPercent,
       opacity: 0,
@@ -189,6 +193,7 @@ function animateText(timeline, config) {
     }, {
       yPercent: 0,
       opacity: 1,
+      visibility: 'visible',
       duration,
       ease: defaultEasingOut,
       stagger,
@@ -7682,10 +7687,10 @@ function footerComponent() {
 function dataAnimationComponent() {
   const containers = document.querySelectorAll('[data-animate-container]');
   console.log('[dataAnimation] Found', containers.length, 'containers');
-  
+
   containers.forEach((container, index) => {
     console.log('[dataAnimation] Processing container', index, '- initialized:', container.hasAttribute('data-gsap-initialized'));
-    
+
     // Prevent duplicate animations
     if (container.hasAttribute('data-gsap-initialized')) {
       console.log('[dataAnimation] Container already initialized, skipping');
@@ -7693,10 +7698,10 @@ function dataAnimationComponent() {
     }
     container.setAttribute('data-gsap-initialized', 'true');
     console.log('[dataAnimation] Marked container as initialized');
-    
+
     // Check if this is a container-level animation
     const containerAnimation = container.dataset.animateContainer;
-    
+
     if (containerAnimation) {
       console.log('[dataAnimation] Container-level animation:', containerAnimation);
       animateContainerChildren(container, containerAnimation);
@@ -7713,90 +7718,91 @@ function animateContainerChildren(container, animationType) {
   const duration = parseFloat(container.dataset.animateDuration) || 1;
   const stagger = parseFloat(container.dataset.animateStagger) || 0.1;
   const children = container.querySelectorAll(container.dataset.animateChildren || '> *');
-  
+
   if (children.length === 0 || shouldSkipAnimation(container)) {
     children.forEach(child => child.removeAttribute('data-gsap-hide'));
     return;
   }
-  
+
   const { fromVars, toVars } = getDirectionalAnimationVars(type, direction);
-  
+
   gsap.timeline({
     scrollTrigger: { trigger: container, start: start, once: true },
     onStart: () => children.forEach(child => child.removeAttribute('data-gsap-hide'))
-  }).fromTo(children, fromVars, { ...toVars, duration, ease: defaultEasingOut, stagger });
+  }).fromTo(children, fromVars, { ...toVars, visibility: 'visible', duration, ease: defaultEasingOut, stagger });
 }
 
 function animateElementsInOrder(container) {
   const allElements = Array.from(container.querySelectorAll('[data-animate]'));
   console.log('[animateElementsInOrder] Found', allElements.length, 'elements');
   console.log('[animateElementsInOrder] Elements:', allElements.map(el => el.dataset.animate));
-  
+
   if (allElements.length === 0) {
     console.log('[animateElementsInOrder] No elements found, returning');
     return;
   }
-  
+
   // Prevent duplicate timeline creation
   if (container.dataset.animateTimelineCreated === 'true') {
     console.log('[animateElementsInOrder] Timeline already created, returning early');
     return;
   }
-  
+
   const start = container.dataset.animateStart || getAnimationStart();
   const once = container.dataset.animateOnce !== 'false';
-  
+
   console.log('[animateElementsInOrder] Start:', start, '| Once:', once);
-  
+
   if (shouldSkipAnimation(container)) {
     console.log('[animateElementsInOrder] Should skip animation');
     allElements.forEach(el => el.removeAttribute('data-gsap-hide'));
     return;
   }
-  
+
   // Mark timeline as created to prevent duplicates
   container.dataset.animateTimelineCreated = 'true';
   console.log('[animateElementsInOrder] Marked timeline as created');
-  
+
   // Group elements by type for text splitting
   const textSplitElements = allElements.filter(el => el.dataset.animate === 'text-split');
-  
+
   // Create splits individually for each element to track which lines belong to which element
   const elementSplitData = new Map();
-  
+
   textSplitElements.forEach(el => {
     const splitType = el.dataset.animateType || 'headings';
     const useMask = splitType === 'headings';
     console.log('[SplitText] Creating split for element:', el.tagName, 'type:', splitType, 'mask:', useMask, 'shouldSplit:', !isPortrait);
     const splitData = createTextSplits([el], { mask: useMask });
     console.log('[SplitText] Result - splits:', splitData.splits.length, 'lines:', splitData.lines.length, 'shouldSplit:', splitData.shouldSplit);
-    
+
     // Set initial state for animation
     if (splitData.shouldSplit && splitData.lines.length > 0) {
       // Keep parent visible, hide only the split lines
-      gsap.set(el, { opacity: 1 });
+      gsap.set(el, { opacity: 1, visibility: 'visible' });
       gsap.set(splitData.lines, { opacity: 0, yPercent: splitType === 'headings' ? headingYPercent : paragraphYPercentNoMask });
     } else {
-      // If not splitting, hide the element itself
-      gsap.set(el, { opacity: 0, y: splitType === 'headings' ? headingY : paragraphY });
+      // If not splitting, initial state is now handled by CSS [data-animate-container] [data-animate]
+      // Only set initial transform properties
+      gsap.set(el, { y: splitType === 'headings' ? headingY : paragraphY });
     }
-    
+
     elementSplitData.set(el, {
       ...splitData,
       splitType
     });
   });
-  
+
   console.log('[animateElementsInOrder] Creating GSAP timeline');
-  
+
   // Track animation state to prevent restart on refresh
   let hasAnimationStarted = false;
   let animationProgress = 0;
-  
+
   const animationTL = gsap.timeline({
-    scrollTrigger: { 
-      trigger: container, 
-      start: start, 
+    scrollTrigger: {
+      trigger: container,
+      start: start,
       once: once,
       onRefresh: (self) => {
         console.log('[ScrollTrigger] Refreshed - hasAnimationStarted:', hasAnimationStarted, 'progress:', animationProgress);
@@ -7828,88 +7834,89 @@ function animateElementsInOrder(container) {
       }
     }
   });
-  
+
   console.log('[animateElementsInOrder] Timeline created with ScrollTrigger:', animationTL.scrollTrigger ? 'YES' : 'NO');
-  
+
   // Process in DOM order
   allElements.forEach((el, index) => {
-      const animateType = el.dataset.animate;
-      const duration = parseFloat(el.dataset.animateDuration) || 1;
-      const delay = parseFloat(el.dataset.animateDelay) || 0;
-      const position = index === 0 ? 0 : ">-0.5";
-      
-      console.log('[Timeline] Adding animation for element', index, '- type:', animateType, '- position:', position);
-      
-      // Check for text-split first (before directional check since it contains a hyphen)
-      if (animateType === 'text-split') {
-        const elementData = elementSplitData.get(el);
-        if (elementData) {
-          console.log('[Timeline] Adding text-split animation - type:', elementData.splitType, 'lines:', elementData.lines.length, 'shouldSplit:', elementData.shouldSplit);
-          console.log('[Timeline] First line element:', elementData.lines[0]);
-          const useMask = elementData.splitType === 'headings';
-          if (elementData.shouldSplit && elementData.lines.length > 0) {
-            // Animate split lines
-            animationTL.fromTo(elementData.lines, {
-              yPercent: useMask ? headingYPercent : paragraphYPercentNoMask,
-              opacity: 0
-            }, {
-              yPercent: 0,
-              opacity: 1,
-              duration: duration,
-              ease: defaultEasingOut,
-              stagger: defaultStagger
-            }, position);
-          } else {
-            // Animate whole element
-            animationTL.fromTo(el, {
-              y: useMask ? headingY : paragraphY,
-              opacity: 0
-            }, {
-              y: 0,
-              opacity: 1,
-              duration: duration,
-              ease: defaultEasingOut
-            }, position);
-          }
+    const animateType = el.dataset.animate;
+    const duration = parseFloat(el.dataset.animateDuration) || 1;
+    const delay = parseFloat(el.dataset.animateDelay) || 0;
+    const position = index === 0 ? 0 : ">-0.5";
+
+    console.log('[Timeline] Adding animation for element', index, '- type:', animateType, '- position:', position);
+
+    // Check for text-split first (before directional check since it contains a hyphen)
+    if (animateType === 'text-split') {
+      const elementData = elementSplitData.get(el);
+      if (elementData) {
+        console.log('[Timeline] Adding text-split animation - type:', elementData.splitType, 'lines:', elementData.lines.length, 'shouldSplit:', elementData.shouldSplit);
+        console.log('[Timeline] First line element:', elementData.lines[0]);
+        const useMask = elementData.splitType === 'headings';
+        if (elementData.shouldSplit && elementData.lines.length > 0) {
+          // Animate split lines
+          animationTL.fromTo(elementData.lines, {
+            yPercent: useMask ? headingYPercent : paragraphYPercentNoMask,
+            opacity: 0
+          }, {
+            yPercent: 0,
+            opacity: 1,
+            duration: duration,
+            ease: defaultEasingOut,
+            stagger: defaultStagger
+          }, position);
+        } else {
+          // Animate whole element
+          animationTL.fromTo(el, {
+            y: useMask ? headingY : paragraphY,
+            opacity: 0
+          }, {
+            y: 0,
+            opacity: 1,
+            visibility: 'visible',
+            duration: duration,
+            ease: defaultEasingOut
+          }, position);
         }
       }
-      // Directional animations: fade-up, slide-left, etc.
-      else if (animateType.includes('-')) {
-        const [type, direction] = animateType.split('-');
-        console.log('[Timeline] Directional animation:', type, direction);
-        const { fromVars, toVars } = getDirectionalAnimationVars(type, direction);
-        animationTL.fromTo(el, fromVars, { ...toVars, duration, ease: defaultEasingOut, delay }, position);
-      }
-      // Standard animations
-      else switch (animateType) {
-        case 'button':
-          console.log('[Timeline] Adding button animation');
-          animationTL.fromTo(el, { yPercent: buttonsYPercent, opacity: 0 }, { yPercent: 0, opacity: 1, duration, ease: defaultEasingOut, delay }, position);
-          break;
-        case 'image':
-          const imgType = el.dataset.animateType || 'swipe';
-          console.log('[Timeline] Adding image animation - type:', imgType);
-          if (imgType === 'swipe') {
-            animationTL.fromTo(el, { clipPath: imageMaskedSwipeStart }, { clipPath: imageMaskedSwipeEnd, duration, ease: defaultEasingOut, delay }, position);
-          } else if (imgType === 'fade') {
-            animationTL.fromTo(el, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration, ease: defaultEasingOut, delay }, position);
-          } else if (imgType === 'scale') {
-            animationTL.fromTo(el, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration, ease: defaultEasingOut, delay }, position);
-          }
-          break;
-        default:
-          console.log('[Timeline] Adding default fade animation');
-          animationTL.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration, ease: defaultEasingOut, delay }, position);
-      }
-    });
-  
+    }
+    // Directional animations: fade-up, slide-left, etc.
+    else if (animateType.includes('-')) {
+      const [type, direction] = animateType.split('-');
+      console.log('[Timeline] Directional animation:', type, direction);
+      const { fromVars, toVars } = getDirectionalAnimationVars(type, direction);
+      animationTL.fromTo(el, fromVars, { ...toVars, duration, ease: defaultEasingOut, delay }, position);
+    }
+    // Standard animations
+    else switch (animateType) {
+      case 'button':
+        console.log('[Timeline] Adding button animation');
+        animationTL.fromTo(el, { yPercent: buttonsYPercent, opacity: 0 }, { yPercent: 0, opacity: 1, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
+        break;
+      case 'image':
+        const imgType = el.dataset.animateType || 'swipe';
+        console.log('[Timeline] Adding image animation - type:', imgType);
+        if (imgType === 'swipe') {
+          animationTL.fromTo(el, { clipPath: imageMaskedSwipeStart }, { clipPath: imageMaskedSwipeEnd, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
+        } else if (imgType === 'fade') {
+          animationTL.fromTo(el, { opacity: 0, y: 30 }, { opacity: 1, y: 0, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
+        } else if (imgType === 'scale') {
+          animationTL.fromTo(el, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
+        }
+        break;
+      default:
+        console.log('[Timeline] Adding default fade animation');
+        animationTL.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
+    }
+  });
+
   console.log('[animateElementsInOrder] Timeline built with', animationTL.getChildren().length, 'tweens');
 }
 
 function getDirectionalAnimationVars(type, direction) {
   const fromVars = { opacity: 0 };
-  const toVars = { opacity: 1 };
-  
+  const toVars = { opacity: 1, visibility: 'visible' };
+
   switch (type) {
     case 'swipe':
       switch (direction) {
@@ -7941,7 +7948,7 @@ function getDirectionalAnimationVars(type, direction) {
       }
       break;
   }
-  
+
   return { fromVars, toVars };
 }
 
