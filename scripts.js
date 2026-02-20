@@ -1,4 +1,4 @@
-console.debug("%cScripts.js loadeds", "color: lightgreen;");
+console.debug("%cscript loaded", "color: lightgreen;");
 
 // Preserve scroll position on refresh
 if ('scrollRestoration' in history) {
@@ -645,7 +645,12 @@ function workGridMasonry() {
     'cmsload',
     (listInstances) => {
       listInstances.forEach((instance) => {
-        instance.on('renderitems', () => setTimeout(handleMacy, 100));
+        instance.on('renderitems', () => {
+          setTimeout(() => {
+            handleMacy();
+            dataAnimationComponent();
+          }, 100);
+        });
       });
     }
   ]);
@@ -1470,6 +1475,7 @@ function finsweetStuff() {
           // 1. Animate new items first
           podcastListComponent();
           workGridComponent();
+          dataAnimationComponent();
 
           // 2. Recalculate masonry layout (if Macy instance exists)
           if (window.macyInstance) {
@@ -7689,27 +7695,28 @@ function dataAnimationComponent() {
   console.log('[dataAnimation] Found', containers.length, 'containers');
 
   containers.forEach((container, index) => {
-    console.log('[dataAnimation] Processing container', index, '- initialized:', container.hasAttribute('data-gsap-initialized'));
-
-    // Prevent duplicate animations
-    if (container.hasAttribute('data-gsap-initialized')) {
-      console.log('[dataAnimation] Container already initialized, skipping');
-      return;
-    }
-    container.setAttribute('data-gsap-initialized', 'true');
-    console.log('[dataAnimation] Marked container as initialized');
-
-    // Check if this is a container-level animation
+    // Element-level animation: always check for new elements
+    const hasUninitializedItems = container.querySelectorAll('[data-animate]:not([data-gsap-item-initialized])').length > 0;
     const containerAnimation = container.dataset.animateContainer;
 
     if (containerAnimation) {
-      console.log('[dataAnimation] Container-level animation:', containerAnimation);
-      animateContainerChildren(container, containerAnimation);
-    } else {
-      console.log('[dataAnimation] Element-level animation');
+      // Container-level animation
+      if (!container.hasAttribute('data-gsap-initialized')) {
+        console.log('[dataAnimation] New container-level animation:', containerAnimation);
+        container.setAttribute('data-gsap-initialized', 'true');
+        animateContainerChildren(container, containerAnimation);
+      } else {
+        // Already initialized, but maybe there are new children
+        console.log('[dataAnimation] Already initialized container, checking for new children');
+        animateContainerChildren(container, containerAnimation);
+      }
+    } else if (hasUninitializedItems) {
+      // Element-level animation with new items
+      console.log('[dataAnimation] Element-level animation - processing new items');
       animateElementsInOrder(container);
     }
   });
+
 }
 
 function animateContainerChildren(container, animationType) {
@@ -7717,12 +7724,18 @@ function animateContainerChildren(container, animationType) {
   const start = container.dataset.animateStart || getAnimationStart();
   const duration = parseFloat(container.dataset.animateDuration) || 1;
   const stagger = parseFloat(container.dataset.animateStagger) || 0.1;
-  const children = container.querySelectorAll(container.dataset.animateChildren || '> *');
+
+  // Filter for uninitialized children only
+  const allChildren = container.querySelectorAll(container.dataset.animateChildren || '> *');
+  const children = Array.from(allChildren).filter(child => !child.hasAttribute('data-gsap-item-initialized'));
 
   if (children.length === 0 || shouldSkipAnimation(container)) {
     children.forEach(child => child.removeAttribute('data-gsap-hide'));
     return;
   }
+
+  // Mark children as initialized
+  children.forEach(child => child.setAttribute('data-gsap-item-initialized', 'true'));
 
   const { fromVars, toVars } = getDirectionalAnimationVars(type, direction);
 
@@ -7733,35 +7746,20 @@ function animateContainerChildren(container, animationType) {
 }
 
 function animateElementsInOrder(container) {
-  const allElements = Array.from(container.querySelectorAll('[data-animate]'));
-  console.log('[animateElementsInOrder] Found', allElements.length, 'elements');
-  console.log('[animateElementsInOrder] Elements:', allElements.map(el => el.dataset.animate));
+  // Filter for uninitialized elements only
+  const allElements = Array.from(container.querySelectorAll('[data-animate]')).filter(el => !el.hasAttribute('data-gsap-item-initialized'));
+  console.log('[animateElementsInOrder] Found', allElements.length, 'new elements');
 
   if (allElements.length === 0) {
-    console.log('[animateElementsInOrder] No elements found, returning');
+    console.log('[animateElementsInOrder] No new elements found, returning');
     return;
   }
 
-  // Prevent duplicate timeline creation
-  if (container.dataset.animateTimelineCreated === 'true') {
-    console.log('[animateElementsInOrder] Timeline already created, returning early');
-    return;
-  }
+  // Mark them immediately to prevent duplicate processing
+  allElements.forEach(el => el.setAttribute('data-gsap-item-initialized', 'true'));
 
   const start = container.dataset.animateStart || getAnimationStart();
   const once = container.dataset.animateOnce !== 'false';
-
-  console.log('[animateElementsInOrder] Start:', start, '| Once:', once);
-
-  if (shouldSkipAnimation(container)) {
-    console.log('[animateElementsInOrder] Should skip animation');
-    allElements.forEach(el => el.removeAttribute('data-gsap-hide'));
-    return;
-  }
-
-  // Mark timeline as created to prevent duplicates
-  container.dataset.animateTimelineCreated = 'true';
-  console.log('[animateElementsInOrder] Marked timeline as created');
 
   // Group elements by type for text splitting
   const textSplitElements = allElements.filter(el => el.dataset.animate === 'text-split');
