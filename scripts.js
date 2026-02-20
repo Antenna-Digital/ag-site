@@ -7768,27 +7768,40 @@ function animateElementsInOrder(container) {
   const elementSplitData = new Map();
 
   textSplitElements.forEach(el => {
-    const splitType = el.dataset.animateType || 'headings';
-    const useMask = splitType === 'headings';
-    console.log('[SplitText] Creating split for element:', el.tagName, 'type:', splitType, 'mask:', useMask, 'shouldSplit:', !isPortrait);
-    const splitData = createTextSplits([el], { mask: useMask });
-    console.log('[SplitText] Result - splits:', splitData.splits.length, 'lines:', splitData.lines.length, 'shouldSplit:', splitData.shouldSplit);
+    const isRichText = el.classList.contains('w-richtext');
+    const childrenToSplit = isRichText
+      ? Array.from(el.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li'))
+      : [el];
 
-    // Set initial state for animation
-    if (splitData.shouldSplit && splitData.lines.length > 0) {
-      // Keep parent visible, hide only the split lines
-      gsap.set(el, { opacity: 1, visibility: 'visible' });
-      gsap.set(splitData.lines, { opacity: 0, yPercent: splitType === 'headings' ? headingYPercent : paragraphYPercentNoMask });
-    } else {
-      // If not splitting, initial state is now handled by CSS [data-animate-container] [data-animate]
-      // Only set initial transform properties
-      gsap.set(el, { y: splitType === 'headings' ? headingY : paragraphY });
-    }
+    console.log('[SplitText] Initializing text-split for:', el.tagName, 'Children:', childrenToSplit.length);
 
-    elementSplitData.set(el, {
-      ...splitData,
-      splitType
+    // Map each child to its own split data for precise control
+    const splits = childrenToSplit.map(child => {
+      const splitData = createTextSplits([child], {
+        type: "words,lines",
+        linesClass: "line",
+        mask: "lines"
+      });
+
+      if (splitData.shouldSplit && splitData.lines.length > 0) {
+        // Hide split lines
+        gsap.set(splitData.lines, { opacity: 0, yPercent: 100 });
+
+        // Fix descender clipping
+        const masks = splitData.lines.map(line => line.parentElement);
+        gsap.set(masks, { paddingBottom: "0.1em", marginBottom: "-0.1em", overflow: "hidden" });
+      }
+
+      // Hide the child container (this hides bullets in lists until they animate)
+      gsap.set(child, { opacity: 0 });
+
+      return { child, splitData };
     });
+
+    // Parent container must be visible
+    gsap.set(el, { opacity: 1, visibility: 'visible' });
+
+    elementSplitData.set(el, { isRichText, splits });
   });
 
   console.log('[animateElementsInOrder] Creating GSAP timeline');
@@ -7846,36 +7859,42 @@ function animateElementsInOrder(container) {
 
     // Check for text-split first (before directional check since it contains a hyphen)
     if (animateType === 'text-split') {
-      const elementData = elementSplitData.get(el);
-      if (elementData) {
-        console.log('[Timeline] Adding text-split animation - type:', elementData.splitType, 'lines:', elementData.lines.length, 'shouldSplit:', elementData.shouldSplit);
-        console.log('[Timeline] First line element:', elementData.lines[0]);
-        const useMask = elementData.splitType === 'headings';
-        if (elementData.shouldSplit && elementData.lines.length > 0) {
-          // Animate split lines
-          animationTL.fromTo(elementData.lines, {
-            yPercent: useMask ? headingYPercent : paragraphYPercentNoMask,
-            opacity: 0
-          }, {
-            yPercent: 0,
-            opacity: 1,
-            duration: duration,
-            ease: defaultEasingOut,
-            stagger: defaultStagger
-          }, position);
-        } else {
-          // Animate whole element
-          animationTL.fromTo(el, {
-            y: useMask ? headingY : paragraphY,
-            opacity: 0
-          }, {
-            y: 0,
-            opacity: 1,
-            visibility: 'visible',
-            duration: duration,
-            ease: defaultEasingOut
-          }, position);
-        }
+      const data = elementSplitData.get(el);
+      if (data && data.splits) {
+        data.splits.forEach((item, i) => {
+          const itemPos = i === 0 ? position : ">-0.7";
+          const split = item.splitData;
+
+          if (split.shouldSplit && split.lines.length > 0) {
+            // First show the container (handles bullets)
+            animationTL.set(item.child, { opacity: 1 }, itemPos);
+
+            // Then animate the lines
+            animationTL.fromTo(split.lines, {
+              yPercent: 100,
+              opacity: 0
+            }, {
+              yPercent: 0,
+              opacity: 1,
+              visibility: 'visible',
+              duration: 0.9,
+              ease: "expo.out",
+              stagger: 0.12
+            }, "<"); // Start with the visibility set above
+          } else {
+            // Fallback for whole element if no split possible
+            animationTL.fromTo(item.child, {
+              y: 30,
+              opacity: 0
+            }, {
+              y: 0,
+              opacity: 1,
+              visibility: 'visible',
+              duration: 0.8,
+              ease: "expo.out"
+            }, itemPos);
+          }
+        });
       }
     }
     // Directional animations: fade-up, slide-left, etc.
