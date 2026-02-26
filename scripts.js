@@ -7832,7 +7832,9 @@ function animateElementsInOrder(container) {
       animationProgress = 1;
       // Revert all splits
       elementSplitData.forEach(data => {
-        data.splits?.forEach(s => s.revert());
+        data.splits?.forEach(item => {
+          item.splitData.splits.forEach(split => split.revert());
+        });
       });
       // Removed scheduleScrollTriggerRefresh to prevent re-triggering
     },
@@ -8026,3 +8028,95 @@ const init = () => {
 }; // end init
 
 $(window).on("load", init);
+
+function ahSliders() {
+  if (!document.querySelector(".swiper.image-slider--featured")) return;
+
+  document.querySelectorAll(".image-slider_grid").forEach((wrap) => {
+    const mainSwiperEl = wrap.querySelector(".swiper.image-slider--featured");
+    const thumbSwiperEl = wrap.querySelector(".swiper.image-slider--thumb-01");
+    const thumbSwiperEl2 = wrap.querySelector(".swiper.image-slider--thumb-02");
+    const prevBtn = wrap.querySelector(".image-slider_arrow--prev");
+    const nextBtn = wrap.querySelector(".image-slider_arrow--next");
+
+    const mainSwiper = new Swiper(mainSwiperEl, {
+      slidesPerView: 1,
+      spaceBetween: 20,
+      speed: 650,
+      loop: true,
+      initialSlide: 0,
+      allowTouchMove: false,
+      navigation: false,
+    });
+
+    const thumbSwiper = new Swiper(thumbSwiperEl, {
+      slidesPerView: 1,
+      spaceBetween: 20,
+      speed: 700,
+      loop: true,
+      initialSlide: 1,
+      allowTouchMove: false,
+      navigation: false,
+    });
+
+    const thumbSwiper2 = new Swiper(thumbSwiperEl2, {
+      slidesPerView: 1,
+      spaceBetween: 20,
+      speed: 700,
+      loop: true,
+      initialSlide: 2,
+      allowTouchMove: false,
+      navigation: false,
+    });
+
+    // Thumb 1 click → slide next once
+    thumbSwiperEl.querySelectorAll(".swiper-slide").forEach((slide) => {
+      slide.style.cursor = "pointer";
+      slide.addEventListener("click", () => {
+        mainSwiper.slideNext();
+        thumbSwiper.slideNext();
+        thumbSwiper2.slideNext();
+      });
+    });
+
+    // Thumb 2 click → slide next twice
+    thumbSwiperEl2.querySelectorAll(".swiper-slide").forEach((slide) => {
+      slide.style.cursor = "pointer";
+      slide.addEventListener("click", () => {
+        mainSwiper.slideNext();
+        thumbSwiper.slideNext();
+        thumbSwiper2.slideNext();
+        setTimeout(() => {
+          mainSwiper.slideNext();
+          thumbSwiper.slideNext();
+          thumbSwiper2.slideNext();
+        }, 750);
+      });
+    });
+
+    // Prev / Next arrow buttons
+    let isAnimating = false;
+    const delay = 750;
+
+    prevBtn.addEventListener("click", () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      mainSwiper.slidePrev();
+      thumbSwiper.slidePrev();
+      thumbSwiper2.slidePrev();
+      setTimeout(() => (isAnimating = false), delay);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      mainSwiper.slideNext();
+      thumbSwiper.slideNext();
+      thumbSwiper2.slideNext();
+      setTimeout(() => (isAnimating = false), delay);
+    });
+  });
+}
+
+window.Webflow ||= [];
+window.Webflow.push(ahSliders);
