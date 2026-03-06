@@ -1212,18 +1212,27 @@ function marquees() {
 
 // Form Stuff
 function formStuff() {
-  // Listen to all jQuery AJAX events (success, error, etc.)
-  $(document).ajaxComplete(function (event, xhr, settings) {
-    if (settings.url.includes('/form/')) {
-      // console.log('AJAX completed:', event, xhr, settings);
+  // Watch for Webflow Form success/fail states (Vanilla JS)
+  const formObservers = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        const target = mutation.target;
+        const isVisible = target.style.display !== 'none' && getComputedStyle(target).display !== 'none';
 
-      if (xhr.status === 200) {
-        console.log('Form successfully submitted');
-        ScrollTrigger.refresh();
-      } else {
-        console.log('Form submission failed');
+        if (isVisible) {
+          if (target.classList.contains('w-form-done')) {
+            console.log('Form successfully submitted');
+            ScrollTrigger.refresh();
+          } else if (target.classList.contains('w-form-fail')) {
+            console.log('Form submission failed');
+          }
+        }
       }
-    }
+    });
+  });
+
+  document.querySelectorAll('.w-form-done, .w-form-fail').forEach(el => {
+    formObservers.observe(el, { attributes: true, attributeFilter: ['style'] });
   });
 
   // HubSpot forms fire global events we can hook into
@@ -6671,27 +6680,25 @@ function getDirectionalAnimationVars(type, direction) {
 // Init Function
 const init = () => {
   setupLenis();
-  heroVantaBG();
+  marquees();
+  initScrollAnimations();
+  formStuff();
+  finsweetStuff();
 
-  setTimeout(() => {
-    swipers();
-    workScrollLock();
-    compassScrollLock();
-    splitScrollLock();
-    workGridMasonry();
-    accordionSection();
-    timelineAccordion();
-    odometers();
-    marquees();
-    formStuff();
-    expertiseStackNav();
-    finsweetStuff();
-    initScrollAnimations();
-  }, 300);
+  // Only run if elements exist on this page
+  if (document.querySelector('.swiper')) swipers();
+  if (document.querySelector('.work-sl_contain')) workScrollLock();
+  if (document.querySelector('.compass_wrap')) compassScrollLock();
+  if (document.querySelector('.split-scroll-lock_contain')) splitScrollLock();
+  if (document.querySelector('.work-grid_wrap')) workGridMasonry();
+  if (document.querySelector('.accordion-section_wrap')) accordionSection();
+  if (document.querySelector('.timeline-accordion_accordion_item')) timelineAccordion();
+  if (document.querySelector('.stat-grid_wrap')) odometers();
+  if (document.querySelector('.expertise-stack_item')) expertiseStackNav();
+  if (document.getElementById('vanta-bg')) heroVantaBG();
 
-  setTimeout(() => {
-    ScrollTrigger.refresh(true);
-  }, 600);
+  setTimeout(() => initScrollAnimations(), 50);
+  setTimeout(() => ScrollTrigger.refresh(true), 200);
 
   let resizeTimer;
   window.addEventListener('resize', () => {
@@ -6705,7 +6712,7 @@ const init = () => {
   });
 }; // end init
 
-$(window).on("load", init);
+window.addEventListener("load", init);
 
 function ahSliders() {
   if (!document.querySelector(".swiper.image-slider--featured")) return;
