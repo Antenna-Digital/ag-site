@@ -29,29 +29,49 @@ ScrollTrigger.config({
 
 // Lenis setup
 function setupLenis() {
-  console.log('[Lenis] Attempting to initialize...');
-
   if (typeof Lenis !== 'function') {
-    console.warn('[Lenis] Error: Lenis is not a constructor/function. Current value:', Lenis);
+    const idConflict = document.getElementById('lenis') || document.getElementById('Lenis');
+    if (idConflict) console.warn('[Lenis] Conflict: Element with ID "lenis" detected. Rename this in Webflow.');
     return;
   }
 
-  try {
-    lenis = new Lenis({ smoothWheel: true });
-    window.lenis = lenis;
+  requestAnimationFrame(() => {
+    try {
+      lenis = new Lenis({
+        smoothWheel: true,
+        wrapper: window,
+        content: document.documentElement,
+        autoResize: true
+      });
+      window.lenis = lenis;
 
-    lenis.on("scroll", ScrollTrigger.update);
+      lenis.on("scroll", ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-    gsap.ticker.lagSmoothing(0);
+      gsap.ticker.add((time) => {
+        if (lenis && typeof lenis.raf === 'function') {
+          lenis.raf(time * 1000);
+        }
+      });
+      gsap.ticker.lagSmoothing(0);
 
-    ScrollTrigger.addEventListener("refresh", () => lenis.resize());
-    console.log('[Lenis] Successfully initialized');
-  } catch (error) {
-    console.error('[Lenis] Critical error during initialization:', error);
-  }
+      ScrollTrigger.addEventListener("refresh", () => {
+        if (lenis && typeof lenis.resize === 'function') lenis.resize();
+      });
+    } catch (error) {
+      // ONLY show diagnostic info if a crash actually happens
+      console.error('[Lenis] Compatibility issue on this page:', error.message);
+
+      const checkConflicts = () => {
+        if (typeof window.i !== 'undefined') return 'Global variable "i" collision detected.';
+        if (window.Observe && typeof window.Observe !== 'function') return 'window.Observe collision.';
+        if (window.Animate && typeof window.Animate !== 'function') return 'window.Animate collision.';
+        return 'No obvious global namespace collisions found.';
+      };
+
+      console.warn('[Lenis] Diagnostic:', checkConflicts());
+      console.info('[Lenis] Falling back to native scrolling for compatibility with 3rd party scripts.');
+    }
+  });
 }
 
 // Global GSAP Variables
@@ -521,7 +541,7 @@ function swipers() {
 // Work Grid Masonry
 function workGridMasonry() {
   if (typeof Macy === 'undefined') {
-    console.error('Macy.js not loaded');
+    // console.error('Macy.js not loaded');
     return;
   }
   const workGridWrap = document.querySelector('.work-grid_wrap');
@@ -724,7 +744,7 @@ function accordionSection() {
         const paragraph = textElement ? textElement.querySelector('.c-paragraph') : null;
 
         if (!inner || !textElement) {
-          console.error('Missing required elements in accordion item', index);
+          // console.error('Missing required elements in accordion item', index);
           return;
         }
 
@@ -1011,7 +1031,7 @@ function marquees() {
       this.contents = this.element.querySelectorAll('[data-marquee-content]');
 
       if (!this.wrapper || !this.contents.length) {
-        console.warn('Marquee: Required elements not found');
+        // console.warn('Marquee: Required elements not found');
         return;
       }
 
@@ -1233,10 +1253,10 @@ function formStuff() {
 
         if (isVisible) {
           if (target.classList.contains('w-form-done')) {
-            console.log('Form successfully submitted');
+            // console.log('Form successfully submitted');
             ScrollTrigger.refresh();
           } else if (target.classList.contains('w-form-fail')) {
-            console.log('Form submission failed');
+            // console.log('Form submission failed');
           }
         }
       }
@@ -1438,7 +1458,7 @@ function heroVantaBG() {
     const container = document.getElementById('vanta-bg');
 
     if (!container) {
-      console.warn('Vanta container not found');
+      // console.warn('Vanta container not found');
       return;
     }
 
@@ -1456,7 +1476,7 @@ function heroVantaBG() {
       });
 
     } catch (error) {
-      console.error('Failed to initialize Vanta:', error);
+      // console.error('Failed to initialize Vanta:', error);
     }
   }
 
@@ -1488,10 +1508,12 @@ function heroVantaBG() {
 // Finsweet Stuff
 // https://finsweet.com/attributes/attributes-api
 function finsweetStuff() {
+  /*
   console.debug(
     "%c [DEBUG] Starting finsweetStuff",
     "background: #33cc33; color: white"
   );
+  */
 
   window.FinsweetAttributes ||= [];
   window.FinsweetAttributes.push([
@@ -1657,7 +1679,7 @@ function compassScrollLock() {
 
   let chartContainer = document.querySelector('.compass_graphic_wrap');
   if (!chartContainer) {
-    console.error('Chart container not found');
+    // console.error('Chart container not found');
     return;
   }
 
@@ -6373,7 +6395,7 @@ function footerComponent() {
 // Container-level: data-animate-container="swipe-left" will animate all children as a group
 function dataAnimationComponent() {
   const containers = document.querySelectorAll('[data-animate-container]');
-  console.log('[dataAnimation] Found', containers.length, 'containers');
+  // console.log('[dataAnimation] Found', containers.length, 'containers');
 
   containers.forEach((container, index) => {
     // Element-level animation: always check for new elements
@@ -6383,17 +6405,17 @@ function dataAnimationComponent() {
     if (containerAnimation) {
       // Container-level animation
       if (!container.hasAttribute('data-gsap-initialized')) {
-        console.log('[dataAnimation] New container-level animation:', containerAnimation);
+        // console.log('[dataAnimation] New container-level animation:', containerAnimation);
         container.setAttribute('data-gsap-initialized', 'true');
         animateContainerChildren(container, containerAnimation);
       } else {
         // Already initialized, but maybe there are new children
-        console.log('[dataAnimation] Already initialized container, checking for new children');
+        // console.log('[dataAnimation] Already initialized container, checking for new children');
         animateContainerChildren(container, containerAnimation);
       }
     } else if (hasUninitializedItems) {
       // Element-level animation with new items
-      console.log('[dataAnimation] Element-level animation - processing new items');
+      // console.log('[dataAnimation] Element-level animation - processing new items');
       animateElementsInOrder(container);
     }
   });
@@ -6429,10 +6451,10 @@ function animateContainerChildren(container, animationType) {
 function animateElementsInOrder(container) {
   // Filter for uninitialized elements only
   const allElements = Array.from(container.querySelectorAll('[data-animate]')).filter(el => !el.hasAttribute('data-gsap-item-initialized'));
-  console.log('[animateElementsInOrder] Found', allElements.length, 'new elements');
+  // console.log('[animateElementsInOrder] Found', allElements.length, 'new elements');
 
   if (allElements.length === 0 || shouldSkipAnimation(container)) {
-    console.log('[animateElementsInOrder] Skipping or no new elements found');
+    // console.log('[animateElementsInOrder] Skipping or no new elements found');
     allElements.forEach(el => {
       el.setAttribute('data-gsap-item-initialized', 'true');
       el.removeAttribute('data-gsap-hide');
@@ -6461,7 +6483,7 @@ function animateElementsInOrder(container) {
       ? Array.from(el.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li'))
       : [el];
 
-    console.log('[SplitText] Initializing text-split for:', el.tagName, 'Children:', childrenToSplit.length);
+    // console.log('[SplitText] Initializing text-split for:', el.tagName, 'Children:', childrenToSplit.length);
 
     // Map each child to its own split data for precise control
     const splits = childrenToSplit.map(child => {
@@ -6494,14 +6516,14 @@ function animateElementsInOrder(container) {
     elementSplitData.set(el, { isRichText, splits });
   });
 
-  console.log('[animateElementsInOrder] Creating GSAP timeline');
+  // console.log('[animateElementsInOrder] Creating GSAP timeline');
 
   // Track animation state to prevent restart on refresh
   let hasAnimationStarted = false;
   let animationProgress = 0;
 
   const onComplete = () => {
-    console.log('[Timeline] Animation COMPLETED');
+    // console.log('[Timeline] Animation COMPLETED');
     animationProgress = 1;
     // Revert all splits
     elementSplitData.forEach(data => {
@@ -6521,7 +6543,7 @@ function animateElementsInOrder(container) {
       start: start,
       once: once,
       onRefresh: (self) => {
-        console.log('[ScrollTrigger] Refreshed - hasAnimationStarted:', hasAnimationStarted, 'progress:', animationProgress);
+        // console.log('[ScrollTrigger] Refreshed - hasAnimationStarted:', hasAnimationStarted, 'progress:', animationProgress);
         // If animation already started, don't let refresh reset it
         if (hasAnimationStarted && animationTL) {
           animationTL.progress(animationProgress);
@@ -6529,14 +6551,14 @@ function animateElementsInOrder(container) {
       }
     },
     onStart: () => {
-      console.log('[Timeline] Animation STARTED');
+      // console.log('[Timeline] Animation STARTED');
       hasAnimationStarted = true;
       // Clean up [data-gsap-hide] attributes
       container.querySelectorAll('[data-gsap-hide]').forEach(item => item.removeAttribute('data-gsap-hide'));
     },
     onComplete: onComplete,
     onRepeat: () => {
-      console.log('[Timeline] Animation REPEATED');
+      // console.log('[Timeline] Animation REPEATED');
     },
     onUpdate: () => {
       if (animationTL) {
@@ -6545,7 +6567,7 @@ function animateElementsInOrder(container) {
     }
   });
 
-  console.log('[animateElementsInOrder] Timeline created with ScrollTrigger:', animationTL.scrollTrigger ? 'YES' : 'NO');
+  // console.log('[animateElementsInOrder] Timeline created with ScrollTrigger:', animationTL.scrollTrigger ? 'YES' : 'NO');
 
   // Process in DOM order
   allElements.forEach((el, index) => {
@@ -6571,7 +6593,7 @@ function animateElementsInOrder(container) {
       }
     }
 
-    console.log('[Timeline] Adding animation for element', index, '- type:', animateType, '- position:', position);
+    // console.log('[Timeline] Adding animation for element', index, '- type:', animateType, '- position:', position);
 
     // Check for text-split first (before directional check since it contains a hyphen)
     if (animateType === 'text-split') {
@@ -6616,23 +6638,23 @@ function animateElementsInOrder(container) {
     // Directional animations: fade-up, slide-left, etc.
     else if (animateType.includes('-')) {
       const [type, direction] = animateType.split('-');
-      console.log('[Timeline] Directional animation:', type, direction);
+      // console.log('[Timeline] Directional animation:', type, direction);
       const { fromVars, toVars } = getDirectionalAnimationVars(type, direction);
       animationTL.fromTo(el, fromVars, { ...toVars, duration, ease: defaultEasingOut, delay }, position);
     }
     // Standard animations
     else switch (animateType) {
       case 'button':
-        console.log('[Timeline] Adding button animation');
+        // console.log('[Timeline] Adding button animation');
         animationTL.fromTo(el, { yPercent: buttonsYPercent, opacity: 0 }, { yPercent: 0, opacity: 1, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
         break;
       case 'fade':
-        console.log('[Timeline] Adding simple fade animation');
+        // console.log('[Timeline] Adding simple fade animation');
         animationTL.fromTo(el, { opacity: 0 }, { opacity: 1, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
         break;
       case 'image':
         const imgType = el.dataset.animateType || 'swipe';
-        console.log('[Timeline] Adding image animation - type:', imgType);
+        // console.log('[Timeline] Adding image animation - type:', imgType);
         if (imgType === 'swipe') {
           animationTL.fromTo(el, { clipPath: imageMaskedSwipeStart }, { clipPath: imageMaskedSwipeEnd, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
         } else if (imgType === 'fade') {
@@ -6642,12 +6664,12 @@ function animateElementsInOrder(container) {
         }
         break;
       default:
-        console.log('[Timeline] Adding default fade animation');
+        // console.log('[Timeline] Adding default fade animation');
         animationTL.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
     }
   });
 
-  console.log('[animateElementsInOrder] Timeline built with', animationTL.getChildren().length, 'tweens');
+  // console.log('[animateElementsInOrder] Timeline built with', animationTL.getChildren().length, 'tweens');
 }
 
 function getDirectionalAnimationVars(type, direction) {
