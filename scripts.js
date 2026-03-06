@@ -1,4 +1,4 @@
-console.debug("%cscripts loaded", "color: lightgreen;");
+console.log("%cAntenna Scripts v1.0.1 - Loaded", "color: #DEE42E; font-weight: bold; background: #11171E; padding: 4px 8px; border-radius: 4px;");
 
 // Preserve scroll position on refresh
 if ('scrollRestoration' in history) {
@@ -29,17 +29,29 @@ ScrollTrigger.config({
 
 // Lenis setup
 function setupLenis() {
-  lenis = new Lenis({ smoothWheel: true });
-  window.lenis = lenis;
+  console.log('[Lenis] Attempting to initialize...');
 
-  lenis.on("scroll", ScrollTrigger.update);
+  if (typeof Lenis !== 'function') {
+    console.warn('[Lenis] Error: Lenis is not a constructor/function. Current value:', Lenis);
+    return;
+  }
 
-  gsap.ticker.add((time) => {
-    lenis.raf(time * 1000);
-  });
-  gsap.ticker.lagSmoothing(0);
+  try {
+    lenis = new Lenis({ smoothWheel: true });
+    window.lenis = lenis;
 
-  ScrollTrigger.addEventListener("refresh", () => lenis.resize());
+    lenis.on("scroll", ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
+
+    ScrollTrigger.addEventListener("refresh", () => lenis.resize());
+    console.log('[Lenis] Successfully initialized');
+  } catch (error) {
+    console.error('[Lenis] Critical error during initialization:', error);
+  }
 }
 
 // Global GSAP Variables
