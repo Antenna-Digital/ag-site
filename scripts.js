@@ -2585,30 +2585,33 @@ function ourExpertiseComponent() {
         el.dataset.animate = 'button';
       });
 
-      images.forEach(el => {
+      images.forEach((el, index) => {
         el.dataset.animate = 'image';
         el.dataset.animateDuration = '1.5';
-        el.dataset.animatePosition = '1.25';
+        // Give the last image a label so the grid can follow it
+        if (index === images.length - 1) {
+          el.dataset.animatePosition = 'images-end';
+        }
       });
 
-      intro._onAnimationComplete = () => {
+      container._onAnimationComplete = () => {
         textShadowItems.forEach(item => item.classList.add('is-darker-shadow'));
         scheduleScrollTriggerRefresh();
       };
-
-      animateElementsInOrder(intro);
     }
 
     if (grid) {
       const gridItems = grid.querySelectorAll('.our-expertise_grid_item');
-      gridItems.forEach(el => {
+      gridItems.forEach((el, index) => {
         el.dataset.animate = 'fade-up';
-        el.dataset.animatePosition = '0';
-        el.dataset.animateStagger = '0.2';
+        // Start grid after intro images, staggered
+        el.dataset.animatePosition = 'images-end';
+        el.dataset.animateStagger = '0.1s';
       });
-
-      animateElementsInOrder(grid);
     }
+
+    // Call engine ONCE on the main wrapper to create a single sequenced timeline
+    animateElementsInOrder(container);
   });
 }
 
