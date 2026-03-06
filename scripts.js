@@ -1,4 +1,4 @@
-console.debug("%cscript loaded", "color: lightgreen;");
+console.debug("%cscripts loaded", "color: lightgreen;");
 
 // Preserve scroll position on refresh
 if ('scrollRestoration' in history) {
@@ -10,27 +10,17 @@ let odometersAnimating = false;
 
 // Lenis setup
 function setupLenis() {
-  lenis = new Lenis({
-    // syncTouch: true,
-    smoothWheel: true
-  });
+  lenis = new Lenis({ smoothWheel: true });
+  window.lenis = lenis;
 
-  // Update ScrollTrigger but prevent refresh during scroll
-  lenis.on("scroll", () => {
-    ScrollTrigger.update();
-  });
+  lenis.on("scroll", ScrollTrigger.update);
 
-  // Prevent Lenis from causing refreshes on pinned elements
-  ScrollTrigger.addEventListener("refresh", () => {
-    lenis.resize();
+  gsap.ticker.add((time) => {
+    lenis.raf(time * 1000);
   });
+  gsap.ticker.lagSmoothing(0);
 
-  // Standard RAF without GSAP ticker to avoid conflicts
-  function raf(time) {
-    lenis.raf(time);
-    requestAnimationFrame(raf);
-  }
-  requestAnimationFrame(raf);
+  ScrollTrigger.addEventListener("refresh", () => lenis.resize());
 }
 
 // Global GSAP Variables
@@ -216,10 +206,7 @@ function scheduleScrollTriggerRefresh(layoutChanged = false) {
 //-----------------//
 /* GSAP Animations */
 //-----------------//
-function initGsapAnimations() {
-  workScrollLock();
-  compassScrollLock();
-  splitScrollLock();
+function initScrollAnimations() {
   document.fonts.ready.then(() => {
     navComponent();
     homepageHeroComponent();
@@ -1303,7 +1290,7 @@ function expertiseStackNav() {
   const navItems = document.querySelectorAll('.expertise-stack_nav_item');
 
   // Function to check and update active state based on scroll position
-  const updateActiveState = () => {
+  window.updateActiveState = () => {
     const threshold = window.innerHeight * 0.05; // 5% of viewport
     let activeIndex = -1;
 
@@ -1368,13 +1355,7 @@ function expertiseStackNav() {
   window.addEventListener('scroll', updateActiveState, { passive: true });
 
   // Initial check
-  updateActiveState();
-
-  // Refresh ScrollTrigger positions on resize
-  window.addEventListener('resize', () => {
-    ScrollTrigger.refresh();
-    updateActiveState();
-  });
+  window.updateActiveState();
 }
 
 // Hero Vanta BG
@@ -1441,7 +1422,7 @@ function heroVantaBG() {
   }
 
   // Initialize effect
-  initVanta();
+  setTimeout(initVanta, 500);
 
   // Add resize listener with debouncing
   let resizeTimeout;
@@ -1599,14 +1580,6 @@ function workScrollLock() {
       duration: 0.8
     });
     tl.to({}, { duration: 0.1 });
-  });
-
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      ScrollTrigger.refresh(true);
-    }, 250);
   });
 };
 
@@ -1971,9 +1944,6 @@ function splitScrollLock() {
     }
   });
 
-  window.addEventListener('resize', () => {
-    ScrollTrigger.refresh();
-  });
 
   splitScrollTrigger.resizeObserver = resizeObserver;
 
@@ -7973,58 +7943,39 @@ function getDirectionalAnimationVars(type, direction) {
 
 // Init Function
 const init = () => {
-  console.debug("%cRun init", "color: lightgreen;");
-
   setupLenis();
-  swipers();
-  initGsapAnimations();
-  workGridMasonry();
-  accordionSection();
-  timelineAccordion();
-  if (!isIOS) {
-    odometers();
-  }
-  marquees();
-  formStuff();
-  expertiseStackNav();
   heroVantaBG();
-  finsweetStuff();
 
-  // Single refresh after everything
+  setTimeout(() => {
+    swipers();
+    workScrollLock();
+    compassScrollLock();
+    splitScrollLock();
+    workGridMasonry();
+    accordionSection();
+    timelineAccordion();
+    odometers();
+    marquees();
+    formStuff();
+    expertiseStackNav();
+    finsweetStuff();
+    initScrollAnimations();
+  }, 300);
+
   setTimeout(() => {
     ScrollTrigger.refresh(true);
-  }, 200);
+  }, 600);
 
-  // Track which elements have been measured to avoid unnecessary refreshes
-  const measuredSizes = new WeakMap();
-
-  const resizeObserver = new ResizeObserver((entries) => {
-    let needsRefresh = false;
-
-    entries.forEach(entry => {
-      const element = entry.target;
-      const newHeight = entry.borderBoxSize[0].blockSize;
-      const previousHeight = measuredSizes.get(element);
-
-      // Only flag for refresh if height actually changed (not initial measurement)
-      if (previousHeight !== undefined && previousHeight !== newHeight) {
-        needsRefresh = true;
-      }
-
-      measuredSizes.set(element, newHeight);
-    });
-
-    // Batch refresh once after all measurements
-    if (needsRefresh) {
-      ScrollTrigger.refresh();
-    }
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      ScrollTrigger.refresh(true);
+      if (lenis) lenis.resize();
+      // Re-run updateActiveState if expertiseStackNav has run
+      if (typeof updateActiveState === 'function') updateActiveState();
+    }, 250);
   });
-
-  // Observe only components that cause layout shifts
-  document.querySelectorAll('.accordion-section_wrap, .load-more, .about_wrap, .stat-grid_wrap').forEach(el => {
-    resizeObserver.observe(el);
-  });
-
 }; // end init
 
 $(window).on("load", init);
