@@ -3185,7 +3185,7 @@ function testimonialComponent() {
     });
 
     paragraphs.forEach(el => {
-      el.dataset.animate = 'text-split';
+      el.dataset.animate = 'fade';
       el.dataset.animateMask = 'false';
       el.dataset.animatePosition = '<0.75';
     });
