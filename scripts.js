@@ -1694,23 +1694,24 @@ function compassScrollLock() {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -50 652 552" style="width: 100%; height: 100%;">
       <g class="chart-rings">
         <path d="M226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
-              fill="#f7f6f4" stroke="none" opacity="0.8"/>
+              fill="#F7F6F4" stroke="none" opacity="0.1"/>
         <path d="M226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25Z" 
-              fill="#e1dfda" stroke="none" opacity="0.8"/>
+              fill="#E4E1DA" stroke="none" opacity="0.08"/>
         <path d="M226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5Z" 
-              fill="#f7f6f4" stroke="none" opacity="0.8"/>
+              fill="#F7F6F4" stroke="none" opacity="0.05"/>
         <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75Z" 
-              fill="#e1dfda" stroke="none" opacity="0.8"/>
+              fill="#F7F6F4" stroke="none" opacity="0.03"/>
       </g>
       <polygon class="data-shape" 
                points="" 
-               fill="rgba(222, 228, 46, 0.7)" 
+               fill="#F8FF05" 
+               fill-opacity="0.6"
                stroke="#DEE42E" 
-               stroke-width="2"/>
+               stroke-width="0.852387"/>
       <g class="data-points"></g>
       <g class="grid-lines">
         <path d="M226 169.75L186.225 186.225L169.75 226L186.225 265.775L206.113 274.012L226 282.25L265.775 265.775L282.25 226L265.775 186.225L226 169.75ZM226 113.5L146.451 146.451L113.5 226L146.451 305.549L226 338.5L305.549 305.549L338.5 226L305.549 146.451L226 113.5ZM226 57.25L106.676 106.676L57.25 226L106.676 345.324L226 394.75L345.324 345.324L394.75 226L345.324 106.676L226 57.25ZM226 1L66.901 66.901L1 226L66.901 385.099L226 451L385.099 385.099L451 226L385.099 66.901L226 1Z" 
-              stroke="#11171E" stroke-width="1.5" fill="none" opacity="0.9"/>
+              stroke="#EFEDE9" stroke-width="0.852387" fill="none" opacity="0.5"/>
       </g>
       <g class="center-lines"></g>
       <g class="chart-labels"></g>
@@ -1774,9 +1775,9 @@ function compassScrollLock() {
     line.setAttribute('y1', chartConfig.centerY);
     line.setAttribute('x2', endX);
     line.setAttribute('y2', endY);
-    line.setAttribute('stroke', '#11171E');
-    line.setAttribute('stroke-opacity', '0.1');
-    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke', '#EFEDE9');
+    line.setAttribute('stroke-opacity', '0.5');
+    line.setAttribute('stroke-width', '0.852387');
     centerLinesGroup.appendChild(line);
   });
 
@@ -1788,7 +1789,7 @@ function compassScrollLock() {
     text.setAttribute('y', pos.y);
     text.setAttribute('text-anchor', pos.textAnchor);
     text.setAttribute('dy', pos.dy);
-    text.setAttribute('fill', '#11171E');
+    text.setAttribute('fill', '#EFEDE9');
     text.style.fontSize = '16px';
     text.style.fontFamily = '"Restarthard 2", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     text.textContent = label;
@@ -1812,10 +1813,8 @@ function compassScrollLock() {
 
       if (!circle) {
         circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('r', '4');
+        circle.setAttribute('r', '2');
         circle.setAttribute('fill', '#DEE42E');
-        circle.setAttribute('stroke', '#DEE42E');
-        circle.setAttribute('stroke-width', '1');
         dataPointsGroup.appendChild(circle);
       }
 
@@ -2030,6 +2029,37 @@ function navComponent() {
   components.forEach(component => {
     const container = component;
 
+    // 1. Tag elements with data-attributes via JS if they have data-anim or are specific types
+    const animElements = container.querySelectorAll('[data-anim]');
+    animElements.forEach(el => {
+      const animType = el.getAttribute('data-anim');
+      // Map fadeslide-up to fade-up (supported by our engine)
+      if (animType === 'fadeslide-up') {
+        el.dataset.animate = 'fade-up';
+      } else {
+        el.dataset.animate = animType;
+      }
+    });
+
+    // Specific tagging for footer elements if not already tagged
+    const footerParagraphs = container.querySelectorAll('.nav_1_menu_footer .c-paragraph');
+    footerParagraphs.forEach(el => {
+      if (!el.dataset.animate) {
+        el.dataset.animate = 'text-split';
+      }
+    });
+
+    const footerButtons = container.querySelectorAll('.nav_1_menu_footer .button_main_wrap');
+    footerButtons.forEach(el => {
+      if (!el.dataset.animate) {
+        el.dataset.animate = 'button';
+      }
+    });
+
+    // 2. Delegate to the global animation engine
+    animateElementsInOrder(container);
+
+    // 3. Keep existing opacity animation for the container itself
     if (shouldSkipAnimation(container, 'bottom 0%')) {
       container.removeAttribute('data-gsap-hide');
       return;
