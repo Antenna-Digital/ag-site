@@ -2643,29 +2643,43 @@ function ourExpertiseComponent() {
       const images = intro.querySelectorAll('.our-expertise_images_wrap .our-expertise_image');
       const textShadowItems = intro.querySelectorAll('.u-text-shadow');
 
-      headings.forEach(el => {
+      headings.forEach((el, i) => {
         el.dataset.animate = 'text-split';
-        el.dataset.animateDuration = '1.25';
+        el.dataset.animateDuration = '0.88';
+        el.dataset.animateLineStagger = '0.08';
+        if (i > 0) el.dataset.animatePosition = '>-0.5';
       });
 
       paragraphs.forEach(el => {
         el.dataset.animate = 'text-split';
         el.dataset.animateMask = 'false';
-        el.dataset.animatePosition = '>-0.65';
+        el.dataset.animateDuration = '0.82';
+        el.dataset.animateLineStagger = '0.07';
+        el.dataset.animatePosition = '>-0.58';
       });
 
       buttons.forEach(el => {
         el.dataset.animate = 'button';
+        el.dataset.animateDuration = '0.55';
       });
 
-      images.forEach((el, index) => {
+      images.forEach(el => {
         el.dataset.animate = 'image';
-        el.dataset.animateDuration = '1.5';
-        // Give the last image a label so the grid can follow it
-        if (index === images.length - 1) {
-          el.dataset.animatePosition = 'images-end';
-        }
+        el.dataset.animateDuration = '0.82';
+        el.dataset.animatePosition = '0';
       });
+
+      const introCopyAnchors = Array.from(
+        intro.querySelectorAll(
+          '.our-expertise_heading_wrap .c-heading, .our-expertise_content_wrap .c-paragraph > *, .button_main_wrap'
+        )
+      );
+      const labelAnchor =
+        introCopyAnchors[introCopyAnchors.length - 1] ||
+        (images.length ? images[images.length - 1] : null);
+      if (labelAnchor) {
+        labelAnchor.dataset.animateAddLabel = 'images-end';
+      }
 
       container._onAnimationComplete = () => {
         textShadowItems.forEach(item => item.classList.add('is-darker-shadow'));
@@ -2677,9 +2691,9 @@ function ourExpertiseComponent() {
       const gridItems = grid.querySelectorAll('.our-expertise_grid_item');
       gridItems.forEach((el, index) => {
         el.dataset.animate = 'fade-up';
-        // Start grid after intro images, staggered
-        el.dataset.animatePosition = 'images-end';
-        el.dataset.animateStagger = '0.1s';
+        el.dataset.animateDuration = '0.65';
+        el.dataset.animatePosition =
+          index === 0 ? 'images-end' : `images-end+=${index * 0.065}`;
       });
     }
 
@@ -6638,6 +6652,7 @@ function animateElementsInOrder(container) {
             animationTL.set(item.child, { opacity: 1 }, itemPos);
 
             // Then animate the lines
+            const lineStagger = parseFloat(el.dataset.animateLineStagger);
             animationTL.fromTo(split.lines, {
               yPercent: 100,
               opacity: 0
@@ -6647,7 +6662,7 @@ function animateElementsInOrder(container) {
               visibility: 'visible',
               duration: duration,
               ease: "expo.out",
-              stagger: 0.12
+              stagger: !isNaN(lineStagger) ? lineStagger : 0.12
             }, "<"); // Start with the visibility set above
           } else {
             // Fallback for whole element if no split possible
@@ -6696,6 +6711,11 @@ function animateElementsInOrder(container) {
       default:
         // console.log('[Timeline] Adding default fade animation');
         animationTL.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, visibility: 'visible', duration, ease: defaultEasingOut, delay }, position);
+    }
+
+    const addLabelName = el.dataset.animateAddLabel;
+    if (addLabelName) {
+      animationTL.addLabel(addLabelName, '>');
     }
   });
 
