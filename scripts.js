@@ -5663,6 +5663,20 @@ function expertiseStackComponent() {
         duration: 1
       });
 
+      const headerButtons = container.querySelectorAll('.expertise_buttons .button_main_wrap');
+      if (headerButtons.length > 0) {
+        containerTL.fromTo(headerButtons, {
+          yPercent: buttonsYPercent,
+          opacity: 0
+        }, {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          ease: defaultEasingOut,
+          stagger: defaultStagger
+        }, ">-0.75");
+      }
+
       if (itemsContainer) {
         containerTL.fromTo(itemsContainer, {
           opacity: 0
